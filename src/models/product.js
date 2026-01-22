@@ -8,10 +8,22 @@ export class ProductModel {
     #table = 'products'
     #fielsToInsert = ['name', 'cod_bar', 'description', 'category_id', 'url_img_original', 'url_img_small', 'is_active']
 
+    /**
+     * Inicializa el modelo con una instancia de base de datos.
+     * @param {Database} [dbInstance] - Instancia opcional para inyección de dependencias (Testing).
+     */
     constructor(db) {
         this.#db = Database.getInstance()
     }
 
+    /**
+     * Busca productos con soporte para filtros, búsqueda y paginación.
+     * * @param {object} params - Objeto de parámetros.
+     * @param {string|null} [params.search] - Texto para buscar por nombre o código de barras.
+     * @param {object} [params.filters] - Filtros específicos (category, state).
+     * @param {number|null} [params.offset] - Desplazamiento para paginación (SQL OFFSET).
+     * @returns {Promise<ProductListDTO[]>} Retorna una lista de DTOs de productos.
+     */
     async findAll({ search = null, filters = {}, offset = null }) {
         let sql = `
         SELECT 
@@ -67,6 +79,11 @@ export class ProductModel {
         }
     }
 
+    /**
+     * Busca un producto por su ID único.
+     * * @param {number} id - ID del producto.
+     * @returns {Promise<ProductDTO|null>} Retorna el DTO del producto o null si no existe.
+     */
     async findById(id) {
         const sql = `
         SELECT 
@@ -93,6 +110,11 @@ export class ProductModel {
         }
     }
 
+    /**
+     * Crea un nuevo producto en la base de datos.
+     * * @param {object} productData - Objeto con los datos crudos del producto (validados previamente).
+     * @returns {Promise<number>} ID del nuevo producto insertado.
+     */
     async create(productData) {
         const columns = this.#fielsToInsert.join(', ')
 
@@ -109,6 +131,12 @@ export class ProductModel {
         }
     }
 
+    /**
+    * Modificar los datos de un producto 
+    * * @param {number} id - ID del producto.
+    * * @param {object} productData - Objeto con los datos crudos del producto (validados previamente).
+    * @returns {boolean} True o false si las filas fueron afectadas
+    */
     async update(id, productData) {
         const setClausule = this.#fielsToInsert.map(field => `${field} = ?`).join(', ')
 
@@ -125,6 +153,14 @@ export class ProductModel {
         }
     }
 
+    /**
+     * Actualiza el estado de activo/inactivo de un producto.
+     * Se utiliza para el borrado lógico (Soft Delete) o reactivación.
+     * * @param {number} id - El ID del producto a modificar.
+     * @param {boolean|number} newStatus - Nuevo estado (true/1 para activar, false/0 para desactivar).
+     * @returns {Promise<boolean>} Retorna `true` si se encontró y actualizó el producto, `false` si el ID no existe.
+     * @throws {Error} Si ocurre un fallo en la conexión o la query.
+     */
     async updateStatus(id, newStatus) {
         const sql = `UPDATE ${this.#table} SET is_active = ? WHERE id = ?`
         try {
@@ -135,6 +171,13 @@ export class ProductModel {
         }
     }
 
+    /**
+     * Realiza una búsqueda ligera optimizada para la vista de catálogo público.
+     * Solo retorna los campos esenciales para mostrar tarjetas (Cards) de productos.
+     * * @param {string|null} [search=null] - Término opcional para buscar por Nombre o Código de Barras.
+     * @returns {Promise<ProductCatalogDTO[]>} Retorna una lista de DTOs optimizados para el catálogo.
+     * @throws {Error} Si ocurre un fallo en la base de datos.
+     */
     async searchCatalog(search = null) {
         let sql = `SELECT id, name, cod_bar, url_img_small FROM ${this.#table} WHERE 1=1`
         const params = []
