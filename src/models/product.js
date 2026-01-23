@@ -13,7 +13,7 @@ export class ProductModel {
      * @param {Database} [dbInstance] - Instancia opcional para inyección de dependencias (Testing).
      */
     constructor(db) {
-        this.#db = Database.getInstance()
+        this.#db = db || Database.getInstance()
     }
 
     /**
@@ -71,12 +71,8 @@ export class ProductModel {
             params.push(parseInt(offset))
         }
 
-        try {
-            const rows = await this.#db.query(sql, params)
-            return rows.map(row => new ProductListDTO(row))
-        } catch (error) {
-            console.log(error)
-        }
+        const rows = await this.#db.query(sql, params)
+        return rows.map(row => new ProductListDTO(row))
     }
 
     /**
@@ -99,15 +95,11 @@ export class ProductModel {
         ON p.category_id = c.id
         WHERE p.id = ? LIMIT 1`
 
-        try {
-            const rows = await this.#db.query(sql, [id])
+        const rows = await this.#db.query(sql, [id])
 
-            if (rows.length === 0) return null
+        if (rows.length === 0) return null
 
-            return new ProductDTO(rows[0])
-        } catch (error) {
-            console.log(error)
-        }
+        return new ProductDTO(rows[0])
     }
 
     /**
@@ -122,13 +114,10 @@ export class ProductModel {
 
         const values = this.#fielsToInsert.map(field => productData[field])
 
-        try {
-            const sql = `INSERT INTO ${this.#table} (${columns}) VALUES (${placeholders})`
-            const result = await this.#db.query(sql, values)
-            return result.insertId
-        } catch (error) {
-            console.log(error)
-        }
+        const sql = `INSERT INTO ${this.#table} (${columns}) VALUES (${placeholders})`
+        const result = await this.#db.query(sql, values)
+        return result.insertId
+
     }
 
     /**
@@ -144,13 +133,10 @@ export class ProductModel {
 
         const parameters = [...values, id]
 
-        try {
-            const sql = `UPDATE ${this.#table} SET ${setClausule} WHERE id = ?`
-            const result = await this.#db.query(sql, parameters)
-            return result.affectedRows > 0
-        } catch (error) {
-            console.log(error)
-        }
+        const sql = `UPDATE ${this.#table} SET ${setClausule} WHERE id = ?`
+        const result = await this.#db.query(sql, parameters)
+        return result.affectedRows > 0
+
     }
 
     /**
@@ -163,12 +149,8 @@ export class ProductModel {
      */
     async updateStatus(id, newStatus) {
         const sql = `UPDATE ${this.#table} SET is_active = ? WHERE id = ?`
-        try {
-            const result = await this.#db.query(sql, [newStatus, id])
-            return result.affectedRows > 0
-        } catch (error) {
-            console.log(error)
-        }
+        const result = await this.#db.query(sql, [newStatus, id])
+        return result.affectedRows > 0
     }
 
     /**
@@ -179,7 +161,7 @@ export class ProductModel {
      * @throws {Error} Si ocurre un fallo en la base de datos.
      */
     async searchCatalog(search = null) {
-        let sql = `SELECT id, name, cod_bar, url_img_small FROM ${this.#table} WHERE 1=1`
+        let sql = `SELECT id, name, cod_bar, url_img_small FROM ${this.#table} WHERE is_active = 1`
         const params = []
         if (search) {
             sql += ' AND ('
@@ -195,11 +177,7 @@ export class ProductModel {
             sql += ')'
         }
 
-        try {
-            const results = await this.#db.query(sql, params)
-            return results.map(row => new ProductCatalogDTO(row))
-        } catch (error) {
-            console.log(error)
-        }
+        const results = await this.#db.query(sql, params)
+        return results.map(row => new ProductCatalogDTO(row))
     }
 }

@@ -1,5 +1,6 @@
 import { processProductImage, deleteProductImage } from '../utils/imageProcessor.js'
 import { ProductModel } from '../models/product.js'
+import { ValidationError, NotFoundError } from '../utils/errors.js'
 
 /**
  * @param {ProductModel} productModelInstance - Instancia del modelo de productos (Inyección de Dependencias).
@@ -36,7 +37,7 @@ export class ProductService {
      */
     async update(id, data, file) {
         const currentProduct = await this.productModel.findById(id)
-        if (!currentProduct) throw new Error('Producto no encontrado')
+        if (!currentProduct) throw new NotFoundError('Producto no encontrado')
 
         let imgPaths = {
             url_img_original: currentProduct.url_img_original,
@@ -72,7 +73,7 @@ export class ProductService {
      */
     async findById(id) {
         const product = await this.productModel.findById(id)
-        if (!product) throw new Error('Producto no encontrado')
+        if (!product) throw new NotFoundError('Producto no encontrado')
         return product
     }
 
@@ -80,16 +81,20 @@ export class ProductService {
      * Realiza un borrado lógico (Desactivar).
      * @param {number} id 
      */
-    async deleteProduct(id) {
-        return await this.productModel.updateStatus(id, false)
+    async delete(id) {
+        const deleted = await this.productModel.updateStatus(id, false)
+        if (!deleted) throw new NotFoundError('Producto no encontrado para eliminar')
+        return true
     }
 
     /**
      * Reactiva un producto eliminado.
      * @param {number} id 
      */
-    async activateProduct(id) {
-        return await this.productModel.updateStatus(id, true)
+    async activate(id) {
+        const activated = await this.productModel.updateStatus(id, true)
+        if(!activated) throw new NotFoundError('Producto no encontrado para activar')
+        return true
     }
 
     /**
