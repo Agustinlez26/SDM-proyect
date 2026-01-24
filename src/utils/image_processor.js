@@ -1,7 +1,8 @@
 import { v4 as uuidv4 } from 'uuid'
 import fs from 'node:fs/promises'
 import sharp from 'sharp'
-import { slugify } from './stringUtils.js'
+import path from 'node:path'
+import { slugify } from './string_utils.js'
 import { UPLOAD_DIR } from '../config/constants.js'
 
 export const processProductImage = async (fileBuffer, productName) => {
