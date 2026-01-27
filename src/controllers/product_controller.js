@@ -29,8 +29,8 @@ export class ProductController {
         }
 
         try {
-            const products = await this.productService.getAll(result.data)
-            res.json({ status: 'succes', data: products })
+            const products = await this.productService.findAll(result.data)
+            res.json({ status: 'success', data: products })
         } catch (error) {
             this.#handleError(res, error)
         }
@@ -46,7 +46,7 @@ export class ProductController {
         if (!result.success) return res.status(400).json({ status: 'error', message: 'ID invalido' })
 
         try {
-            const product = await this.productService.getById(result.data)
+            const product = await this.productService.findById(result.data)
             res.json({ status: 'succes', data: product })
         } catch (error) {
             this.#handleError(res, error)
@@ -92,6 +92,7 @@ export class ProductController {
 
         const result = validateProduct(req.body)
         if (!result.success) {
+            console.log(JSON.stringify(result.error.format(), null, 2))
             return res.status(400).
                 json({
                     status: 'error',
@@ -169,7 +170,7 @@ export class ProductController {
         }
 
         try {
-            const deleted = await this.productService.delete(idResult)
+            const deleted = await this.productService.delete(idResult.data)
             if (!deleted) return res.status(404).json({
                 status: 'error',
                 message: 'No se pudo eliminar el producto de la base de datos'
@@ -199,7 +200,7 @@ export class ProductController {
         }
 
         try {
-            const activate = await this.productService.activate(idResult)
+            const activate = await this.productService.activate(idResult.data)
             if (!activate) return res.status(404).json({
                 status: 'error',
                 message: 'No se pudo activar el producto en la base de datos'
@@ -207,7 +208,7 @@ export class ProductController {
 
             res.status(200).json({
                 status: 'success',
-                message: 'Producto eliminado correctamente'
+                message: 'Producto activado correctamente'
             })
         } catch (error) {
             this.#handleError(res, error)

@@ -6,6 +6,7 @@ import { ProductCatalogDTO } from '../dtos/products/productCatalogDTO.js'
 export class ProductModel {
     #db
     #table = 'products'
+    #table2 = 'product_categories'
     #fielsToInsert = ['name', 'cod_bar', 'description', 'category_id', 'url_img_original', 'url_img_small', 'is_active']
 
     /**
@@ -24,37 +25,29 @@ export class ProductModel {
      * @param {number|null} [params.offset] - Desplazamiento para paginación (SQL OFFSET).
      * @returns {Promise<ProductListDTO[]>} Retorna una lista de DTOs de productos.
      */
-    async findAll({ search = null, filters = {}, offset = null }) {
+    async findAll({ search = null, filters = {}, offset = null, limit = null }) {
         let sql = `
         SELECT 
-        p.name, 
-        p.cod_bar, 
-        p.description, 
-        c.name as category, 
+        p.id,
+        p.name,
+        p.cod_bar,
+        p.description,
+        c.name as category,
         p.url_img_small
-        FROM products p
-        JOIN product_categories c 
+        FROM ${this.#table} p
+        JOIN ${this.#table2} c
         ON p.category_id = c.id
         WHERE 1=1`
 
         const params = []
 
         if (search) {
-            sql += ' AND ('
-            const isNumeric = /^\d+$/.test(search)
-
-            if (isNumeric) {
-                sql += 'p.cod_bar LIKE ?'
-            } else {
-                sql += 'p.name LIKE ?'
-            }
-
-            params.push(`%${search}%`)
-            sql += ')'
+            sql += ' AND (p.name LIKE ? OR p.cod_bar LIKE ?)'
+            params.push(`%${search}%`, `%${search}%`)
         }
 
         if (filters.category) {
-            sql += ' AND category = ?'
+            sql += ' AND c.id = ?'
             params.push(filters.category)
         }
 
@@ -65,9 +58,9 @@ export class ProductModel {
 
         sql += ' ORDER BY p.id DESC'
 
-        if (offset !== null) {
+        if (limit && offset !== null) {
             sql += ' LIMIT ? OFFSET ?'
-            params.push(20)
+            params.push(parseInt(limit))
             params.push(parseInt(offset))
         }
 
@@ -91,7 +84,7 @@ export class ProductModel {
         p.url_img_original,
         p.is_active
         FROM ${this.#table} p
-        JOIN product_categories c
+        JOIN ${this.#table2} c
         ON p.category_id = c.id
         WHERE p.id = ? LIMIT 1`
 
@@ -100,6 +93,28 @@ export class ProductModel {
         if (rows.length === 0) return null
 
         return new ProductDTO(rows[0])
+    }
+
+    async findByCodBar(cod, excludeId = null) {
+        let sql = `SELECT 1 FROM ${this.#table} WHERE cod_bar = ?`
+        const params = [cod]
+        if (excludeId) {
+            sql += ' AND id != ?'
+            params.push(excludeId)
+        }
+        const result = await this.#db.query(sql, params)
+        return result.length > 0
+    }
+
+    async findByName(name, excludeId = null) {
+        let sql = `SELECT 1 FROM ${this.#table} WHERE name = ?`
+        const params = [name]
+        if (excludeId) {
+            sql += ' AND id != ?'
+            params.push(excludeId)
+        }
+        const result = await this.#db.query(sql, params)
+        return result.length > 0
     }
 
     /**

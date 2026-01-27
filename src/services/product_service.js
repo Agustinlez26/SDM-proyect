@@ -1,11 +1,11 @@
-import { processProductImage, deleteProductImage } from '../utils/imageProcessor.js'
-import { ProductModel } from '../models/product.js'
+import { processProductImage, deleteProductImage } from '../utils/image_processor.js'
 import { ValidationError, NotFoundError } from '../utils/errors.js'
 
 /**
  * @param {ProductModel} productModelInstance - Instancia del modelo de productos (Inyección de Dependencias).
  */
 export class ProductService {
+    #PAGE_SIZE
     constructor(ProductModel) {
         this.productModel = ProductModel
     }
@@ -16,13 +16,18 @@ export class ProductService {
      * @param {object} file - Archivo de imagen (req.file).
      * @returns {Promise<number>} ID del producto creado.
      */
-    async create(data, file) {
+    async create(file, data) {
+        const validateName = await this.productModel.findByName(data.name)
+        if (validateName) throw new ValidationError('Un producto ya existe con este nombre')
+        const validateCodBar = await this.productModel.findByCodBar(data.cod_bar)
+        if (validateCodBar) throw new ValidationError('Un producto ya existe con este codigo de barra')
+
         let imagesPaths = await processProductImage(file.buffer, data.name)
 
         const producToSave = {
             ...data,
             ...imagesPaths,
-            is_active: data.is_active ?? true
+            is_active: true
         }
 
         return await this.productModel.create(producToSave)
@@ -38,6 +43,16 @@ export class ProductService {
     async update(id, data, file) {
         const currentProduct = await this.productModel.findById(id)
         if (!currentProduct) throw new NotFoundError('Producto no encontrado')
+
+        if(data.name && data.name !== currentProduct.name) {
+            const existsName = await this.productModel.findByName(data.name, id)
+            if (existsName) throw new ValidationError('Un producto ya existe con este nombre')
+        }
+
+        if(data.cod_bar && data.cod_bar !== currentProduct.cod_bar){
+            const existsCodBar = await this.productModel.findByCodBar(data.cod_bar, id)
+            if (existsCodBar) throw new ValidationError('Un producto ya existe con este codigo de barra')
+        }
 
         let imgPaths = {
             url_img_original: currentProduct.url_img_original,
@@ -62,8 +77,11 @@ export class ProductService {
      * Obtiene una lista paginada y filtrada de productos.
      * @param {object} params - { search, filters, offset }
      */
-    async findAll({ search, filters, offset }) {
-        return await this.productModel.findAll({ search, filters, offset })
+    async findAll({ page = 1, search, category, state }) {
+        const limit = this.#PAGE_SIZE
+        const offset = (page - 1) * limit
+        const filters = { category, state }
+        return await this.productModel.findAll({ search, filters, offset, limit })
     }
 
     /**
@@ -93,7 +111,7 @@ export class ProductService {
      */
     async activate(id) {
         const activated = await this.productModel.updateStatus(id, true)
-        if(!activated) throw new NotFoundError('Producto no encontrado para activar')
+        if (!activated) throw new NotFoundError('Producto no encontrado para activar')
         return true
     }
 
