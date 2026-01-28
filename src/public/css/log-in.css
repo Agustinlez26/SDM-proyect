@@ -1,0 +1,156 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: "Inter", sans-serif;
+}
+
+body {
+  height: 100vh;
+  width: 100vw;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+body::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("../imgs/fondo.png");
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;
+  filter: blur(10px);
+  transform: scale(1.1);
+  z-index: -1;
+}
+
+.login-container {
+  min-width: 400px;
+  height: 500px;
+  padding: 30px;
+  border-radius: 16px;
+  box-shadow: 0 20px 20px #0003;
+  background-color: #fffb;
+  backdrop-filter: blur(12px);
+}
+
+.login-form {
+  width: 100%;
+  height: 100%;
+  color: #214d5c;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.login-logo::before {
+  content: "";
+  display: block;
+  width: 150px;
+  height: 150px;
+  margin: -20px;
+  padding: 0;
+  background-image: url("../imgs/logo.png");
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;
+}
+
+.login-form__title {
+  margin: 0 20px;
+}
+
+.login-form__subtitle {
+  font-weight: 500;
+  margin: 0 15px;
+  margin-bottom: 20px;
+}
+
+.login-form__group {
+  width: 100%;
+}
+
+.login-form__label {
+  margin-left: 10px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.login-form__input-wrapper {
+  margin: 10px 0;
+  background: #eee;
+  padding: 10px 15px;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 0 10px #0001;
+}
+
+.login-form__input {
+  flex: 1;
+  width: 100%;
+  background-color: transparent;
+  outline: 0;
+  border: 0;
+}
+
+.view-password {
+  width: 20px;
+  height: 20px;
+  outline: 0;
+  border: none;
+  background-image: url("../imgs/visibility.svg");
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;
+}
+
+.view-password-visibility-off {
+  background-image: url("../imgs/visibility_off.svg");
+}
+
+.login-form__forgot-pass {
+  align-self: flex-end;
+  text-decoration: none;
+  margin: 15px 0;
+  margin-right: 10px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: color 0.3s ease-in-out;
+}
+
+.login-form__forgot-pass:visited {
+  color: #214d5c;
+}
+
+.login-form__forgot-pass:hover {
+  color: #306e83;
+}
+
+.login-form__submit {
+  width: 100%;
+  font-size: 1rem;
+  color: #fff;
+  padding: 10px;
+  outline: 0;
+  border: 2px transparent;
+  border-radius: 20px;
+  background-color: #214d5c;
+  box-shadow: 0 0 10px #214d5c66;
+  transition: background-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+.login-form__submit:hover {
+  background-color: #36768b;
+  box-shadow: 0 0 10px #15313a66;
+}
