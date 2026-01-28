@@ -25,26 +25,30 @@ describe('ProductService', () => {
             update: jest.fn(),
             findAll: jest.fn(),
             findById: jest.fn(),
+            findByName: jest.fn(),
+            findByCodBar: jest.fn(),
             updateStatus: jest.fn(),
             searchCatalog: jest.fn()
         };
 
-        productService = new ProductService(mockProductModel);
+        productService = new ProductService({ productModel: mockProductModel });
     });
 
     describe('create', () => {
         it('debe procesar la imagen y guardar el producto', async () => {
-            const mockData = { name: 'Mate', price: 100 };
             const mockFile = { buffer: Buffer.from('fake-image') };
+            const mockData = { name: 'Mate', cod_bar: '123' };
             const mockImagePaths = { url_img_original: 'path/orig', url_img_small: 'path/small' };
             const expectedId = 1;
 
             // Configuramos los mocks
             processProductImage.mockResolvedValue(mockImagePaths);
-            mockProductModel.create.mockResolvedValue(expectedId);
+            mockProductModel.findByCodBar.mockResolvedValue(false);
+            mockProductModel.findByName.mockResolvedValue(false);
 
+            mockProductModel.create.mockResolvedValue(expectedId);
             // Ejecutamos
-            const result = await productService.create(mockData, mockFile);
+            const result = await productService.create(mockFile, mockData);
 
             // Verificamos
             expect(processProductImage).toHaveBeenCalledWith(mockFile.buffer, mockData.name);

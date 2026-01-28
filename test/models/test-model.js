@@ -1,5 +1,5 @@
 // test-model.js
-import { ProductModel } from '../src/models/product.js';
+import { ProductModel } from '../../src/models/product.js';
 
 // Instanciamos el modelo
 const productModel = new ProductModel();
