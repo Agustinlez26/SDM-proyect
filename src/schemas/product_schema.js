@@ -16,22 +16,16 @@ const params = z.object({
 }).transform((data) => {
     return {
         search: data.search || null,
-        category: data.category,
+        category: data.category_id,
         state: data.state,
         page: data.page || null,
     }
 })
 
-const id = z.string().transform(val => parseInt(val, 10)).refine(val => !isNaN(val) && val > 0, {
-    message: "El ID debe ser un número positivo"
-});
-
 export function validateParams(input) {
     return params.safeParse(input)
 }
-export function validateId(input) {
-    return id.safeParse(input)
-}
+
 export function validateProduct(input) {
     return productSchema.safeParse(input)
 }
