@@ -1,7 +1,7 @@
 import { Database } from '../config/connection.js'
-import { ProductListDTO } from '../dtos/products/productListDTO.js'
-import { ProductDTO } from '../dtos/products/productDTO.js'
-import { ProductCatalogDTO } from '../dtos/products/productCatalogDTO.js'
+import { ProductListDTO } from '../dtos/products/product_list_DTO.js'
+import { ProductDTO } from '../dtos/products/product_DTO.js'
+import { ProductCatalogDTO } from '../dtos/products/product_catalog_DTO.js'
 
 export class ProductModel {
     #db
@@ -10,10 +10,11 @@ export class ProductModel {
     #fielsToInsert = ['name', 'cod_bar', 'description', 'category_id', 'url_img_original', 'url_img_small', 'is_active']
 
     /**
-     * Inicializa el modelo con una instancia de base de datos.
-     * @param {Database} [dbInstance] - Instancia opcional para inyección de dependencias (Testing).
-     */
-    constructor(db) {
+         * Inicializa el modelo con una instancia de base de datos.
+         * @param {Object} dependencies
+         * @param {Database} [dependencies.db] - Instancia opcional para inyección de dependencias.
+         */
+    constructor({ db }) {
         this.#db = db || Database.getInstance()
     }
 
@@ -64,7 +65,7 @@ export class ProductModel {
             params.push(parseInt(offset))
         }
 
-        const rows = await this.#db.query(sql, params)
+        const [rows] = await this.#db.query(sql, params)
         return rows.map(row => new ProductListDTO(row))
     }
 
@@ -88,11 +89,11 @@ export class ProductModel {
         ON p.category_id = c.id
         WHERE p.id = ? LIMIT 1`
 
-        const rows = await this.#db.query(sql, [id])
+        const [row] = await this.#db.query(sql, [id])
 
-        if (rows.length === 0) return null
+        if (row.length === 0) return null
 
-        return new ProductDTO(rows[0])
+        return new ProductDTO(row[0])
     }
 
     async findByCodBar(cod, excludeId = null) {
@@ -102,7 +103,7 @@ export class ProductModel {
             sql += ' AND id != ?'
             params.push(excludeId)
         }
-        const result = await this.#db.query(sql, params)
+        const [result] = await this.#db.query(sql, params)
         return result.length > 0
     }
 
@@ -113,7 +114,7 @@ export class ProductModel {
             sql += ' AND id != ?'
             params.push(excludeId)
         }
-        const result = await this.#db.query(sql, params)
+        const [result] = await this.#db.query(sql, params)
         return result.length > 0
     }
 
@@ -130,7 +131,7 @@ export class ProductModel {
         const values = this.#fielsToInsert.map(field => productData[field])
 
         const sql = `INSERT INTO ${this.#table} (${columns}) VALUES (${placeholders})`
-        const result = await this.#db.query(sql, values)
+        const [result] = await this.#db.query(sql, values)
         return result.insertId
 
     }
@@ -149,7 +150,7 @@ export class ProductModel {
         const parameters = [...values, id]
 
         const sql = `UPDATE ${this.#table} SET ${setClausule} WHERE id = ?`
-        const result = await this.#db.query(sql, parameters)
+        const [result] = await this.#db.query(sql, parameters)
         return result.affectedRows > 0
 
     }
@@ -164,7 +165,7 @@ export class ProductModel {
      */
     async updateStatus(id, newStatus) {
         const sql = `UPDATE ${this.#table} SET is_active = ? WHERE id = ?`
-        const result = await this.#db.query(sql, [newStatus, id])
+        const [result] = await this.#db.query(sql, [newStatus, id])
         return result.affectedRows > 0
     }
 
@@ -192,7 +193,7 @@ export class ProductModel {
             sql += ')'
         }
 
-        const results = await this.#db.query(sql, params)
+        const [results] = await this.#db.query(sql, params)
         return results.map(row => new ProductCatalogDTO(row))
     }
 }

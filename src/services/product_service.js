@@ -1,13 +1,13 @@
 import { processProductImage, deleteProductImage } from '../utils/image_processor.js'
 import { ValidationError, NotFoundError } from '../utils/errors.js'
 
-/**
- * @param {ProductModel} productModelInstance - Instancia del modelo de productos (Inyección de Dependencias).
- */
 export class ProductService {
-    #PAGE_SIZE
-    constructor(ProductModel) {
-        this.productModel = ProductModel
+    #PAGE_SIZE = 20
+    /**
+     * @param {ProductModel} productModelInstance - Instancia del modelo de productos (Inyección de Dependencias).
+     */
+    constructor({ productModel }) {
+        this.productModel = productModel
     }
 
     /**
@@ -44,12 +44,12 @@ export class ProductService {
         const currentProduct = await this.productModel.findById(id)
         if (!currentProduct) throw new NotFoundError('Producto no encontrado')
 
-        if(data.name && data.name !== currentProduct.name) {
+        if (data.name && data.name !== currentProduct.name) {
             const existsName = await this.productModel.findByName(data.name, id)
             if (existsName) throw new ValidationError('Un producto ya existe con este nombre')
         }
 
-        if(data.cod_bar && data.cod_bar !== currentProduct.cod_bar){
+        if (data.cod_bar && data.cod_bar !== currentProduct.cod_bar) {
             const existsCodBar = await this.productModel.findByCodBar(data.cod_bar, id)
             if (existsCodBar) throw new ValidationError('Un producto ya existe con este codigo de barra')
         }
