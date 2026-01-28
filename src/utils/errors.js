@@ -13,7 +13,6 @@ export class NotFoundError extends AppError{
     }
 }
 
-
 export class ValidationError extends AppError{
     constructor(message = 'Datos invalidos'){
         super(message, 400)
