@@ -1,9 +1,6 @@
 import mysql from 'mysql2/promise'
-import dotenv from 'dotenv'
 
-dotenv.config()
-
-class Database {
+export class Database {
     static #instance = null
     #pool = null
 
@@ -17,7 +14,7 @@ class Database {
             user: process.env.DB_USER,
             password: process.env.DB_PASSWORD,
             database: process.env.DB_NAME,
-            port: process.env.DB_PORT ?? 3306,
+            port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 3306,
             waitForConnections: true,
             connectionLimit: 10
         })
@@ -43,6 +40,4 @@ class Database {
         }
     }
 }
-
-export default Database
 
