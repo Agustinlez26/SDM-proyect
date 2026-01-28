@@ -3,7 +3,7 @@ import fs from 'node:fs/promises'
 import sharp from 'sharp'
 import path from 'node:path'
 import { slugify } from './string_utils.js'
-import { UPLOAD_DIR } from '../config/constants.js'
+import { UPLOAD_DIR, PUBLIC_URL_BASE } from '../config/constants.js'
 
 export const processProductImage = async (fileBuffer, productName) => {
     const rename = slugify(productName)
@@ -27,20 +27,31 @@ export const processProductImage = async (fileBuffer, productName) => {
     ])
 
     return {
-        url_img_original: pathOriginal.replace(/\\/g, '/'),
-        url_img_small: pathSmall.replace(/\\/g, '/')
+        url_img_original: `${PUBLIC_URL_BASE}/${fileName}.webp`,
+        url_img_small: `${PUBLIC_URL_BASE}/${fileName}-small.webp`
     }
 }
 
-export const deleteProductImage = async (pathOriginal, pathSmall) => {
+export const deleteProductImage = async (urlOriginal, urlSmall) => {
     try {
         const deletionPromises = []
 
-        if (pathOriginal) deletionPromises.push(fs.unlink(pathOriginal))
-        if (pathSmall) deletionPromises.push(fs.unlink(pathSmall))
+        if (urlOriginal) {
+            const fileName = path.basename(urlOriginal)
+            const physicalPath = path.join(UPLOAD_DIR, fileName)
+            deletionPromises.push(fs.unlink(physicalPath))
+        }
+
+        if (urlSmall) {
+            const fileName = path.basename(urlSmall)
+            const physicalPath = path.join(UPLOAD_DIR, fileName)
+            deletionPromises.push(fs.unlink(physicalPath))
+        }
 
         await Promise.all(deletionPromises)
     } catch (error) {
-        console.warn(`[ImageProcessor] Advertencia: No se pudo borrar alguna imagen antigua.`, error.message)
+        if (error.code !== 'ENOENT') {
+            console.warn(`[ImageProcessor] Error al borrar imagen:`, error.message)
+        }
     }
 }
