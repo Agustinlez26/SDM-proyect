@@ -132,8 +132,14 @@ export class StockModel {
      * @returns {Promise<boolean>} True si se actualizó, False si no se encontró.
      */
     async update(id, stockData) {
-        const setClausule = this.#fieldsToUpdate.map(field => `${field} = ?`).join(', ')
-        const values = this.#fieldsToUpdate.map(field => stockData[field])
+        const keys = Object.keys(stockData);
+        const allowedKeys = keys.filter(key => this.#fieldsToUpdate.includes(key));
+        if (allowedKeys.length === 0) {
+            return false;
+        }
+
+        const setClausule = allowedKeys.map(key => `${key} = ?`).join(', ')
+        const values = allowedKeys.map(key => stockData[key])
         const parameters = [...values, id]
 
         const sql = `UPDATE ${this.#table} SET ${setClausule} WHERE id = ?`

@@ -7,7 +7,7 @@ export class ProductModel {
     #db
     #table = 'products'
     #table2 = 'product_categories'
-    #fielsToInsert = ['name', 'cod_bar', 'description', 'category_id', 'url_img_original', 'url_img_small', 'is_active']
+    #fieldsToInsert = ['name', 'cod_bar', 'description', 'category_id', 'url_img_original', 'url_img_small', 'is_active']
 
     /**
          * Inicializa el modelo con una instancia de base de datos.
@@ -124,11 +124,11 @@ export class ProductModel {
      * @returns {Promise<number>} ID del nuevo producto insertado.
      */
     async create(productData) {
-        const columns = this.#fielsToInsert.join(', ')
+        const columns = this.#fieldsToInsert.join(', ')
 
-        const placeholders = this.#fielsToInsert.map(() => '?').join(', ')
+        const placeholders = this.#fieldsToInsert.map(() => '?').join(', ')
 
-        const values = this.#fielsToInsert.map(field => productData[field])
+        const values = this.#fieldsToInsert.map(field => productData[field])
 
         const sql = `INSERT INTO ${this.#table} (${columns}) VALUES (${placeholders})`
         const [result] = await this.#db.query(sql, values)
@@ -143,9 +143,13 @@ export class ProductModel {
     * @returns {boolean} True o false si las filas fueron afectadas
     */
     async update(id, productData) {
-        const setClausule = this.#fielsToInsert.map(field => `${field} = ?`).join(', ')
-
-        const values = this.#fielsToInsert.map(field => productData[field])
+        const keys = Object.keys(productData);
+        const allowedKeys = keys.filter(key => this.#fieldsToInsert.includes(key));
+        if (allowedKeys.length === 0) {
+            return false;
+        }
+        const setClausule = allowedKeys.map(key => `${key} = ?`).join(', ')
+        const values = allowedKeys.map(key => productData[key])
 
         const parameters = [...values, id]
 
