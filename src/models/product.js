@@ -133,7 +133,6 @@ export class ProductModel {
         const sql = `INSERT INTO ${this.#table} (${columns}) VALUES (${placeholders})`
         const [result] = await this.#db.query(sql, values)
         return result.insertId
-
     }
 
     /**
