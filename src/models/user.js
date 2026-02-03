@@ -8,7 +8,7 @@ import { randomUUID } from 'node:crypto'
  * Modelo de Usuario.
  * Gestiona la interacción con la tabla 'users' y su relación con 'branches'.
  */
-export class User {
+export class UserModel {
     #db
     #table = 'users'
     #table2 = 'branches'
@@ -19,7 +19,7 @@ export class User {
      * Inicializa el modelo con una instancia de la base de datos.
      * @param {Object} [db] - Instancia opcional de la base de datos (Inyección de dependencias).
      */
-    constructor(db) {
+    constructor({ db }) {
         this.#db = db || Database.getInstance();
     }
 
