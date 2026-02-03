@@ -5,5 +5,5 @@ export const idSchema = z.coerce.number().int().positive({
 });
 
 export function validateId(input) {
-    return id.safeParse(input)
+    return idSchema.safeParse(input)
 }
