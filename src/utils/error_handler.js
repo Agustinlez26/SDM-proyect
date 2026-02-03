@@ -19,6 +19,10 @@ export const handleError = (res, error) => {
         return res.status(404).json({ status: 'error', message: error.message })
     }
 
+    if (error.name === 'AuthenticationError'){
+        return res.status(404).json({ status: 'error', message: error.message })
+    }
+
     console.error("[Critical Error]:", error)
 
     return res.status(500).json({

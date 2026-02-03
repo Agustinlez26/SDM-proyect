@@ -18,3 +18,10 @@ export class ValidationError extends AppError{
         super(message, 400)
     }
 }
+
+export class AuthenticationError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = "AuthenticationError";
+    }
+}
