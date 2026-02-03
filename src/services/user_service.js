@@ -11,7 +11,7 @@ export class UserService {
     /**
      * @param {import('../models/user_model').User} userModel - Instancia del modelo User.
      */
-    constructor(userModel) {
+    constructor({ userModel }) {
         this.userModel = userModel
     }
 
