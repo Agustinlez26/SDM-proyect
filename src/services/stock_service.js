@@ -11,8 +11,9 @@ export class StockService {
      * @param {Object} dependencies
      * @param {import('../models/stock.js').Stock} dependencies.stockModel - Instancia del modelo de Stock.
      */
-    constructor({ stockModel }) {
+    constructor({ stockModel, branchModel }) {
         this.stockModel = stockModel
+        this.branchModel = branchModel
     }
 
     /**
@@ -27,6 +28,8 @@ export class StockService {
      * @throws {ValidationError} Si el producto ya está asignado a la sucursal.
      */
     async create(data) {
+        const validateBranch = await this.branchModel.exists(data.branch_id)
+        if (!validateBranch) throw new ValidationError('esta sucursal no existe')
         const validate = await this.stockModel.findByProductAndBranch(data.product_id, data.branch_id)
         if (validate) throw new ValidationError('El producto ya tiene un registro de stock en esta sucursal')
         const stockToSave = {
@@ -49,9 +52,10 @@ export class StockService {
      */
     async findAll({ page = 1, search, category, branch, lowStock, outStock, }) {
         const limit = this.#PAGE_SIZE
-        const offset = (page - 1) * limit
-        const filters = { category, branch, lowStock, outStock }
-        return await this.stockModel.findAll(search, filters, offset, limit)
+        const pageNumber = Math.max(1, Number(page) || 1)
+        const offset = Math.max(0, (pageNumber - 1) * limit)
+        const filters = { category, branch, lowStock, outStock };
+        return await this.stockModel.findAll({ search, filters, offset, limit })
     }
 
     /**
@@ -66,11 +70,11 @@ export class StockService {
         return stock
     }
 
-        /**
-     * Cuenta cuántos productos tienen stock bajo (menor o igual al mínimo).
-     * * @param {number} [branch_id] - ID opcional de sucursal para filtrar el conteo.
-     * @returns {Promise<Object>} Objeto con el conteo { count: number }.
-     */
+    /**
+ * Cuenta cuántos productos tienen stock bajo (menor o igual al mínimo).
+ * * @param {number} [branch_id] - ID opcional de sucursal para filtrar el conteo.
+ * @returns {Promise<Object>} Objeto con el conteo { count: number }.
+ */
     async lowStock(branch_id) {
         return await this.stockModel.lowStock(branch_id)
     }

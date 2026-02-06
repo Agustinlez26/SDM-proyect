@@ -61,8 +61,14 @@ export class StockController {
             })
         }
 
+        const filters = result.data
+
+        if (!req.user.is_admin) {
+            filters.branch = req.user.branch_id
+        }
+
         try {
-            const stocks = await this.stockService.findAll(result.data)
+            const stocks = await this.stockService.findAll(filters)
             res.json({ status: 'success', data: stocks })
         } catch (error) {
             handleError(res, error)
@@ -83,6 +89,14 @@ export class StockController {
 
         try {
             const stock = await this.stockService.getById(result.data)
+            if (!stock) return res.status(404).json({ message: 'Stock no encontrado' })
+
+            if (!req.user.is_admin && stock.branch_id !== req.user.branch_id) {
+                return res.status(403).json({
+                    status: 'error',
+                    message: 'No tienes permiso para ver el inventario de otra sucursal'
+                })
+            }
             res.json({ status: 'success', data: stock })
         } catch (error) {
             handleError(res, error)
@@ -97,9 +111,8 @@ export class StockController {
      */
     getLowStockCount = async (req, res) => {
         let branch_id = null
-
-        if (req.query.branch_id) {
-            const result = validateId(req.query.branch_id)
+        if (!req.user.is_admin) {
+            const result = validateId(req.user.branch_id)
             if (!result.success) {
                 return res.status(400).json({
                     status: 'error',
@@ -126,9 +139,8 @@ export class StockController {
      */
     getOutStockCount = async (req, res) => {
         let branch_id = null
-
-        if (req.query.branch_id) {
-            const result = validateId(req.query.branch_id)
+        if (!req.user.is_admin) {
+            const result = validateId(req.user.branch_id)
             if (!result.success) {
                 return res.status(400).json({
                     status: 'error',
