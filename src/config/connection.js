@@ -1,4 +1,5 @@
 import mysql from 'mysql2/promise'
+import 'dotenv/config'
 
 export class Database {
     static #instance = null
@@ -32,8 +33,7 @@ export class Database {
 
     async query(sql, params) {
         try {
-            const [results] = await this.#pool.execute(sql,params)
-            return results
+            return await this.#pool.execute(sql,params)
         } catch (e) {
             console.error('Error en la query', e.message)
             throw e
