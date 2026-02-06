@@ -2,6 +2,7 @@ import { Database } from "../config/connection.js";
 import { AuthDTO } from "../dtos/auth/auth_DTO.js";
 import { User_DTO } from "../dtos/users/User_DTO.js";
 import { User_list_DTO } from "../dtos/users/User_list_DTO.js";
+import { User_profile_DTO } from "../dtos/users/User_profile_DTO.js";
 import { randomUUID } from 'node:crypto'
 
 /**
@@ -41,14 +42,14 @@ export class UserModel {
         u.is_admin,
         u.is_active
         FROM ${this.#table} u
-        JOIN ${this.#table2} b
+        LEFT JOIN ${this.#table2} b
         ON u.branch_id = b.id    
         WHERE 1=1`
 
         const params = []
 
         if (search) {
-            sql += ' AND (u.full_name LIKE ? OR u.email LIKE ? OR u.phone LIKE ?)'
+            sql += ' AND (u.full_name LIKE ? OR u.email LIKE ?)'
             params.push(`%${search}%`, `%${search}%`, `%${search}%`)
         }
 
@@ -69,9 +70,30 @@ export class UserModel {
     }
 
     /**
-     * Busca un usuario por su ID.
-     * * @param {number} id - ID del usuario.
-     * @returns {Promise<User_DTO|null>} DTO del usuario o null si no existe.
+         * Obtiene exclusivamente la contraseña encriptada (hash) de un usuario.
+         * Útil para procesos internos de autenticación o validación de cambios de clave
+         * sin exponer otros datos del usuario.
+         * * @param {string} id - El UUID del usuario.
+         * @returns {Promise<User_DTO|null>} Un DTO parcial conteniendo solo la contraseña, o null si no existe.
+         */
+    async findPassById(id) {
+        const sql =
+            `SELECT 
+            password
+        FROM ${this.#table}
+        WHERE id = UUID_TO_BIN(?)`
+
+        const [rows] = await this.#db.query(sql, [id])
+        if (rows.length === 0) return null
+        return rows[0]
+    }
+
+    /**
+     * Busca la información administrativa completa de un usuario por su ID.
+     * Incluye datos sensibles de estado (admin, active) y la relación con su sucursal.
+     * NO incluye la contraseña.
+     * * @param {string} id - El UUID del usuario.
+     * @returns {Promise<User_DTO|null>} DTO con la info completa del usuario o null si no existe.
      */
     async findById(id) {
         const sql =
@@ -83,13 +105,36 @@ export class UserModel {
         u.is_admin,
         u.is_active
         FROM ${this.#table} u
-        JOIN ${this.#table2} b
+        LEFT JOIN ${this.#table2} b
         ON u.branch_id = b.id    
         WHERE u.id = UUID_TO_BIN(?)`
 
         const [rows] = await this.#db.query(sql, [id])
         if (rows.length === 0) return null
         return new User_DTO(rows[0])
+    }
+
+    /**
+     * Obtiene los datos básicos para mostrar en el perfil del usuario.
+     * Filtra información administrativa sensible y devuelve un DTO optimizado para la vista.
+     * * @param {string} id - El UUID del usuario.
+     * @returns {Promise<User_profile_DTO|null>} DTO de perfil o null si no existe.
+     */
+    async findProfile(id) {
+        const sql =
+            `SELECT 
+        BIN_TO_UUID(u.id) as id,
+        u.full_name,
+        u.email,
+        b.name as branch
+        FROM ${this.#table} u
+        LEFT JOIN ${this.#table2} b
+        ON u.branch_id = b.id    
+        WHERE u.id = UUID_TO_BIN(?)`
+
+        const [rows] = await this.#db.query(sql, [id])
+        if (rows.length === 0) return null
+        return new User_profile_DTO(rows[0])
     }
 
     /**
@@ -111,7 +156,7 @@ export class UserModel {
             requires_password_change
             FROM ${this.#table} WHERE email = ? LIMIT 1`
         const [rows] = await this.#db.query(sql, [email])
-        if (rows.length === 0) return null;
+        if (rows.length === 0) return null
         return new AuthDTO(rows[0])
     }
 
@@ -124,7 +169,7 @@ export class UserModel {
         const newId = randomUUID()
         const columns = ['id', ...this.#fieldsToInsert].join(', ');
         const placeholders = ['UUID_TO_BIN(?)', ...this.#fieldsToInsert.map(() => '?')].join(', ')
-        const values = [newId, ...this.#fieldsToInsert.map(field => userData[field])]
+        const values = [newId, ...this.#fieldsToInsert.map(field => userData[field] ?? null)]
         const sql = `INSERT INTO ${this.#table} (${columns}) VALUES (${placeholders})`
         await this.#db.query(sql, values)
         return newId
@@ -145,7 +190,7 @@ export class UserModel {
         }
 
         const setClausule = allowedKeys.map(key => `${key} = ?`).join(', ')
-        const values = allowedKeys.map(key => updateData[key])
+        const values = allowedKeys.map(key => updateData[key] ?? null)
         const parameters = [...values, id]
 
         const sql = `UPDATE ${this.#table} SET ${setClausule} WHERE id = UUID_TO_BIN(?)`
@@ -191,14 +236,17 @@ export class UserModel {
      * @param {boolean} [firstLogin=false] - Indica si es el cambio obligatorio inicial.
      * @returns {Promise<boolean>} True si se actualizó correctamente.
      */
-    async changePassword(id, newPassword, firstLogin = false) {
+    async changePassword(id, newPassword, requireChangeStatus = null) {
         const parameters = [newPassword]
         const setClausule = ['password = ?']
-        if (firstLogin) {
+
+        if (requireChangeStatus !== null) {
             setClausule.push('requires_password_change = ?')
-            parameters.push(0)
+            parameters.push(requireChangeStatus)
         }
+
         parameters.push(id)
+
         const sql = `UPDATE ${this.#table} SET ${setClausule.join(', ')} WHERE id = UUID_TO_BIN(?)`
         const [result] = await this.#db.query(sql, parameters)
         return result.affectedRows > 0

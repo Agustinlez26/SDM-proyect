@@ -9,10 +9,12 @@ import bcrypt from 'bcryptjs';
 export class UserService {
 
     /**
-     * @param {import('../models/user_model').User} userModel - Instancia del modelo User.
+     * @param {import('../models/user.js').User} userModel - Instancia del modelo User.
+     * @param {import('../models/branch.js').Branch} branchModel - Instancia del modelo User.
      */
-    constructor({ userModel }) {
+    constructor({ userModel, branchModel }) {
         this.userModel = userModel
+        this.branchModel = branchModel
     }
 
     /**
@@ -26,8 +28,11 @@ export class UserService {
     async create(data, createdByAdmin = false) {
         const validate = await this.userModel.findByEmail(data.email)
         if (validate) throw new ValidationError('Ya existe un usuario con este email')
+        const existsBranch = await this.branchModel.exists(data.branch_id)
+        if (!existsBranch) throw new ValidationError('No existe esta sucursal')
         const validateBranch = await this.userModel.existsInBranch(data.branch_id)
         if (validateBranch) throw new ValidationError('Ya existe un usuario en esta sucursal')
+
 
         const hashedPassword = await bcrypt.hash(data.password, 10);
 
@@ -72,6 +77,12 @@ export class UserService {
         return user
     }
 
+    async findProfile(id) {
+        const user = await this.userModel.findProfile(id)
+        if (!user) throw new NotFoundError('No existe un usuario con ese Identificador')
+        return user
+    }
+
     /**
      * Actualiza datos del perfil de un usuario.
      * @param {number} id 
@@ -90,31 +101,67 @@ export class UserService {
     }
 
     /**
-     * Gestiona el cambio de contraseña OBLIGATORIO (primer login).
-     * @param {number} id 
-     * @param {string} newPassword - Nueva contraseña en texto plano.
-     * @returns {Promise<boolean>}
-     */
+         *  CAMBIO OBLIGATORIO (First Login)
+         * Se ejecuta cuando el usuario ingresa por primera vez o tras un blanqueo.
+         * * LÓGICA:
+         * - Valida que el usuario exista.
+         * - Hashea la nueva contraseña.
+         * - Actualiza la contraseña y **DESACTIVA (0)** la obligación de cambio.
+         * * @param {string} id - UUID del usuario.
+         * @param {string} newPassword - Nueva contraseña elegida por el usuario.
+         * @returns {Promise<boolean>} True si la actualización fue exitosa.
+         * @throws {NotFoundError} Si el usuario no existe.
+         */
     async firstChangePass(id, newPassword) {
         const validation = await this.userModel.exists(id)
         if (!validation) throw new NotFoundError('No existe un usuario con ese Identificador')
 
         const hashedPassword = await bcrypt.hash(newPassword, 10);
-        return await this.userModel.changePassword(id, hashedPassword, true)
+        return await this.userModel.changePassword(id, hashedPassword, 0)
     }
 
     /**
-     * Gestiona el cambio de contraseña VOLUNTARIO (perfil).
-     * @param {number} id 
-     * @param {string} newPassword - Nueva contraseña en texto plano.
-     * @returns {Promise<boolean>}
+     *  BLANQUEO ADMINISTRATIVO (Admin Reset)
+     * Se ejecuta cuando el Admin restaura la cuenta de un usuario.
+     * * LÓGICA:
+     * - Valida que el usuario exista.
+     * - Hashea la contraseña temporal provista por el Admin.
+     * - Actualiza la contraseña y **ACTIVA (1)** la obligación de cambio.
+     * * @param {string} id - UUID del usuario a resetear.
+     * @param {string} newPassword - Contraseña temporal.
+     * @returns {Promise<boolean>} True si la actualización fue exitosa.
+     * @throws {NotFoundError} Si el usuario no existe.
      */
-    async changePass(id, newPassword) {
+    async resetPass(id, newPassword) {
         const validation = await this.userModel.exists(id)
         if (!validation) throw new NotFoundError('No existe un usuario con ese Identificador')
 
         const hashedPassword = await bcrypt.hash(newPassword, 10);
-        return await this.userModel.changePassword(id, hashedPassword, false)
+        return await this.userModel.changePassword(id, hashedPassword, 1)
+    }
+
+    /**
+         *  CAMBIO VOLUNTARIO (Perfil)
+         * Se ejecuta cuando el usuario decide cambiar su contraseña desde su perfil.
+         * - Busca al usuario por email.
+         * - **SEGURIDAD:** Verifica que la `oldPassword` coincida con la actual.
+         * - Hashea la nueva contraseña.
+         * - Actualiza la contraseña y **MANTIENE DESACTIVADA (0)** la obligación.
+         * * @param {string} email - Email del usuario (extraído del token o sesión).
+         * @param {string} oldpassword - Contraseña actual para validar identidad.
+         * @param {string} newPassword - Nueva contraseña deseada.
+         * @returns {Promise<boolean>} True si la actualización fue exitosa.
+         * @throws {NotFoundError} Si el usuario no existe.
+         * @throws {ValidationError} Si la contraseña actual es incorrecta.
+         */
+    async changePass(id, oldpassword, newPassword) {
+        const validation = await this.userModel.findPassById(id)
+        if (!validation) throw new NotFoundError('No existe un usuario con ese Identificador')
+        const passValid = await bcrypt.compare(oldpassword, validation.password)
+        if (!passValid) throw new ValidationError('La contraseña vieja no es igual a la del usuario')
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        return await this.userModel.changePassword(id, hashedPassword, 0)
     }
 
     /**
