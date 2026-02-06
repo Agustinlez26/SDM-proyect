@@ -31,7 +31,7 @@ export class StockModel {
          * @param {number|null} [params.limit] - Límite de registros.
          * @returns {Promise<Stock_list_DTO[]>} Lista de stocks formateada.
          */
-    async findAll({ search = null, filters = {}, offset = null, limit = null }) {
+    async findAll({ search = null, filters = {}, offset = null, limit = null } = {}) {
         let sql = `SELECT
         s.id,
         p.name,
@@ -71,11 +71,14 @@ export class StockModel {
 
         sql += ' ORDER BY s.id DESC'
 
-        if (limit && offset !== null) {
-            sql += ' LIMIT ? OFFSET ?'
-            params.push(parseInt(limit))
-            params.push(parseInt(offset))
+        if (Number.isFinite(limit) && Number.isFinite(offset) && offset >= 0) {
+            sql += ` LIMIT ${limit} OFFSET ${offset}`
         }
+
+        console.log('--- DEBUG QUERY ---');
+        console.log('SQL:', sql);
+        console.log('PARAMS:', params);
+        console.log('-------------------');
 
         const [rows] = await this.#db.query(sql, params)
         return rows.map(row => new Stock_list_DTO(row))

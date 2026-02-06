@@ -59,10 +59,8 @@ export class ProductModel {
 
         sql += ' ORDER BY p.id DESC'
 
-        if (limit && offset !== null) {
-            sql += ' LIMIT ? OFFSET ?'
-            params.push(parseInt(limit))
-            params.push(parseInt(offset))
+        if (Number.isFinite(limit) && Number.isFinite(offset) && offset >= 0) {
+            sql += ` LIMIT ${limit} OFFSET ${offset}`
         }
 
         const [rows] = await this.#db.query(sql, params)
