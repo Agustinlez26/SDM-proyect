@@ -1,4 +1,5 @@
-import { validateId, validateParams, validatePartialProduct, validateProduct } from '../schemas/product_schema.js'
+import { validateParams, validatePartialProduct, validateProduct } from '../schemas/product_schema.js'
+import { validateId } from '../schemas/shared_schema.js'
 import { handleError } from '../utils/error_handler.js'
 /**
  * Controlador para la gestión de Productos.
@@ -81,7 +82,13 @@ export class ProductController {
      */
     getById = async (req, res) => {
         const result = validateId(req.params.id)
-        if (!result.success) return res.status(400).json({ status: 'error', message: 'ID invalido' })
+        if (!result.success) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'ID invalido',
+                errors: result.error.errors
+            })
+        }
 
         try {
             const product = await this.productService.findById(result.data)
@@ -124,7 +131,8 @@ export class ProductController {
         if (!idResult.success) {
             return res.status(400).json({
                 status: 'error',
-                message: 'el ID es invalido'
+                message: 'el ID es invalido',
+                errors: idResult.error.errors
             })
         }
 

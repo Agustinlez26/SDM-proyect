@@ -79,7 +79,8 @@ export class ProductService {
      */
     async findAll({ page = 1, search, category, state }) {
         const limit = this.#PAGE_SIZE
-        const offset = (page - 1) * limit
+        const pageNumber = Math.max(1, Number(page) || 1)
+        const offset = Math.max(0, (pageNumber - 1) * limit)
         const filters = { category, state }
         return await this.productModel.findAll({ search, filters, offset, limit })
     }
