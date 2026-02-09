@@ -168,7 +168,12 @@ export class StockModel {
          * @returns {Promise<Object|undefined>} Objeto { id } o undefined.
          */
     async findByProductAndBranch(productId, branchId) {
-        const sql = `SELECT id FROM ${this.#table} WHERE product_id = ? AND branch_id = ?`
+        const sql = `SELECT 
+            s.quantity, 
+            p.name as product_name
+            FROM ${this.#table} s
+            JOIN products p ON s.product_id = p.id
+            WHERE s.product_id = ? AND s.branch_id = ?`
         const [rows] = await this.#db.query(sql, [productId, branchId])
         return rows[0]
     }
