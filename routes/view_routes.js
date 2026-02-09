@@ -1,6 +1,6 @@
 // src/routes/views_routes.js
 import { Router } from 'express'
-import { ViewsController } from '../src/controllers/views_controller.js'
+import { ViewsController } from '../src/controllers/view_controller.js'
 
 const router = Router()
 const viewsController = new ViewsController()
