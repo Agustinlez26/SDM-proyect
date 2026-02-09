@@ -25,7 +25,7 @@ export class Database {
     }
 
     static getInstance() {
-        if(!Database.#instance) {
+        if (!Database.#instance) {
             new Database()
         }
         return Database.#instance
@@ -33,11 +33,15 @@ export class Database {
 
     async query(sql, params) {
         try {
-            return await this.#pool.execute(sql,params)
+            return await this.#pool.execute(sql, params)
         } catch (e) {
             console.error('Error en la query', e.message)
             throw e
         }
+    }
+
+    async getConnection() {
+        return await this.#pool.getConnection()
     }
 }
 
