@@ -1,15 +1,5 @@
 import z from 'zod';
 
-/**
- * =========================================================================
- * SCHEMAS DE VALIDACIÓN - ZOD (Sin Phone)
- * =========================================================================
- */
-
-// -------------------------------------------------------------------------
-// 1. REGLAS ATÓMICAS
-// -------------------------------------------------------------------------
-
 const userIdRule = z.string().uuid({ message: "ID inválido (Debe ser formato UUID)" });
 
 const passwordRule = z.string()
@@ -19,10 +9,6 @@ const passwordRule = z.string()
 const confirmPasswordRule = z.string()
     .min(6, { message: "La confirmación debe tener al menos 6 caracteres" });
 
-// -------------------------------------------------------------------------
-// 2. SCHEMA BASE (LA ESTRUCTURA PURA)
-// -------------------------------------------------------------------------
-// Eliminado el campo 'phone'.
 const baseUserSchema = z.object({
     full_name: z.string()
         .min(2, { message: "El nombre es muy corto" })

@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { idSchema } from './shared_schema.js'
+import { pageSchema } from './shared_schema.js'
 
 const stock_schema = z.object({
     product_id: idSchema,
@@ -19,7 +20,7 @@ const params = z.object({
     branch_id: z.coerce.number().int().positive().optional(),
     low_stock: z.string().transform(val => val === 'true').optional(),
     out_stock: z.string().transform(val => val === 'true').optional(),
-    page: z.coerce.number().int().min(1).optional().default(1)
+    page: pageSchema
 }).transform((data) => {
     return {
         search: data.search,

@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { pageSchema } from './shared_schema'
 
 const productSchema = z.object({
     name: z.string().min(3, 'El nombre debe ser mayor a 3 digitos').max(100),
@@ -12,7 +13,7 @@ const params = z.object({
     search: z.string().optional(),
     category_id: z.coerce.number().int().positive().optional(),
     state: z.string().transform(val => val === 'true').optional(),
-    page: z.coerce.number().int().min(1).optional().default(1),
+    page: pageSchema
 }).transform((data) => {
     return {
         search: data.search || null,
