@@ -1,5 +1,5 @@
 import z from 'zod'
-import { pageSchema } from './shared_schema'
+import { pageSchema } from './shared_schema.js'
 
 const MOVEMENT_TYPES = ['ingreso', 'egreso', 'envio']
 const STATUS_TYPES = ['pendiente', 'en_progreso', 'entregado']
@@ -55,10 +55,12 @@ const movementSchema = z.object({
 
 const params = z.object({
     search: z.string().optional(),
-    type: z.coerce.number().int().positive().optional(),
+    type: z.enum(MOVEMENT_TYPES),
     origin: z.coerce.number().int().positive().optional(),
     destination: z.coerce.number().int().positive().optional(),
     user: z.string().uuid().optional(),
+    date_start: z.coerce.date().optional(),
+    date_end: z.coerce.date().optional(),
     page: pageSchema
 })
 
@@ -69,14 +71,14 @@ const movementDetailSchema = z.object({
 }
 )
 
-export function validateMovement(input){
+export function validateMovement(input) {
     return movementSchema.safeParse(input)
 }
 
-export function validateDetailMovement(input){
+export function validateDetailMovement(input) {
     return movementDetailSchema.safeParse(input)
 }
 
-export function validateParams(input){
+export function validateParams(input) {
     return params.safeParse(input)
 }

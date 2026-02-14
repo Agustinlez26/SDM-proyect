@@ -1,6 +1,5 @@
 import { z } from 'zod'
-import { idSchema } from './shared_schema.js'
-import { pageSchema } from './shared_schema.js'
+import { idSchema ,pageSchema } from './shared_schema.js'
 
 const stock_schema = z.object({
     product_id: idSchema,

@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-const idSchema = z.coerce.number().int().positive({
+export const idSchema = z.coerce.number().int().positive({
     message: "El ID debe ser un número positivo"
 })
 
