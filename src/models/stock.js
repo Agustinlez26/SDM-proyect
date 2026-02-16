@@ -75,11 +75,6 @@ export class StockModel {
             sql += ` LIMIT ${limit} OFFSET ${offset}`
         }
 
-        console.log('--- DEBUG QUERY ---');
-        console.log('SQL:', sql);
-        console.log('PARAMS:', params);
-        console.log('-------------------');
-
         const [rows] = await this.#db.query(sql, params)
         return rows.map(row => new Stock_list_DTO(row))
     }

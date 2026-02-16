@@ -1,6 +1,8 @@
-import { Database } from "../config/connection"
-import { MovementDetailsDTO } from "../dtos/movements/movement_details_DTO"
-import { MovementDTO } from "../dtos/movements/movements_DTO"
+import { Database } from "../config/connection.js"
+import { MovementDetailsDTO } from "../dtos/movements/movement_details_DTO.js"
+import { MovementRecentsDTO } from "../dtos/movements/movement_recents_DTO.js"
+import { MovementDTO } from "../dtos/movements/movements_DTO.js"
+import { ShipmentsDTO } from "../dtos/movements/shipments_DTO.js"
 
 /**
  * Modelo de Movimientos (MovementsModel).
@@ -10,11 +12,12 @@ import { MovementDTO } from "../dtos/movements/movements_DTO"
  * 2. EGRESO: Venta a cliente (Resta stock directo).
  * 3. ENVIO: Traslado entre sucursales (Flujo secuencial: Pendiente -> En Proceso -> Entregado).
  */
-export class MovementsModel {
+export class MovementModel {
     #db
     #table = 'movements'
     #tableDetails = 'movement_details'
     #tableStock = 'product_branch_stock'
+    #tableBranches = 'branches'
 
     constructor({ db }) {
         this.#db = db || Database.getInstance
@@ -83,8 +86,18 @@ export class MovementsModel {
             params.push(filters.destination_branch_id)
         }
 
+        if (filters.date_start) {
+            sql += ' AND m.date >= ?'
+            params.push(filters.date_start)
+        }
+
+        if (filters.date_end) {
+            sql += ' AND m.date <= ?'
+            params.push(filters.date_end)
+        }
+
         if (filters.user_id) {
-            sql += ' AND m.user_id = ?'
+            sql += ' AND m.user_id = UUID_TO_BIN(?)'
             params.push(filters.user_id)
         }
 
@@ -157,7 +170,30 @@ export class MovementsModel {
             WHERE md.movement_id = ?
         `
         const [rows] = await this.#db.query(sql, [movementId])
-        return rows.map(r => new MovementDetailsDTO(r))
+        return rows.map(row => new MovementDetailsDTO(row))
+    }
+
+    async findShipmentsInProcess(branch_id = null) {
+        let sql = `
+            SELECT
+                m.id
+                m.status,
+                m.receipt_number,
+                b.name as branch
+                m.date
+            FROM ${this.#table} m
+            JOIN ${this.#tableBranches} b ON m.destination_branch_id = b.id
+            WHERE m.type = 'envio'
+        `
+
+        const params = []
+
+        if (branch_id) {
+            sql += ' AND m.destination_branch_id = ?'
+            params.push(branch_id)
+        }
+        const [rows] = await this.#db.query(sql, params)
+        return rows.map(row => new ShipmentsDTO(row))
     }
 
     /**
@@ -183,7 +219,7 @@ export class MovementsModel {
         sql += ' ORDER BY m.created_at DESC LIMIT 5'
 
         const [rows] = await this.#db.query(sql, params)
-        return rows
+        return rows.map(row => new MovementRecentsDTO)
     }
 
     /**
@@ -204,10 +240,10 @@ export class MovementsModel {
             const sqlHeader = `
                 INSERT INTO ${this.#table} 
                 (receipt_number, type, date, user_id, origin_branch_id, destination_branch_id, status) 
-                VALUES (?, ?, ?, UUID_TO_BIN(?), ?, ?, ?)
+                VALUES (?, ?, NOW(), UUID_TO_BIN(?), ?, ?, ?)
             `
             const [resultHeader] = await connection.query(sqlHeader, [
-                data.receipt_number, data.type, data.date, data.user_id,
+                data.receipt_number, data.type, data.user_id,
                 data.origin_branch_id, data.destination_branch_id, data.status
             ])
             const movementId = resultHeader.insertId
@@ -289,7 +325,7 @@ export class MovementsModel {
             }
 
             await connection.query(
-                `UPDATE ${this.#table} SET status = 'en_proceso' WHERE id = ?`,
+                `UPDATE ${this.#table} SET status = 'en_proceso', set date = NOW() WHERE id = ?`,
                 [movementId]
             )
 
@@ -347,5 +383,9 @@ export class MovementsModel {
         } finally {
             connection.release()
         }
+    }
+
+    async shipmentsPendings(branchID = null) {
+
     }
 }
