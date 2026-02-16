@@ -8,6 +8,7 @@ router.get('/', checkAuth, (req, res) => movementController.getAll(req, res))
 router.get('/:id', checkAuth, (req, res) => movementController.getById(req, res))
 router.get('/details/:id', checkAuth, (req, res) => movementController.getDetails(req, res))
 router.get('/recent', checkAuth, (req, res) => movementController.getRecent(req, res))
+router.get('/shipments', checkAuth, (req, res) => movementController.getRecent(req, res))
 
 router.post('/', checkAuth, (req, res) => movementController.getById(req, res))
 router.post('/chageStatus/:id', checkAuth, (req, res) => movementController.getById(req, res))

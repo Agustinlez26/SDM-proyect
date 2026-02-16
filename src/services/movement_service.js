@@ -17,7 +17,7 @@ export class MovementService {
 
     /**
          * Busca movimientos aplicando filtros y paginación matemática.
-         * * @param {string} search - Término de búsqueda (por comprobante).
+         * @param {string} search - Término de búsqueda (por comprobante).
          * @param {string} type - Tipo de movimiento (ingreso, egreso, envio).
          * @param {number} origin - ID sucursal origen.
          * @param {number} destination - ID sucursal destino.
@@ -25,7 +25,7 @@ export class MovementService {
          * @param {number} page - Número de página actual (default 1).
          * @returns {Promise<Object[]>} Lista de movimientos.
          */
-    async findAll(search, type, origin, destination, user, page) {
+    async findAll({ search, type, origin, destination, user, date_start, date_end, page }) {
         const limit = this.#PAGE_SIZE
         const pageNumber = Math.max(1, Number(page) || 1)
         const offset = Math.max(0, (pageNumber - 1) * limit)
@@ -33,6 +33,8 @@ export class MovementService {
             type,
             origin_branch_id: origin,
             destination_branch_id: destination,
+            date_start,
+            date_end,
             user_id: user
         }
         return await this.movementModel.findAll({ search, filters, offset, limit })
@@ -68,6 +70,18 @@ export class MovementService {
      */
     async findRecent(branch_id = null) {
         return await this.movementModel.findRecent(branch_id)
+    }
+
+    /**
+     * Obtiene los envios en estado de "en proceso"
+     * * @param {number|null} branch_id - Filtra por sucursal del usuario en caso de no ser admin (decido en el controller)
+     */
+    async findShipmentsInProcess(branchId = null) {
+        if (branchId) {
+            const shipments = await this.movementModel.findShipmentsInProcess(branchId)
+            return shipments.map(row => row.branch = 'Producción')
+        }
+        return await this.movementModel.findShipmentsInProcess()
     }
 
     /**

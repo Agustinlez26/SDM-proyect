@@ -1,4 +1,4 @@
-import { validateMovement, validateDetailMovement, validateParams } from "../schemas/movement_schema"
+import { validateMovement, validateDetailMovement, validateParams } from "../schemas/movement_schema.js"
 import { validateId } from "../schemas/shared_schema.js"
 import { handleError } from "../utils/error_handler.js"
 
@@ -119,6 +119,19 @@ export class MovementController {
 
         try {
             const recentMovements = await this.movementService.findRecent(branch_id)
+            res.json({ status: 'success', data: recentMovements })
+        } catch (error) {
+            handleError(res, error)
+        }
+    }
+
+    getShipmentsInProcess = async (req, res) => {
+        if (!req.user.is_admin) {
+            branch_id = req.user.branch_id
+        }
+
+        try {
+            const recentMovements = await this.movementService.findShipmentsInProcess(branch_id)
             res.json({ status: 'success', data: recentMovements })
         } catch (error) {
             handleError(res, error)
