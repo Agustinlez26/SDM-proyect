@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+export const dateValidation = z.coerce.date()
+
 export const idSchema = z.coerce.number().int().positive({
     message: "El ID debe ser un número positivo"
 })
@@ -10,4 +12,8 @@ export const pageSchema = z.coerce.number().int().min(1).positive({
 
 export function validateId(input) {
     return idSchema.safeParse(input)
+}
+
+export function validateDate(input) {
+    return dateValidation.safeParse(input)
 }

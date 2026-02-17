@@ -1,5 +1,5 @@
 import z from 'zod'
-import { pageSchema } from './shared_schema.js'
+import { pageSchema, dateValidation } from './shared_schema.js'
 
 const MOVEMENT_TYPES = ['ingreso', 'egreso', 'envio']
 const STATUS_TYPES = ['pendiente', 'en_progreso', 'entregado']
@@ -59,8 +59,8 @@ const params = z.object({
     origin: z.coerce.number().int().positive().optional(),
     destination: z.coerce.number().int().positive().optional(),
     user: z.string().uuid().optional(),
-    date_start: z.coerce.date().optional(),
-    date_end: z.coerce.date().optional(),
+    date_start: dateValidation.optional(),
+    date_end: dateValidation.optional(),
     page: pageSchema
 })
 

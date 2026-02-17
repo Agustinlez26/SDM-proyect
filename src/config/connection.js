@@ -44,4 +44,3 @@ export class Database {
         return await this.#pool.getConnection()
     }
 }
-
