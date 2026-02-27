@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<%- include('../partials/head', { title: 'Mi Perfil' , cssFile: 'my_profile.css' }) %>
+
+    <body>
+        <div class="layout">
+
+            <%- include('../partials/sidebar', { activePage: 'profile' }) %>
+
+                <main class="layout__content">
+
+                    <%- include('../partials/navbar', { title: 'Mi Perfil' }) %>
+                        <script src="/js/profile.js" defer></script>
+                        <div class="main-container profile-container">
+                            <div class="profile-card">
+
+                                <div class="profile-header" style="justify-content: space-between;">
+                                    <div style="display: flex; align-items: center; gap: 1.5rem;">
+                                        <div class="profile-avatar" id="profile-avatar">
+                                            <span class="material-symbols-outlined"
+                                                style="font-size: 40px;">person</span>
+                                        </div>
+                                        <div class="profile-titles">
+                                            <h2 id="profile-name">Cargando...</h2>
+                                            <p id="profile-role" class="text-muted">Obteniendo datos</p>
+                                        </div>
+                                    </div>
+                                    <button class="btn-secondary" onclick="openEditProfileModal()"
+                                        style="border-radius: 50%; width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center;"
+                                        title="Editar Perfil">
+                                        <span class="material-symbols-outlined">edit</span>
+                                    </button>
+                                </div>
+
+                                <hr class="divider">
+
+                                <div class="profile-body">
+                                    <div class="form-group">
+                                        <label>Nombre Completo</label>
+                                        <input type="text" id="input-name" readonly class="readonly-input">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Correo Electrónico</label>
+                                        <input type="email" id="input-email" readonly class="readonly-input">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Sucursal Asignada</label>
+                                        <div class="input-with-icon">
+                                            <span class="material-symbols-outlined">store</span>
+                                            <input type="text" id="input-branch" readonly class="readonly-input">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <hr class="divider">
+
+                                <div class="profile-security">
+                                    <div>
+                                        <h3>Seguridad de la cuenta</h3>
+                                        <p class="text-muted" style="font-size: 0.85rem; margin-top: 0.25rem;">
+                                            Usa una contraseña segura que no uses en otros sitios.
+                                        </p>
+                                    </div>
+                                    <button class="btn-primary" onclick="openPasswordModal()">
+                                        <span class="material-symbols-outlined">lock</span> Cambiar Contraseña
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-overlay" id="modal-edit-profile">
+                            <div class="modal-card" style="max-width: 450px;">
+                                <header class="modal-header">
+                                    <h3>Editar Perfil</h3>
+                                    <button class="btn-close-modal" onclick="closeEditProfileModal()">
+                                        <span class="material-symbols-outlined">close</span>
+                                    </button>
+                                </header>
+
+                                <form class="modal-form" id="form-edit-profile">
+                                    <input type="hidden" id="edit-user-id">
+
+                                    <div class="form-group">
+                                        <label>Nombre Completo</label>
+                                        <input type="text" id="edit-full-name" name="full_name" required minlength="2"
+                                            maxlength="100">
+                                    </div>
+
+                                    <div class="form-group" style="margin-top: 1rem;">
+                                        <label>Correo Electrónico</label>
+                                        <input type="email" id="edit-email" name="email" required>
+                                    </div>
+
+                                    <p class="text-muted" style="font-size: 0.8rem; margin-top: 1rem;">
+                                        * Para cambiar tu sucursal o permisos, contacta a un administrador.
+                                    </p>
+
+                                    <div class="modal-actions">
+                                        <button type="button" class="btn-cancel"
+                                            onclick="closeEditProfileModal()">Cancelar</button>
+                                        <button type="submit" class="btn-confirm" id="btn-submit-profile">Guardar
+                                            Cambios</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="modal-overlay" id="modal-change-password">
+                            <div class="modal-card" style="max-width: 450px;">
+                                <header class="modal-header">
+                                    <h3>Cambiar Contraseña</h3>
+                                    <button class="btn-close-modal" id="btn-close-pwd">
+                                        <span class="material-symbols-outlined">close</span>
+                                    </button>
+                                </header>
+
+                                <form class="modal-form" id="form-change-password">
+                                    <div class="form-group">
+                                        <label>Contraseña Actual</label>
+                                        <input type="password" id="pwd-old" name="old_password" required
+                                            placeholder="Ingresa tu contraseña actual">
+                                    </div>
+
+                                    <div class="form-group" style="margin-top: 1rem;">
+                                        <label>Nueva Contraseña</label>
+                                        <input type="password" id="pwd-new" name="password" required
+                                            placeholder="Mínimo 6 caracteres" minlength="6">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Confirmar Nueva Contraseña</label>
+                                        <input type="password" id="pwd-confirm" name="confirm_password" required
+                                            placeholder="Repite la nueva contraseña" minlength="6">
+                                        <span id="pwd-error-msg"
+                                            style="color: #ef4444; font-size: 0.8rem; display: none; margin-top: 0.4rem;">Las
+                                            contraseñas no coinciden.</span>
+                                    </div>
+
+                                    <div class="modal-actions">
+                                        <button type="button" class="btn-cancel" id="btn-cancel-pwd">Cancelar</button>
+                                        <button type="submit" class="btn-confirm" id="btn-submit-pwd">Guardar
+                                            Cambios</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                </main>
+
+        </div>
+    </body>
+
+</html>
