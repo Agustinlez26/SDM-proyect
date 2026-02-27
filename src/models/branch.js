@@ -1,5 +1,6 @@
 import { Database } from "../config/connection.js"
 import { BranchDTO } from "../dtos/branches/branch_DTO.js"
+import { BranchListDTO } from "../dtos/branches/branch_list_DTO.js"
 import { BranchTypeDTO } from "../dtos/branches/branch_type_DTO.js"
 import { CityDTO } from "../dtos/city/city_DTO.js"
 import { ProvinceDTO } from "../dtos/province/province_DTO.js"
@@ -92,6 +93,12 @@ export class BranchModel {
 
         const [rows] = await this.#db.query(sql, [id])
         return new BranchDTO(rows[0])
+    }
+
+    async getCatalog() {
+        const sql = `SELECT id, name FROM ${this.#table} WHERE is_active != 0 AND id != 1 ORDER BY name ASC`
+        const [rows] = await this.#db.query(sql)
+        return rows.map(row => new BranchListDTO(row))
     }
 
     /**

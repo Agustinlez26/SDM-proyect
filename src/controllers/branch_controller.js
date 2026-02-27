@@ -65,6 +65,20 @@ export class BranchController {
     }
 
     /**
+     * Obtiene el catálogo de sucursales activas (id y name) para llenar selectores en el frontend.
+     * * @param {import('express').Request} req 
+     * @param {import('express').Response} res
+     */
+    getCatalog = async (req, res) => {
+        try {
+            const catalog = await this.branchService.getCatalog()
+            res.json({ status: 'success', data: catalog })
+        } catch (error) {
+            handleError(res, error)
+        }
+    }
+
+    /**
      * Obtiene una sucursal específica por su ID.
      * * @param {import('express').Request} req - Params: { id }
      * @param {import('express').Response} res
@@ -76,6 +90,21 @@ export class BranchController {
         try {
             const branch = await this.branchService.getById(result.data)
             res.json({ status: 'success', data: branch })
+        } catch (error) {
+            handleError(res, error)
+        }
+    }
+
+    /**
+     * Obtiene los tipos de sucursales disponibles.
+     * Útil para llenar selectores en el frontend con opciones de tipo de sucursal.
+     * * @param {import('express').Request} req 
+     * @param {import('express').Response} res 
+     */
+    getTypes = async (req, res) => {
+        try {
+            const types = await this.branchService.getTypes()
+            res.json({ status: 'success', data: types })
         } catch (error) {
             handleError(res, error)
         }
@@ -167,7 +196,7 @@ export class BranchController {
      * @param {import('express').Response} res
      */
     getCities = async (req, res) => {
-        const { province_id } = req.body
+        const { province_id } = req.query
 
         const result = validateId(province_id)
         if (!result.success) {

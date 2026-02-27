@@ -39,6 +39,10 @@ export class BranchService {
         return await this.branchModel.getAll(filters)
     }
 
+    async getCatalog() {
+        return await this.branchModel.getCatalog()
+    }
+
     /**
      * Busca una sucursal por ID.
      * * @param {number|string} id - ID de la sucursal.
@@ -51,6 +55,14 @@ export class BranchService {
             throw new NotFoundError('La sucursal solicitada no existe')
         }
         return branch
+    }
+
+    /**
+     * Obtiene el listado de tipos de sucursal.
+     * @returns {Promise<Array>} Lista de tipos de sucursal.
+     */ 
+    async getTypes() {
+        return await this.branchModel.getTypes()
     }
 
     /**

@@ -4,7 +4,12 @@ import { checkAuth, isAdmin } from '../src/middlewares/auth_middleware.js'
 
 const router = Router()
 
+router.get('/cities', checkAuth, (req, res) => branchController.getCities(req, res))
+router.get('/provinces', checkAuth, (req, res) => branchController.getProvinces(req, res))
+
 router.get('/', checkAuth, isAdmin, (req, res) => branchController.getAll(req, res))
+router.get('/catalog', checkAuth, (req, res) => branchController.getCatalog(req, res))
+router.get('/types', checkAuth, (req, res) => branchController.getTypes(req, res))
 router.get('/:id', checkAuth, isAdmin, (req, res) => branchController.getById(req, res))
 
 router.post('/', checkAuth, isAdmin, (req, res) => branchController.create(req, res))

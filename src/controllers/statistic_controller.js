@@ -1,5 +1,5 @@
 import { handleError } from "../utils/error_handler.js"
-import { validateDate, validateId } from "../schemas/shared_schema.js"
+import { validateYear, validateId } from "../schemas/shared_schema.js"
 
 /**
  * @class StatisticController
@@ -37,17 +37,17 @@ export class StatisticController {
      * @returns {Promise<Object>} JSON con el historial de egresos.
      */
     getMonthlyEgresses = async (req, res) => {
-        const dateValidation = validateDate(req.query)
-        if (!dateValidation.success) {
+        const yearValidation = validateYear(req.query)
+        if (!yearValidation.success) {
             return res.status(400).json({
                 status: 'error',
-                message: 'La fecha es invalida',
-                error: dateValidation.error.errors
+                message: 'El año es inválido',
+                error: yearValidation.error.errors
             })
         }
 
         try {
-            const monthlyEgresses = await this.statisticService.getMonthlyEgresses(dateValidation)
+            const monthlyEgresses = await this.statisticService.getMonthlyEgresses(yearValidation.data.year)
             return res.json({ status: 'success', data: monthlyEgresses })
         } catch (error) {
             handleError(res, error)
@@ -61,17 +61,17 @@ export class StatisticController {
      * @returns {Promise<Object>} JSON con el historial de rendimiento por sucursal.
      */
     getBranchPerformanceByMonth = async (req, res) => {
-        const dateValidation = validateDate(req.query)
-        if (!dateValidation.success) {
+        const yearValidation = validateYear(req.query)
+        if (!yearValidation.success) {
             return res.status(400).json({
                 status: 'error',
-                message: 'La fecha es invalida',
-                error: dateValidation.error.errors
+                message: 'El año es inválido',
+                error: yearValidation.error.errors
             })
         }
 
         try {
-            const branchPerformance = await this.statisticService.getBranchPerformanceByMonth(dateValidation)
+            const branchPerformance = await this.statisticService.getBranchPerformanceByMonth(yearValidation.data.year)
             return res.json({ status: 'success', data: branchPerformance })
         } catch (error) {
             handleError(res, error)
@@ -86,26 +86,26 @@ export class StatisticController {
      * @returns {Promise<Object>} JSON con la estacionalidad del producto.
      */
     getProductSeasonality = async (req, res) => {
-        const dateValidation = validateDate(req.query.date)
-        if (!dateValidation.success) {
+        const yearValidation = validateYear(req.query)
+        if (!yearValidation.success) {
             return res.status(400).json({
                 status: 'error',
-                message: 'La fecha es invalida',
-                error: dateValidation.error.errors
+                message: 'El año es inválido',
+                error: yearValidation.error.errors
             })
         }
 
-        const idValidation = validateId(req.query.productId)
+        const idValidation = validateId(req.params.id)
         if (!idValidation.success) {
             return res.status(400).json({
                 status: 'error',
-                message: 'El id del producto es invalido',
+                message: 'El id del producto es inválido',
                 error: idValidation.error.errors
             })
         }
 
         try {
-            const productSeasonality = await this.statisticService.getProductSeasonality(idValidation.data, dateValidation.data)
+            const productSeasonality = await this.statisticService.getProductSeasonality(idValidation.data, yearValidation.data.year)
             return res.json({ status: 'success', data: productSeasonality })
         } catch (error) {
             handleError(res, error)
@@ -127,26 +127,6 @@ export class StatisticController {
         try {
             const comparationEgresses = await this.statisticService.getComparationEgresses(branchId)
             return res.json({ status: 'success', data: comparationEgresses })
-        } catch (error) {
-            handleError(res, error)
-        }
-    }
-
-    /**
-     * Responde con la cantidad de productos en estado de stock crítico.
-     * @param {Object} req - Objeto de solicitud de Express.
-     * @param {Object} res - Objeto de respuesta de Express.
-     * @returns {Promise<Object>} JSON con el conteo de stock crítico.
-     */
-    getCriticalStockCount = async (req, res) => {
-        let branchId = null
-        if (!req.user.is_admin) {
-            branchId = req.user.branch_id
-        }
-
-        try {
-            const criticalStockCount = await this.statisticService.getCriticalStockCount(branchId)
-            return res.json({ status: 'success', data: criticalStockCount })
         } catch (error) {
             handleError(res, error)
         }
