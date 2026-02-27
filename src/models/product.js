@@ -2,6 +2,7 @@ import { Database } from '../config/connection.js'
 import { ProductListDTO } from '../dtos/products/product_list_DTO.js'
 import { ProductDTO } from '../dtos/products/product_DTO.js'
 import { ProductCatalogDTO } from '../dtos/products/product_catalog_DTO.js'
+import { CategoryDTO } from '../dtos/products/category_DTO.js'
 
 export class ProductModel {
     #db
@@ -53,8 +54,10 @@ export class ProductModel {
         }
 
         if (filters.state !== undefined) {
+            // Convertir boolean a 0/1 para MySQL
+            const stateValue = filters.state ? 1 : 0
             sql += ' AND p.is_active = ?'
-            params.push(filters.state)
+            params.push(stateValue)
         }
 
         sql += ' ORDER BY p.id DESC'
@@ -101,8 +104,8 @@ export class ProductModel {
             sql += ' AND id != ?'
             params.push(excludeId)
         }
-        const [result] = await this.#db.query(sql, params)
-        return result.length > 0
+        const [rows] = await this.#db.query(sql, params)
+        return rows.length > 0
     }
 
     async findByName(name, excludeId = null) {
@@ -112,8 +115,8 @@ export class ProductModel {
             sql += ' AND id != ?'
             params.push(excludeId)
         }
-        const [result] = await this.#db.query(sql, params)
-        return result.length > 0
+        const [rows] = await this.#db.query(sql, params)
+        return rows.length > 0
     }
 
     /**
@@ -126,7 +129,14 @@ export class ProductModel {
 
         const placeholders = this.#fieldsToInsert.map(() => '?').join(', ')
 
-        const values = this.#fieldsToInsert.map(field => productData[field])
+        const values = this.#fieldsToInsert.map(field => {
+            const value = productData[field];
+            // Convertir boolean a 0/1 para MySQL
+            if (field === 'is_active' && typeof value === 'boolean') {
+                return value ? 1 : 0;
+            }
+            return value;
+        })
 
         const sql = `INSERT INTO ${this.#table} (${columns}) VALUES (${placeholders})`
         const [result] = await this.#db.query(sql, values)
@@ -146,7 +156,14 @@ export class ProductModel {
             return false;
         }
         const setClausule = allowedKeys.map(key => `${key} = ?`).join(', ')
-        const values = allowedKeys.map(key => productData[key])
+        const values = allowedKeys.map(key => {
+            // Convertir boolean a 0/1 para MySQL
+            const value = productData[key];
+            if (key === 'is_active' && typeof value === 'boolean') {
+                return value ? 1 : 0;
+            }
+            return value;
+        })
 
         const parameters = [...values, id]
 
@@ -165,8 +182,10 @@ export class ProductModel {
      * @throws {Error} Si ocurre un fallo en la conexión o la query.
      */
     async updateStatus(id, newStatus) {
+        // Convertir boolean a 0/1 para MySQL
+        const statusValue = typeof newStatus === 'boolean' ? (newStatus ? 1 : 0) : newStatus;
         const sql = `UPDATE ${this.#table} SET is_active = ? WHERE id = ?`
-        const [result] = await this.#db.query(sql, [newStatus, id])
+        const [result] = await this.#db.query(sql, [statusValue, id])
         return result.affectedRows > 0
     }
 
@@ -194,7 +213,25 @@ export class ProductModel {
             sql += ')'
         }
 
-        const [results] = await this.#db.query(sql, params)
-        return results.map(row => new ProductCatalogDTO(row))
+        const [rows] = await this.#db.query(sql, params)
+        return rows.map(row => new ProductCatalogDTO(row))
+    }
+
+    async findCategories() {
+        const sql = `SELECT id, name FROM ${this.#table2} WHERE is_active = 1 ORDER BY name ASC`
+        const [rows] = await this.#db.query(sql)
+        return rows.map(row => new CategoryDTO(row))
+    }
+
+    async createCategory(name) {
+        const sql = `INSERT INTO ${this.#table2} (name) VALUES (?)`
+        const [result] = await this.#db.query(sql, [name])
+        return result.insertId
+    }
+
+    async deleteCategory(id) {
+        const sql = `UPDATE ${this.#table2} SET is_active = 0 WHERE id = ?`
+        const [result] = await this.#db.query(sql, [id])
+        return result.affectedRows > 0
     }
 }

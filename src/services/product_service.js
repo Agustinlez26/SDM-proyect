@@ -70,6 +70,11 @@ export class ProductService {
             ...imgPaths
         }
 
+        // Preservar is_active si no se envía explícitamente
+        if (productToUpdate.is_active === undefined) {
+            productToUpdate.is_active = currentProduct.is_active
+        }
+
         return await this.productModel.update(id, productToUpdate)
     }
 
@@ -122,5 +127,40 @@ export class ProductService {
      */
     async searchCatalog(search) {
         return await this.productModel.searchCatalog(search)
+    }
+
+    /**
+ * catálogo de categorias.
+ */
+    async findCategories() {
+        return await this.productModel.findCategories()
+    }
+
+    /**
+ * Crea una nueva categoría.
+ * @param {string} name - Nombre de la categoría.
+ *  
+ * @return {Promise<number>} ID de la categoría creada.
+ * @throws {ValidationError} Si el nombre ya existe o es inválido.
+ */
+    async createCategory(name) {
+        const existingCategories = await this.productModel.findCategories()
+        if (existingCategories.some(cat => cat.name.toLowerCase() === name.toLowerCase())) {
+            throw new ValidationError('Ya existe una categoría con este nombre')
+        }
+        return await this.productModel.createCategory(name.trim())
+    }
+
+    /**
+ * Elimina (desactiva) una categoría por ID.
+ * @param {number} id - ID de la categoría a eliminar.
+ * @return {Promise<boolean>} True si se eliminó, error si no se encuentra.
+ * @throws {NotFoundError} Si la categoría no existe.
+ */
+
+    async deleteCategory(id) {
+        const deleted = await this.productModel.deleteCategory(id)
+        if (!deleted) throw new NotFoundError('Categoría no encontrada para eliminar')
+        return true
     }
 }

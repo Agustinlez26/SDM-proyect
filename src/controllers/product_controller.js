@@ -1,4 +1,4 @@
-import { validateParams, validatePartialProduct, validateProduct } from '../schemas/product_schema.js'
+import { validateParams, validatePartialProduct, validateProduct, validateCategory } from '../schemas/product_schema.js'
 import { validateId } from '../schemas/shared_schema.js'
 import { handleError } from '../utils/error_handler.js'
 /**
@@ -222,4 +222,70 @@ export class ProductController {
         }
     }
 
+    /**
+     * Obtiene el listado de categorías para el catálogo.
+     * @param {import('express').Request} req 
+     * @param {import('express').Response} res 
+     */
+    getCategories = async (req, res) => {
+        try {
+            const categories = await this.productService.findCategories()
+            res.json({ status: 'success', data: categories })
+        } catch (error) {
+            handleError(res, error)
+        }
+    }
+
+    /**
+     * Crea una nueva categoría.
+     * @param {import('express').Request} req 
+     * @param {import('express').Response} res 
+     */
+    createCategory = async (req, res) => {
+        const result = validateCategory(req.body)
+        if (!result.success) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'Datos invalidos',
+                errors: result.error.errors
+            })
+        }
+
+        try {
+            const categoryId = await this.productService.createCategory(result.data.name)
+            res.status(201).json({ status: 'success', data: { id: categoryId } })
+        } catch (error) {
+            handleError(res, error)
+        }
+    }
+
+    /**
+     * Elimina (desactiva) una categoría por ID.
+     * @param {import('express').Request} req 
+     * @param {import('express').Response} res 
+     */
+    deleteCategory = async (req, res) => {
+        const idResult = validateId(req.params.id)
+        if (!idResult.success) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'el ID es invalido'
+            })
+        }
+
+        try {
+            const deleted = await this.productService.deleteCategory(idResult.data)
+            if (!deleted) return res.status(404).json({
+                status: 'error',
+                message: 'No se pudo eliminar la categoría de la base de datos'
+            })
+
+            res.status(200).json({
+                status: 'success',
+                message: 'Categoría eliminada correctamente'
+            })
+        } catch (error) {
+            handleError(res, error)
+        }
+    }
 }
