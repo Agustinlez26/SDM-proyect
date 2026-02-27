@@ -186,7 +186,7 @@ export class StockModel {
             params.push(id)
         }
         const [rows] = await this.#db.query(sql, params)
-        return rows[0]
+        return rows[0].count
     }
 
     /**

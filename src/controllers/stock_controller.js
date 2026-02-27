@@ -75,6 +75,27 @@ export class StockController {
         }
     }
 
+    getCatalog = async (req, res) => {
+        const result = validateParams(req.query)
+        if (!result.success) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'Parametros invalidos',
+                errors: result.error.errors
+            })
+        }
+
+        const filters = result.data
+        filters.branch = req.user.branch_id
+
+        try {
+            const stocks = await this.stockService.findAll(filters)
+            res.json({ status: 'success', data: stocks })
+        } catch (error) {
+            handleError(res, error)
+        }
+    }
+
     /**
      * Obtiene un registro de stock específico por su ID.
      * @param {import('express').Request} req - Petición con el ID en params.
