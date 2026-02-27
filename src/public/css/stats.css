@@ -1,0 +1,156 @@
+.stats-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--gap-grid);
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.stats-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+}
+
+.stats-controls {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  background-color: var(--bg-card);
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+}
+
+.input-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.input-group label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.stats-input {
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  outline: none;
+  width: 80px;
+  transition: border-color 0.2s;
+}
+
+.stats-input:focus {
+  border-color: var(--primary);
+}
+
+.stats-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.stats-btn:hover {
+  background-color: var(--primary-hover);
+}
+
+/* --- GRID SYSTEM --- */
+.stats-grid {
+  display: grid;
+  /* Responsive automático: columnas de mínimo 450px */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 450px), 1fr));
+  gap: var(--gap-grid);
+}
+
+/* --- TARJETAS (CARDS) --- */
+.stat-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px; /* Bordes más redondeados tipo app moderna */
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+}
+
+/* Header de la tarjeta */
+.card-header {
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--primary-light); /* Usamos el light para separar sutilmente */
+  padding-bottom: 0.8rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-header h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(
+    --text-secondary
+  ); /* Color secundario para títulos de gráficos queda muy pro */
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* --- CONTENEDOR DE CHART --- */
+.chart-wrapper {
+  position: relative;
+  height: 300px;
+  width: 100%;
+}
+
+/* --- MINI BÚSQUEDA (Para estacionalidad) --- */
+.mini-search {
+  display: flex;
+  gap: 5px;
+}
+
+.mini-search input {
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  width: 100px;
+}
+
+.mini-search button {
+  background: var(--primary-light);
+  color: var(--primary);
+  border: none;
+  border-radius: 6px;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: background 0.2s;
+}
+
+.mini-search button:hover {
+  background: var(--border-color);
+}

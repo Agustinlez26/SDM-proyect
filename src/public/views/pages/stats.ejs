@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <%- include('../partials/head', { title: 'Estadísticas' , cssFile: 'stats.css' }) %>
+</head>
+
+<body>
+    <div class="layout">
+        <%- include('../partials/sidebar', { activePage: 'stats' }) %>
+
+            <main class="layout__content">
+                <%- include('../partials/navbar', { title: 'Estadísticas' }) %>
+
+                    <div class="main-container">
+                        <div class="stats-header">
+                            <h1 class="stats-title">Panel de Estadísticas</h1>
+                            <div class="stats-controls">
+                                <div class="input-group">
+                                    <label for="globalYear">Año</label>
+                                    <input type="number" id="globalYear" class="stats-input" value="2026" min="2020">
+                                </div>
+                                <button onclick="loadGlobalData()" class="stats-btn">
+                                    <span class="material-symbols-outlined">refresh</span> Actualizar
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="stats-grid">
+                            <article class="stat-card">
+                                <div class="card-header">
+                                    <h3>🏆 Productos Más Vendidos (Histórico)</h3>
+                                </div>
+                                <div class="chart-wrapper">
+                                    <canvas id="topSellingChart"></canvas>
+                                </div>
+                            </article>
+
+                            <article class="stat-card">
+                                <div class="card-header">
+                                    <h3>📉 Evolución de Ventas (Egresos Totales)</h3>
+                                </div>
+                                <div class="chart-wrapper">
+                                    <canvas id="monthlyEgressesChart"></canvas>
+                                </div>
+                            </article>
+
+                            <article class="stat-card">
+                                <div class="card-header">
+                                    <h3>🏢 Rendimiento por Sucursal</h3>
+                                </div>
+                                <div class="chart-wrapper">
+                                    <canvas id="branchPerformanceChart"></canvas>
+                                </div>
+                            </article>
+
+                            <article class="stat-card">
+                                <div class="card-header with-actions">
+                                    <h3>📅 Estacionalidad de Producto</h3>
+                                    <div class="mini-search">
+                                        <input type="number" id="productIdInput" placeholder="ID Producto" min="1">
+                                        <button onclick="loadProductSeasonality()" title="Buscar">
+                                            <span class="material-symbols-outlined">search</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="chart-wrapper">
+                                    <canvas id="seasonalityChart"></canvas>
+                                </div>
+                            </article>
+                        </div>
+                    </div>
+
+                    <script src="/js/stats.js"></script>
+            </main>
+    </div>
+</body>
+
+</html>
