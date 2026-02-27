@@ -1,0 +1,26 @@
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <link rel="stylesheet" href="/css/partials/base.css">
+    <link rel="stylesheet" href="/css/partials/sidebar.css">
+    <link rel="stylesheet" href="/css/partials/navbar.css">
+    <link rel="icon" type="image/png" href="/imgs/favicon.png?v=1.0">
+    <% if (!locals.excludeBaseJs) { %>
+        <script src="/js/base.js" defer></script>
+        <% } %>
+
+            <% if (typeof cssFile !=='undefined' ) { %>
+                <link rel="stylesheet" href="/css/<%= cssFile %>">
+                <% } %>
+
+                    <% if (locals.jsFile) { %>
+                        <script src="/js/<%= jsFile %>" defer></script>
+                        <% } %>
+                            <title>
+                                <%= title %>
+                            </title>
+</head>

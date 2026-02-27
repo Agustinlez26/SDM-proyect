@@ -1,0 +1,119 @@
+<script>
+    window.CURRENT_USER_ROLE = '<%= user && user.role === "admin" ? "admin" : "empleado" %>';
+</script>
+<script src="/js/navbar.js" defer></script>
+
+<header class="navbar">
+
+    <div class="navbar__left">
+        <button id="sidebar-toggle" class="navbar__toggle">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
+            </svg>
+        </button>
+
+        <h2 class="navbar__title">
+            <%= title %>
+        </h2>
+    </div>
+
+    <div class="navbar__right">
+
+        <div class="dropdown-wrapper" id="notif-wrapper">
+            <button class="navbar__btn" id="btn-notifications">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                    <path
+                        d="M19 12.59V10c0-3.22-2.18-5.93-5.14-6.74C13.57 2.52 12.85 2 12 2s-1.56.52-1.86 1.26C7.18 4.08 5 6.79 5 10v2.59L3.29 14.3a1 1 0 0 0-.29.71v2c0 .55.45 1 1 1h16c.55 0 1-.45 1-1v-2c0-.27-.11-.52-.29-.71zM19 16H5v-.59l1.71-1.71a1 1 0 0 0 .29-.71v-3c0-2.76 2.24-5 5-5s5 2.24 5 5v3c0 .27.11.52.29.71L19 15.41zm-4.18 4H9.18c.41 1.17 1.51 2 2.82 2s2.41-.83 2.82-2">
+                    </path>
+                </svg>
+                <span class="badge-count hidden" id="notif-badge">0</span>
+            </button>
+
+            <div class="dropdown-menu notif-menu">
+                <div class="dropdown-header">
+                    <h4>Notificaciones</h4>
+                </div>
+                <div class="dropdown-body" id="notif-list">
+                    <div class="notif-loading text-center" style="padding: 2rem; color: var(--text-muted);">
+                        <span class="material-symbols-outlined spin">refresh</span><br>Cargando...
+                    </div>
+                </div>
+                <div class="dropdown-footer">
+                    <a href="/operations">Ver Operaciones →</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="navbar__divider"></div>
+
+        <div class="dropdown-wrapper" id="user-wrapper">
+            <button class="navbar__user" id="btn-user-menu">
+                <div class="user-avatar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
+                        viewBox="0 0 24 24">
+                        <path
+                            d="M12 12c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5m0-8c1.65 0 3 1.35 3 3s-1.35 3-3 3-3-1.35-3-3 1.35-3 3-3M4 22h16c.55 0 1-.45 1-1v-1c0-3.86-3.14-7-7-7h-4c-3.86 0-7 3.14-7 7v1c0 .55.45 1 1 1m6-7h4c2.76 0 5 2.24 5 5H5c0-2.76 2.24-5 5-5">
+                        </path>
+                    </svg>
+                </div>
+                <span class="user-name">
+                    <%= user ? user.name : 'Usuario' %>
+                </span>
+                <span class="material-symbols-outlined icon-small">expand_more</span>
+            </button>
+
+            <div class="dropdown-menu user-menu">
+                <div class="user-menu-header">
+                    <p class="user-fullname">
+                        <%= user ? user.name : 'Nombre Apellido' %>
+                    </p>
+                    <p class="user-role">
+                        <%= user ? user.role.toUpperCase() : 'ROL' %>
+                    </p>
+                </div>
+
+                <ul class="user-menu-links">
+                    <li>
+                        <a href="/profile">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor"
+                                viewBox="0 0 24 24">
+                                <path
+                                    d="M12 12c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5m0-8c1.65 0 3 1.35 3 3s-1.35 3-3 3-3-1.35-3-3 1.35-3 3-3M4 22h16c.55 0 1-.45 1-1v-1c0-3.86-3.14-7-7-7h-4c-3.86 0-7 3.14-7 7v1c0 .55.45 1 1 1m6-7h4c2.76 0 5 2.24 5 5H5c0-2.76 2.24-5 5-5">
+                                </path>
+                            </svg>
+                            Mi Perfil
+                        </a>
+                    </li>
+                    <li>
+                        <button id="theme-toggle">
+                            <svg id="icon-moon" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                                fill="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    d="M12.2 22c4.53 0 8.45-2.91 9.76-7.24a1.002 1.002 0 0 0-1.25-1.25c-.78.23-1.58.35-2.38.35-4.52 0-8.2-3.68-8.2-8.2 0-.8.12-1.6.35-2.38.11-.35.01-.74-.25-1s-.64-.36-1-.25A10.17 10.17 0 0 0 2 11.8C2 17.42 6.57 22 12.2 22M8.18 4.65c-.03.34-.05.68-.05 1.02 0 5.62 4.57 10.2 10.2 10.2.34 0 .68-.02 1.02-.05C17.93 18.38 15.23 20 12.2 20 7.68 20 4 16.32 4 11.8a8.15 8.15 0 0 1 4.18-7.15">
+                                </path>
+                            </svg>
+                            <svg id="icon-sun" class="hidden" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                                fill="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    d="M12 17.01c2.76 0 5.01-2.25 5.01-5.01S14.76 6.99 12 6.99 6.99 9.24 6.99 12s2.25 5.01 5.01 5.01M12 9c1.66 0 3.01 1.35 3.01 3.01s-1.35 3.01-3.01 3.01-3.01-1.35-3.01-3.01S10.34 9 12 9m1 10h-2v3h2zm0-17h-2v3h2zM2 11h3v2H2zm17 0h3v2h-3zM4.22 18.36l.71.71.71.71 1.06-1.06 1.06-1.06-.71-.71-.71-.71-1.06 1.06zM19.78 5.64l-.71-.71-.71-.71-1.06 1.06-1.06 1.06.71.71.71.71 1.06-1.06zm-12.02.7L6.7 5.28 5.64 4.22l-.71.71-.71.71L5.28 6.7l1.06 1.06.71-.71zm8.48 11.32 1.06 1.06 1.06 1.06.71-.71.71-.71-1.06-1.06-1.06-1.06-.71.71z">
+                                </path>
+                            </svg>
+                            <span id="theme-text">Modo Oscuro</span>
+                        </button>
+                    </li>
+                    <li class="logout-item">
+                        <a href="/logout" class="text-danger">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor"
+                                viewBox="0 0 24 24">
+                                <path
+                                    d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59zM19 3H5c-1.11 0-2 .9-2 2v4h2V5h14v14H5v-4H3v4c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z" />
+                            </svg>
+                            Cerrar Sesión
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+    </div>
+</header>
