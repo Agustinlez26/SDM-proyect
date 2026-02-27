@@ -61,15 +61,15 @@ export class MovementController {
      * @param {Object} res - Response.
      */
     getById = async (req, res) => {
-        const validateId = validateId(req.params.id)
-        if (!validateId.success) return res.status(400).json({
+        const result = validateId(req.params.id)
+        if (!result.success) return res.status(400).json({
             status: 'error',
             message: 'El id ingresado es invalido',
-            error: validateId.error.errors
+            error: result.error.errors
         })
 
         try {
-            const movement = await this.movementService.findById(validateId.data)
+            const movement = await this.movementService.findById(result.data)
             if (!req.user.is_admin) {
                 const validateUser = (movement.origin_branch_id === req.user.branch_id || movement.destination_branch_id === req.user.branch_id)
                 if (!validateUser) {
@@ -92,15 +92,15 @@ export class MovementController {
      * @param {Object} res - Response.
      */
     getDetails = async (req, res) => {
-        const validateId = validateId(req.params.id)
-        if (!validateId.success) return res.status(400).json({
+        const result = validateId(req.params.id)
+        if (!result.success) return res.status(400).json({
             status: 'error',
             message: 'El id ingresado es invalido',
-            error: validateId.error.errors
+            error: result.error.errors
         })
 
         try {
-            const details = await this.movementService.findDetails(validateId.data)
+            const details = await this.movementService.findDetails(result.data)
             res.json({ status: 'success', data: details })
         } catch (error) {
             handleError(res, error)
@@ -126,6 +126,7 @@ export class MovementController {
     }
 
     getShipmentsInProcess = async (req, res) => {
+        let branch_id = null
         if (!req.user.is_admin) {
             branch_id = req.user.branch_id
         }
@@ -212,8 +213,11 @@ export class MovementController {
     changeStatus = async (req, res) => {
         const { movementId } = req.params.id
         try {
-            await this.movementService.changeStatusShipment(movementId)
-            res.json({ message: 'Envío despachado (En tránsito)' })
+            const result = await this.movementService.changeStatusShipment(movementId)
+            res.json({ 
+                status: 'success',
+                message: result.message 
+            })
         } catch (error) {
             handleError(res, error)
         }

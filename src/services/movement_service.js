@@ -89,7 +89,7 @@ export class MovementService {
      * Prepara los datos según el tipo (INGRESO, EGRESO, ENVIO) y valida stock antes de llamar al modelo.
      * * 1. INGRESO: Entra a Casa Central (ID 1). Status: Entregado. Stock: Suma.
      * 2. EGRESO: Sale de Origen. Status: Entregado. Stock: Resta.
-     * 3. ENVIO: De Casa Central a Sucursal X. Status: Pendiente. Stock: No se toca (se valida disponibilidad).
+     * 3. ENVIO: De Casa Central a Sucursal X. Status: Pendiente. Stock: Resta en origen.
      * * @param {Object} data - Datos del movimiento.
      * @param {Array} details - Array de productos.
      * @returns {Promise<Object>} { id, message }
@@ -149,6 +149,8 @@ export class MovementService {
     /**
      * Avanza el estado de un envío (Máquina de estados).
      * * Flujo: PENDIENTE -> [Despachar] -> EN_PROCESO -> [Recibir] -> ENTREGADO.
+     * - Al despachar (Pendiente -> En Proceso): Solo cambia el estado (stock ya fue descontado al crear).
+     * - Al recibir (En Proceso -> Entregado): Suma stock en destino.
      * * @param {number} movementId 
      * @returns {Promise<Object>} Mensaje de éxito.
      */
@@ -160,20 +162,23 @@ export class MovementService {
         if (movement.status === 'entregado') throw new ValidationError('Este envío ya está concluido')
 
         const details = await this.movementModel.findDetails(movementId)
+        let message = ''
 
         if (movement.status === 'pendiente') {
             await this.movementModel.dispatchShipment(
                 movementId,
                 details
             )
+            message = 'Envío despachado (En tránsito)'
         } else {
             await this.movementModel.receiveShipment(
                 movementId,
                 details
             )
+            message = 'Envío recibido y stock actualizado en destino'
         }
 
-        return { message: 'Envío recibido y stock actualizado' }
+        return { message }
     }
 
     /**

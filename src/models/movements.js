@@ -10,7 +10,7 @@ import { ShipmentsDTO } from "../dtos/movements/shipments_DTO.js"
  * Maneja tres tipos de flujos:
  * 1. INGRESO: Entrada de producción (Suma stock directo).
  * 2. EGRESO: Venta a cliente (Resta stock directo).
- * 3. ENVIO: Traslado entre sucursales (Flujo secuencial: Pendiente -> En Proceso -> Entregado).
+ * 3. ENVIO: Traslado entre sucursales (Flujo secuencial: Pendiente [stock descuenta] -> En Proceso [solo estado] -> Entregado [suma en destino]).
  */
 export class MovementModel {
     #db
@@ -176,10 +176,10 @@ export class MovementModel {
     async findShipmentsInProcess(branch_id = null) {
         let sql = `
             SELECT
-                m.id
+                m.id,
                 m.status,
                 m.receipt_number,
-                b.name as branch
+                b.name as branch,
                 m.date
             FROM ${this.#table} m
             JOIN ${this.#tableBranches} b ON m.destination_branch_id = b.id
@@ -201,7 +201,7 @@ export class MovementModel {
      * Opcionalmente filtrados por sucursal de destino.
      * * @param {number|null} branchId - Filtro opcional por sucursal.
      */
-    async getRecent(branchId = null) {
+    async findRecent(branchId = null) {
         const params = []
         let sql = `
             SELECT
@@ -219,13 +219,13 @@ export class MovementModel {
         sql += ' ORDER BY m.created_at DESC LIMIT 5'
 
         const [rows] = await this.#db.query(sql, params)
-        return rows.map(row => new MovementRecentsDTO)
+        return rows.map(row => new MovementRecentsDTO(row))
     }
 
     /**
      * Crea la cabecera del movimiento, sus detalles y actualiza el stock (si corresponde).
-     * * NOTA: Si el tipo es 'ENVIO', esta función NO actualiza el stock, solo crea el registro en estado 'pendiente'.
-     * El stock se descontará posteriormente en dispatchShipment.
+     * * NOTA: Para ENVIO, el stock se resta en origen al crear el movimiento.
+     * Al despachar solo se cambia el estado.
      * * @param {Object} data - Datos del movimiento (type, date, user_id, branches, status).
      * @param {Array} details - Array de productos y cantidades.
      * @param {string} stockAction - 'ADD', 'SUBTRACT' o 'NONE'.
@@ -251,27 +251,25 @@ export class MovementModel {
             const values = details.map(d => [movementId, d.product_id, d.quantity])
             await connection.query(`INSERT INTO ${this.#tableDetails} (movement_id, product_id, quantity) VALUES ?`, [values])
 
-            if (data.type !== 'ENVIO') {
-                for (const item of details) {
-                    if (stockAction === 'ADD') {
-                        const sqlUpsert = `
-                            INSERT INTO ${this.#tableStock} (branch_id, product_id, quantity)
-                            VALUES (?, ?, ?) 
-                            ON DUPLICATE KEY UPDATE quantity = quantity + ?
-                        `
-                        await connection.query(sqlUpsert, [targetBranchId, item.product_id, item.quantity, item.quantity])
+            for (const item of details) {
+                if (stockAction === 'ADD') {
+                    const sqlUpsert = `
+                        INSERT INTO ${this.#tableStock} (branch_id, product_id, quantity)
+                        VALUES (?, ?, ?) 
+                        ON DUPLICATE KEY UPDATE quantity = quantity + ?
+                    `
+                    await connection.query(sqlUpsert, [targetBranchId, item.product_id, item.quantity, item.quantity])
 
-                    } else if (stockAction === 'SUBTRACT') {
-                        const sqlUpdate = `
-                            UPDATE ${this.#tableStock} 
-                            SET quantity = quantity - ? 
-                            WHERE branch_id = ? AND product_id = ? AND quantity >= ?
-                        `
-                        const [res] = await connection.query(sqlUpdate, [item.quantity, targetBranchId, item.product_id, item.quantity])
+                } else if (stockAction === 'SUBTRACT') {
+                    const sqlUpdate = `
+                        UPDATE ${this.#tableStock} 
+                        SET quantity = quantity - ? 
+                        WHERE branch_id = ? AND product_id = ? AND quantity >= ?
+                    `
+                    const [res] = await connection.query(sqlUpdate, [item.quantity, targetBranchId, item.product_id, item.quantity])
 
-                        if (res.affectedRows === 0) {
-                            throw new Error(`Stock insuficiente para el producto ID: ${item.product_id}`)
-                        }
+                    if (res.affectedRows === 0) {
+                        throw new Error(`Stock insuficiente para el producto ID: ${item.product_id}`)
                     }
                 }
             }
@@ -288,7 +286,8 @@ export class MovementModel {
 
     /**
      * FASE 1 ENVÍO: Despachar (Pendiente -> En Proceso).
-     * Resta el stock de la sucursal de origen.
+     * Solo cambia el estado del envío a 'en_proceso'.
+     * El stock ya fue descontado al crear el movimiento.
      * Utiliza 'FOR UPDATE' para evitar condiciones de carrera.
      * * @param {number} movementId 
      * @param {Array} details 
@@ -299,7 +298,7 @@ export class MovementModel {
             await connection.beginTransaction()
 
             const [rows] = await connection.query(
-                `SELECT status, origin_branch_id FROM ${this.#table} WHERE id = ? FOR UPDATE`,
+                `SELECT status FROM ${this.#table} WHERE id = ? FOR UPDATE`,
                 [movementId]
             )
 
@@ -307,25 +306,8 @@ export class MovementModel {
                 throw new Error(`El envío no está en estado 'pendiente'. Estado actual: ${rows[0]?.status}`)
             }
 
-            const originBranchId = rows[0].origin_branch_id
-
-            for (const item of details) {
-                const sqlSubtract = `
-                    UPDATE ${this.#tableStock} 
-                    SET quantity = quantity - ? 
-                    WHERE branch_id = ? AND product_id = ? AND quantity >= ?
-                `
-                const [result] = await connection.query(sqlSubtract, [
-                    item.quantity, originBranchId, item.product_id, item.quantity
-                ])
-
-                if (result.affectedRows === 0) {
-                    throw new Error(`Stock insuficiente en origen (ID: ${item.product_id}) para realizar el despacho.`)
-                }
-            }
-
             await connection.query(
-                `UPDATE ${this.#table} SET status = 'en_proceso', set date = NOW() WHERE id = ?`,
+                `UPDATE ${this.#table} SET status = 'en_proceso', date = NOW() WHERE id = ?`,
                 [movementId]
             )
 
@@ -383,9 +365,5 @@ export class MovementModel {
         } finally {
             connection.release()
         }
-    }
-
-    async shipmentsPendings(branchID = null) {
-
     }
 }

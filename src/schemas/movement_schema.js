@@ -55,7 +55,7 @@ const movementSchema = z.object({
 
 const params = z.object({
     search: z.string().optional(),
-    type: z.enum(MOVEMENT_TYPES),
+    type: z.enum(MOVEMENT_TYPES).optional(),
     origin: z.coerce.number().int().positive().optional(),
     destination: z.coerce.number().int().positive().optional(),
     user: z.string().uuid().optional(),
