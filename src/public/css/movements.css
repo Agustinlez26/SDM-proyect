@@ -1,0 +1,760 @@
+/* =========================================
+   1. TOOLBAR & FILTROS (Estilos Base)
+   ========================================= */
+
+.stock-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  position: relative;
+  z-index: 20;
+}
+
+/* Buscador */
+.search-bar {
+  display: flex;
+  align-items: center;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  flex-grow: 1;
+  max-width: 500px;
+  transition: all 0.2s ease;
+}
+
+.search-bar:focus-within {
+  box-shadow: 0 4px 12px rgba(33, 77, 92, 0.1);
+  border-color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.search-bar input {
+  border: none;
+  outline: none;
+  width: 100%;
+  margin-left: 0.5rem;
+  font-size: 0.95rem;
+}
+.search-icon {
+  color: #94a3b8;
+}
+
+/* Botón Filtro */
+.btn-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.6rem 1.2rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-filter:hover {
+  background-color: var(--bg-body);
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* --- MENU FILTROS + OVERLAY --- */
+.filter-wrapper {
+  position: relative;
+}
+
+.filter-menu {
+  position: absolute;
+  top: 110%;
+  right: 0;
+  width: 360px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  z-index: 1001;
+
+  /* Estado inicial oculto */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: block !important;
+}
+
+.filter-wrapper.active .filter-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* Overlay Oscuro */
+.filter-wrapper.active::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: var(--sidebar-width); /* Respeta el sidebar en escritorio */
+  width: calc(100% - var(--sidebar-width));
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 90;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Inputs del filtro */
+.filter-group {
+  margin-bottom: 1.25rem;
+}
+
+.dates {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.filter-group label {
+  display: block;
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-secondary);
+}
+.filter-group select {
+  width: 100%;
+  padding: 0.6rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  outline: none;
+  font-size: 0.9rem;
+}
+.btn-apply {
+  width: 100%;
+  padding: 0.75rem;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.filter-group input[type="date"] {
+  width: 100%;
+  padding: 0.6rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  outline: none;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  background-color: var(--bg-input);
+  font-family: inherit; /* Para que use Manrope */
+  transition: border-color 0.2s;
+}
+
+.filter-group input[type="date"]:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+/* Personalización del icono del calendario (Webkit/Chrome) */
+.filter-group input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.filter-group input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/* Margen extra para separar el segundo label del primer input */
+.filter-group input[type="date"] + label {
+  margin-top: 1rem;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.filter-actions button {
+  flex: 1;
+  padding: 0.75rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.filter-actions .btn-cancel {
+  background-color: var(--bg-card);
+  border: 1px solid #cbd5e1;
+  color: var(--text-secondary);
+}
+
+.filter-actions .btn-cancel:hover {
+  background-color: #f1f5f9;
+  color: var(--text-primary);
+  border-color: #94a3b8;
+}
+
+.filter-actions .btn-apply {
+  background-color: var(--primary);
+  border: 1px solid var(--primary);
+  color: white;
+  box-shadow: 0 4px 6px rgba(33, 77, 92, 0.1);
+}
+
+.filter-actions .btn-apply:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-1px);
+  color: var(--primary-dark);
+  box-shadow: 0 6px 12px rgba(33, 77, 92, 0.15);
+}
+
+/* =========================================
+   2. TABLA DE MOVIMIENTOS (GRID + SEMÁNTICA)
+   ========================================= */
+
+.movements-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  overflow-x: auto;
+  overflow-y: hidden;
+  width: 100%;
+}
+
+.movements-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.movements-table thead tr,
+.movements-table tbody tr {
+  display: grid;
+  grid-template-columns: 50px 130px 100px 110px 90px 2fr 2fr 100px 50px;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  align-items: center;
+}
+
+/* Header Styles */
+.movements-table thead {
+  background: var(--bg-body);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.movements-table th {
+  text-align: left;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #64748b;
+  letter-spacing: 0.05em;
+  padding: 0;
+}
+
+/* Centrado de headers específicos */
+.movements-table th.col-date,
+.movements-table th.col-created,
+.movements-table th.col-info {
+  text-align: center;
+}
+
+/* Body Styles */
+.movements-table tbody tr {
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color 0.15s;
+}
+.movements-table tbody tr:hover {
+  background-color: var(--bg-body);
+}
+.movements-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+/* Cell Styles */
+.movements-table td {
+  padding: 0;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  overflow: hidden; /* Necesario para text-overflow */
+}
+
+/* --- ESTILOS DE COLUMNAS --- */
+.col-id {
+  color: var(--text-muted);
+  font-family: monospace;
+}
+.col-receipt {
+  font-weight: 600;
+  font-family: monospace;
+  font-size: 0.9rem;
+}
+
+.col-date,
+.col-created {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.col-branch {
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.col-user {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  line-height: 1.2;
+}
+.user-name {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+.user-id {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Columna Info (Botón) */
+.col-info {
+  display: flex;
+  justify-content: center;
+}
+
+.btn-icon-info {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-icon-info:hover {
+  background-color: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  transform: scale(1.05);
+}
+
+.empty-state-row {
+  display: table-row !important;
+  background-color: transparent !important;
+}
+
+.empty-state-row td {
+  text-align: center;
+  padding: 4rem 2rem !important;
+  color: var(--text-muted);
+}
+
+.empty-state-row .icon-empty {
+  font-size: 48px;
+  color: #cbd5e1;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+/* Badges */
+.type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.type-in {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+.type-out {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+.type-transfer {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+.icon-tiny {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.col-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.status-ok {
+  background-color: #22c55e;
+  box-shadow: 0 0 0 2px #dcfce7;
+}
+.status-warn {
+  background-color: #eab308;
+  box-shadow: 0 0 0 2px #fef9c3;
+}
+.status-info {
+  background-color: #3b82f6;
+  box-shadow: 0 0 0 2px #dbeafe;
+}
+
+/* =========================================
+   3. MODAL DE DETALLE (Diseño Grid)
+   ========================================= */
+.modal-card {
+  background: var(--bg-card); /* ESTO SOLUCIONA LA TRANSPARENCIA */
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  padding: 2rem;
+  max-height: 90vh; /* Evita que sea más alto que la pantalla */
+  overflow-y: auto; /* Scroll interno si es necesario */
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h3 {
+  font-size: 1.25rem;
+  color: var(--text-primary);
+  margin: 0;
+  font-weight: 700;
+}
+
+.btn-close-modal {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 4px;
+  border-radius: 50%;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-close-modal:hover {
+  background-color: #fee2e2;
+  color: #ef4444;
+}
+
+.modal-actions {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 2000;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  /* ESTADO INICIAL: OCULTO */
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none; /* IMPORTANTE: Para que no bloquee clicks cuando no se ve */
+  transition: all 0.3s ease;
+}
+
+/* ESTADO ACTIVO: VISIBLE */
+.modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto; /* Reactivamos los clicks */
+}
+
+.modal-large {
+  max-width: 700px;
+  width: 90%;
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Grilla Superior */
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.detail-item label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  font-weight: 700;
+}
+.detail-item span {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Caja de Ruta */
+.detail-route {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--bg-input);
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+.route-box {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.icon-route {
+  font-size: 24px;
+  color: var(--primary);
+  background: var(--bg-card);
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+.route-box label {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.route-box p {
+  margin: 0;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.route-arrow {
+  font-size: 1.5rem;
+  color: var(--text-muted);
+}
+
+/* Tabla interna de productos */
+.detail-products-container {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.detail-products-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.detail-products-table th {
+  background: var(--bg-input);
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.detail-products-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+.detail-products-table tr:last-child td {
+  border-bottom: none;
+}
+
+.qty-badge-modal {
+  background: var(--primary-light);
+  color: var(--primary);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 700;
+  display: inline-block;
+}
+
+/* Helpers texto */
+.text-right {
+  text-align: right;
+}
+.text-center {
+  text-align: center;
+}
+.font-mono {
+  font-family: monospace;
+}
+.font-bold {
+  font-weight: 600;
+}
+.text-muted {
+  color: var(--text-muted);
+}
+
+/* =========================================
+   4. PAGINACIÓN
+   ========================================= */
+.pagination-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background-color: var(--bg-body);
+  gap: 1rem;
+}
+.btn-page {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.btn-page:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.page-info {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* =========================================
+   5. RESPONSIVE
+   ========================================= */
+
+@media (max-width: 1024px) {
+  /* Scroll horizontal para la tabla */
+  .movements-panel {
+    overflow-x: auto;
+  }
+
+  /* Forzamos un ancho mínimo mayor para que las columnas de 2fr se luzcan */
+  .movements-table {
+    min-width: 1200px;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Overlay ocupa todo en mobile */
+  .filter-wrapper.active::before {
+    left: 0;
+    width: 100%;
+  }
+
+  /* Menú Filtro Centrado */
+  .filter-menu {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 90%;
+    transform: translate(-50%, -40%) scale(0.95);
+    z-index: 2000;
+  }
+  .filter-wrapper.active .filter-menu {
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  /* Ajuste Modal Detalle en Mobile */
+  .detail-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .detail-route {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  .route-arrow {
+    transform: rotate(90deg);
+    align-self: center;
+  }
+}
+
+/* --- DARK THEME OVERRIDES --- */
+body.dark-theme .modal-overlay {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+body.dark-theme .detail-products-table td {
+  border-bottom-color: var(--border-color);
+}

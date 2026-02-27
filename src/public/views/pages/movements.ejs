@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+<%- include('../partials/head', { title: 'Movimientos' , cssFile: 'movements.css' }) %>
+
+    <body>
+        <div class="layout">
+            <%- include('../partials/sidebar', { activePage: 'movements' }) %>
+
+                <main class="layout__content">
+                    <%- include('../partials/navbar', { title: 'Movimientos' }) %>
+                        <script src="/js/movements.js" defer></script>
+
+                        <div class="main-container">
+                            <div class="stock-toolbar">
+                                <div class="search-bar">
+                                    <span class="material-symbols-outlined search-icon">search</span>
+                                    <input type="text" id="movement-search"
+                                        placeholder="Buscar por recibo, usuario o ID..."
+                                        onkeypress="if(event.key === 'Enter') applyFilters()">
+                                </div>
+
+                                <div class="filter-wrapper" id="filter-wrapper">
+                                    <button class="btn-filter" id="btn-filter-toggle">
+                                        <span class="material-symbols-outlined">filter_list</span> Filtros
+                                    </button>
+
+                                    <div class="filter-menu" id="filter-menu">
+                                        <header class="modal-header">
+                                            <h3>Filtros</h3>
+                                            <button class="btn-close-modal" id="btn-close-filters">
+                                                <span class="material-symbols-outlined">close</span>
+                                            </button>
+                                        </header>
+
+                                        <div class="filter-group">
+                                            <label>Tipo de Movimiento</label>
+                                            <select id="filter-type">
+                                                <option value="">Todos</option>
+                                                <% if (user && user.role==='admin' ) { %>
+                                                    <option value="ingreso">Ingreso</option>
+                                                    <% } %>
+                                                        <option value="envio">Envío</option>
+                                                        <option value="egreso">Egreso</option>
+                                            </select>
+                                        </div>
+
+                                        <% if (user && user.role==='admin' ) { %>
+                                            <div class="filter-group">
+                                                <label>Origen</label>
+                                                <select id="filter-origin">
+                                                    <option value="">Cualquier Origen</option>
+                                                </select>
+                                            </div>
+
+                                            <div class="filter-group">
+                                                <label>Destino</label>
+                                                <select id="filter-dest">
+                                                    <option value="">Cualquier Destino</option>
+                                                </select>
+                                            </div>
+
+                                            <div class="filter-group">
+                                                <label>Usuario</label>
+                                                <select id="filter-user">
+                                                    <option value="">Todos los Usuarios</option>
+                                                </select>
+                                            </div>
+                                            <% } %>
+
+                                                <div class="filter-group dates">
+                                                    <div>
+                                                        <label>Fecha de inicio</label>
+                                                        <input id="filter-start" type="date">
+                                                    </div>
+                                                    <div>
+                                                        <label>Fecha de fin</label>
+                                                        <input id="filter-end" type="date">
+                                                    </div>
+                                                </div>
+                                                <div class="filter-actions">
+                                                    <button class="btn-cancel" onclick="clearFilters()">
+                                                        <span class="material-symbols-outlined"
+                                                            style="font-size: 18px;">restart_alt</span> Limpiar
+                                                    </button>
+                                                    <button class="btn-apply" onclick="applyFilters()">
+                                                        <span class="material-symbols-outlined"
+                                                            style="font-size: 18px;">check</span> Aplicar
+                                                    </button>
+                                                </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <section class="movements-panel">
+                                <table class="movements-table">
+                                    <thead>
+                                        <tr>
+                                            <th class="col-id">ID</th>
+                                            <th class="col-receipt">Nro. Recibo</th>
+                                            <th class="col-type">Tipo</th>
+                                            <th class="col-status">Estado</th>
+                                            <th class="col-date">Fecha</th>
+                                            <th class="col-branch">Origen</th>
+                                            <th class="col-branch">Destino</th>
+                                            <th class="col-user">Usuario</th>
+                                            <th class="col-info">Info</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="movements-list-container">
+                                        <tr class="loading-state">
+                                            <td colspan="9" style="text-align: center; padding: 3rem;">
+                                                <span class="material-symbols-outlined spin">refresh</span>
+                                                <br>Cargando historial...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <footer class="pagination-footer">
+                                    <button class="btn-page" id="btn-prev-page" onclick="changePage(-1)" disabled>
+                                        <span class="material-symbols-outlined">chevron_left</span>
+                                    </button>
+                                    <span class="page-info" id="page-info">Página 1</span>
+                                    <button class="btn-page" id="btn-next-page" onclick="changePage(1)">
+                                        <span class="material-symbols-outlined">chevron_right</span>
+                                    </button>
+                                </footer>
+                            </section>
+                        </div>
+
+                        <div class="modal-overlay" id="modal-movement-detail">
+                            <div class="modal-card modal-large">
+                                <header class="modal-header">
+                                    <h3>Detalle del Movimiento <span id="detail-id" class="text-muted">#000</span></h3>
+                                    <button class="btn-close-modal" id="btn-close-detail">
+                                        <span class="material-symbols-outlined">close</span>
+                                    </button>
+                                </header>
+
+                                <div class="modal-body">
+                                    <div class="detail-grid">
+                                        <div class="detail-item">
+                                            <label>Nro. Recibo</label>
+                                            <span id="detail-receipt">0000-000000</span>
+                                        </div>
+                                        <div class="detail-item">
+                                            <label>Tipo</label>
+                                            <span id="detail-type" class="type-badge">TYPE</span>
+                                        </div>
+                                        <div class="detail-item">
+                                            <label>Estado</label>
+                                            <span id="detail-status">Estado</span>
+                                        </div>
+                                        <div class="detail-item">
+                                            <label>Fecha</label>
+                                            <span id="detail-date">YYYY-MM-DD</span>
+                                        </div>
+                                        <div class="detail-item">
+                                            <label>Usuario Responsable</label>
+                                            <span id="detail-user">Nombre Usuario</span>
+                                        </div>
+                                        <div class="detail-item">
+                                            <label>Fecha Creación</label>
+                                            <span id="detail-created">YYYY-MM-DD HH:mm</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="detail-route">
+                                        <div class="route-box">
+                                            <span class="material-symbols-outlined icon-route">warehouse</span>
+                                            <div>
+                                                <label>Origen</label>
+                                                <p id="detail-origin">Origen...</p>
+                                            </div>
+                                        </div>
+                                        <div class="route-arrow">➝</div>
+                                        <div class="route-box">
+                                            <span class="material-symbols-outlined icon-route">store</span>
+                                            <div>
+                                                <label>Destino</label>
+                                                <p id="detail-dest">Destino...</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <h4 class="section-subtitle">Productos Involucrados</h4>
+                                    <div class="detail-products-container">
+                                        <table class="detail-products-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Código</th>
+                                                    <th>Producto</th>
+                                                    <th class="text-right">Cantidad</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="detail-products-list">
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <div class="modal-actions">
+                                    <button class="btn-primary" id="btn-print">
+                                        <span class="material-symbols-outlined">print</span> Imprimir Comprobante
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                </main>
+        </div>
+    </body>
+
+</html>
