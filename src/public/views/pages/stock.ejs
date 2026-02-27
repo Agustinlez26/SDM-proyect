@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<%- include('../partials/head', { title: 'Stock' , cssFile: 'stock.css' }) %>
+
+    <body>
+        <div class="layout">
+
+            <%- include('../partials/sidebar', { activePage: 'stock' }) %>
+
+                <main class="layout__content">
+
+                    <%- include('../partials/navbar', { title: 'Gestión de stock' }) %>
+                        <script src="/js/stock.js" defer></script>
+
+                        <div class="main-container">
+                            <div class="stock-toolbar">
+                                <div class="search-bar">
+                                    <span class="material-symbols-outlined search-icon">search</span>
+                                    <input type="text" id="stock-search" placeholder="Buscar por nombre, código o ID..."
+                                        onkeypress="if(event.key === 'Enter') applyFilters()">
+                                </div>
+
+                                <div class="filter-wrapper">
+                                    <button class="btn-filter" id="btn-filter-toggle">
+                                        <span class="material-symbols-outlined">filter_list</span>
+                                        Filtros
+                                    </button>
+
+                                    <div class="filter-menu" id="filter-menu">
+                                        <header class="modal-header">
+                                            <h3>Filtros</h3>
+                                            <button class="btn-close-modal" id="btn-close-filters">
+                                                <span class="material-symbols-outlined">close</span>
+                                            </button>
+                                        </header>
+
+                                        <div class="filter-group">
+                                            <label>Sucursal</label>
+                                            <select id="filter-branch">
+                                                <option value="">Todas</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="filter-group">
+                                            <label>Categoría</label>
+                                            <select id="filter-category">
+                                                <option value="">Todas</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="filter-group">
+                                            <label>Estado de Stock</label>
+                                            <div class="checkbox-group">
+                                                <label><input type="checkbox" id="filter-low-stock" value="true"> Stock
+                                                    Bajo</label>
+                                                <label><input type="checkbox" id="filter-out-stock" value="true"> Sin
+                                                    Stock</label>
+                                            </div>
+                                        </div>
+
+                                        <div class="filter-actions">
+                                            <button class="btn-cancel" onclick="clearFilters()">Limpiar</button>
+                                            <button class="btn-apply" onclick="applyFilters()">Aplicar</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <section class="stock-panel">
+                                <div class="table-responsive">
+                                    <table class="stock-table">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Cód. Barra</th>
+                                                <th>Producto</th>
+                                                <th>Sucursal</th>
+                                                <th class="text-center">Cantidad</th>
+                                                <th class="text-center">Mínimo</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="stock-list-container">
+                                            <tr>
+                                                <td colspan="6" class="loading-state">
+                                                    <span class="material-symbols-outlined spin">refresh</span>
+                                                    Cargando inventario...
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <footer class="pagination-footer">
+                                    <button class="btn-page" id="btn-prev-page" onclick="changePage(-1)" disabled>
+                                        <span class="material-symbols-outlined">chevron_left</span>
+                                    </button>
+                                    <span class="page-info" id="page-info">Página 1</span>
+                                    <button class="btn-page" id="btn-next-page" onclick="changePage(1)">
+                                        <span class="material-symbols-outlined">chevron_right</span>
+                                    </button>
+                                </footer>
+                            </section>
+                        </div>
+                </main>
+        </div>
+    </body>
+
+</html>

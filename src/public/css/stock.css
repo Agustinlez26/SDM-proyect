@@ -1,0 +1,440 @@
+/* --- GESTIÓN DE STOCK (Stock Panel) --- */
+
+.main-container {
+  padding-top: 1rem;
+  position: relative; /* Necesario para el contexto del overlay */
+}
+
+/* 1. BARRA DE HERRAMIENTAS OPTIMIZADA */
+.stock-toolbar {
+  display: flex;
+  justify-content: space-between; /* Separa buscador a la izq y filtros a la der */
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  position: relative;
+  z-index: 20; /* Para que quede sobre el contenido al desplegar */
+}
+
+/* Buscador (Más presencia) */
+.search-bar {
+  display: flex;
+  align-items: center;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 10px; /* Bordes más suaves */
+  padding: 0.75rem 1.25rem; /* Más "gordito" */
+  flex-grow: 1;
+  max-width: 600px; /* Un poco más ancho */
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.01);
+}
+
+.search-bar:focus-within {
+  box-shadow: 0 4px 12px rgba(33, 77, 92, 0.1); /* Sombra suave de tu color primario */
+  border-color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.search-icon {
+  color: var(--text-muted);
+  font-size: 20px;
+  margin-right: 0.75rem;
+}
+
+#stock-search {
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: 1rem;
+  color: var(--text-primary);
+  background: transparent;
+}
+
+/* 2. BOTÓN DE FILTRO MEJORADO (Más grande y estético) */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 1rem;
+}
+
+.btn-close-modal {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 4px;
+  border-radius: 50%;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 0.75rem 1.5rem; /* Más grande */
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  min-width: 120px;
+  justify-content: center;
+}
+
+.btn-filter:hover {
+  background-color: var(--bg-body);
+  border-color: var(--primary); /* Toque de color al hover */
+  color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.btn-filter span {
+  font-size: 20px; /* Icono más grande */
+}
+
+/* Wrapper para los filtros (Para manejar el dropdown) */
+.filter-wrapper {
+  position: relative;
+}
+
+/* 3. MENÚ DE FILTROS & OVERLAY */
+
+/* El menú en sí */
+.filter-menu {
+  position: absolute;
+  top: 120%; /* Un poco más separado */
+  right: 0;
+  width: 320px; /* Más ancho para respirar */
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px; /* Más redondo */
+  box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.15); /* Sombra potente */
+  padding: 1.5rem;
+  z-index: 1001; /* Lo más alto */
+  display: block !important;
+
+  /* Animación de entrada */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Estado Abierto (Clase que pondremos con JS en el wrapper o el menu) */
+.filter-wrapper.active .filter-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* El OVERLAY OSCURO (Truco: Usamos ::before en el stock-container o wrapper) */
+/* Lo mejor es crear un div separado en el HTML con JS, 
+   pero aquí simulamos el efecto visual si el wrapper tiene la clase .active */
+.filter-wrapper.active::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: var(--sidebar-width);
+  width: calc(100% - var(--sidebar-width));
+
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.4); /* Fondo oscuro semitransparente */
+  backdrop-filter: blur(2px); /* Blur opcional muy pro */
+  z-index: 999;
+  cursor: default;
+}
+
+/* Estilos internos del menú */
+.filter-group {
+  margin-bottom: 1.5rem;
+}
+
+.filter-group label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.filter-group select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background-color: var(--bg-input);
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.filter-group select:focus {
+  outline: none;
+  border-color: var(--primary);
+  background-color: var(--bg-input);
+}
+
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.checkbox-group label {
+  text-transform: none;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.checkbox-group input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary); /* Pinta el checkbox del color de la marca */
+  margin-right: 0.75rem;
+}
+
+.btn-apply {
+  width: 100%;
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  padding: 0.85rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: 0.5rem;
+}
+
+.btn-apply:hover {
+  background-color: var(--primary-hover);
+}
+
+/* Reset para el btn-apply dentro de filter-actions */
+.filter-actions .btn-apply {
+  width: auto !important;
+  margin-top: 0 !important;
+  padding: 0.75rem 1rem !important;
+  border-radius: 8px;
+  font-size: 0.9rem !important;
+  background-color: var(--primary);
+  border: 1px solid var(--primary) !important;
+  color: white;
+  box-shadow: 0 4px 6px rgba(33, 77, 92, 0.1);
+}
+
+.filter-actions .btn-apply:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-1px);
+  color: var(--primary-dark);
+  box-shadow: 0 6px 12px rgba(33, 77, 92, 0.15);
+}
+
+.filter-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.filter-actions button {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: none;
+  min-height: 40px;
+}
+
+.filter-actions .btn-cancel {
+  background-color: var(--bg-card);
+  border: 1px solid #cbd5e1 !important;
+  color: var(--text-secondary);
+}
+
+.filter-actions .btn-cancel:hover {
+  background-color: #f1f5f9;
+  color: var(--text-primary);
+  border-color: #94a3b8 !important;
+}
+
+/* --- TABLA DE STOCK --- */
+
+/* --- TABLA DE STOCK --- */
+.stock-panel {
+  background: var(--bg-card);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  overflow: hidden;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.stock-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.stock-table thead th {
+  background-color: var(--bg-body);
+  border-bottom: 1px solid var(--border-color);
+  padding: 1rem 1.5rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.stock-row {
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color 0.2s;
+}
+
+.stock-row:last-child {
+  border-bottom: none;
+}
+
+.stock-row:hover {
+  background-color: rgba(77, 184, 208, 0.1);
+}
+
+.stock-table td {
+  padding: 1rem 1.5rem;
+  vertical-align: middle;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+/* Celda con Imagen y Nombre */
+.product-cell {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.product-thumb {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-input);
+}
+
+/* Tipografías útiles */
+.font-mono {
+  font-family: monospace;
+  color: var(--text-muted);
+}
+.font-bold {
+  font-weight: 600;
+}
+.text-center {
+  text-align: center;
+}
+.text-muted {
+  color: var(--text-muted);
+}
+
+/* --- BADGES DE CANTIDAD --- */
+.qty-badge {
+  display: inline-block;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-align: center;
+  min-width: 40px;
+}
+
+.qty-ok {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.qty-low {
+  background-color: #fef3c7;
+  color: #854d0e;
+  border: 1px solid #fde047;
+}
+
+.qty-empty {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+/* Paginación */
+.pagination-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background-color: var(--bg-body);
+  border-top: 1px solid var(--border-color);
+  gap: 1rem;
+}
+
+.btn-page {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+}
+
+.btn-page:hover:not(:disabled) {
+  background-color: var(--primary-light);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.btn-page:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-info {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
