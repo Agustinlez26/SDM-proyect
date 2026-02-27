@@ -26,6 +26,7 @@ import { MovementController } from '../controllers/movement_controller.js'
 import { StatisticModel } from '../models/statistics.js'
 import { StatisticService } from '../services/statistic_service.js'
 import { StatisticController } from '../controllers/statistic_controller.js'
+import { NotificationController } from '../controllers/notification_controller.js'
 
 const db = Database.getInstance()
 
@@ -49,6 +50,7 @@ const stockController = new StockController({ stockService })
 const userController = new UserController({ userService })
 const authController = new AuthController({ authService })
 const statisticController = new StatisticController({ statisticService })
+const notificationController = new NotificationController({ statisticService })
 const branchController = new BranchController({ branchService })
 const movementController = new MovementController({ movementService })
 
@@ -59,5 +61,6 @@ export {
     authController,
     branchController,
     movementController,
-    statisticController
+    statisticController,
+    notificationController
 }

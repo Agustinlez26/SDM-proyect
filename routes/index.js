@@ -7,6 +7,8 @@ import user_routes from './user_routes.js'
 import branch_routers from './branch_routes.js'
 import location_routes from './location_routes.js'
 import movements_routes from './movement_routes.js'
+import statistic_routes from './statistic_routes.js'
+import notification_routes from './notification_routes.js'
 
 const router = Router()
 
@@ -17,6 +19,8 @@ router.use('/api/auth', auth_routes)
 router.use('/api/branches', branch_routers)
 router.use('/api/locations', location_routes)
 router.use('/api/movements', movements_routes)
+router.use('/api/statistics', statistic_routes)
+router.use('/api/notifications', notification_routes)
 
 router.use('/', view_routes)
 
