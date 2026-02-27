@@ -65,6 +65,16 @@ export class UserService {
         return await this.userModel.findAll({ search, filters })
     }
 
+    /*
+     * Obtiene una lista de usuarios activos.
+        * @returns {Promise<Array>} Lista de usuarios activos (DTOs).
+        * @throws {NotFoundError} Si no se encuentran usuarios activos.
+        * NOTA: Este método se utiliza para cargar opciones en formularios, por eso devuelve un DTO simplificado.
+     */
+    async listUsers() {
+        return await this.userModel.listUsers()
+    }
+
     /**
      * Busca un usuario por ID.
      * @param {number} id 

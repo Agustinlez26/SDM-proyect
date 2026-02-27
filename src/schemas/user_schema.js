@@ -48,7 +48,7 @@ const createUserSchema = baseUserSchema.refine((data) => data.password === data.
  * Base - Passwords -> Partial
  */
 const updateUserSchema = baseUserSchema
-    .omit({ password: true, confirm_password: true })
+    .omit({ password: true, confirm_password: true})
     .partial();
 
 /**
@@ -56,7 +56,7 @@ const updateUserSchema = baseUserSchema
  * Solo nombre y email son editables por el propio usuario.
  */
 const userProfileSchema = baseUserSchema
-    .pick({ full_name: true, email: true }) // Quitamos phone de aquí también
+    .pick({ full_name: true, email: true })
     .partial();
 
 /**

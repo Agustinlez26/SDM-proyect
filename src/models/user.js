@@ -1,8 +1,9 @@
 import { Database } from "../config/connection.js";
 import { AuthDTO } from "../dtos/auth/auth_DTO.js";
-import { User_DTO } from "../dtos/users/User_DTO.js";
-import { User_list_DTO } from "../dtos/users/User_list_DTO.js";
-import { User_profile_DTO } from "../dtos/users/User_profile_DTO.js";
+import { User_DTO } from "../dtos/users/user_DTO.js";
+import { User_all_DTO } from "../dtos/users/user_all_DTO.js";
+import {User_list_DTO } from "../dtos/users/User_list_DTO.js";
+import { User_profile_DTO } from "../dtos/users/user_profile_DTO.js";
 import { randomUUID } from 'node:crypto'
 
 /**
@@ -50,7 +51,7 @@ export class UserModel {
 
         if (search) {
             sql += ' AND (u.full_name LIKE ? OR u.email LIKE ?)'
-            params.push(`%${search}%`, `%${search}%`, `%${search}%`)
+            params.push(`%${search}%`, `%${search}%`)
         }
 
         if (filters.is_admin !== undefined) {
@@ -59,13 +60,24 @@ export class UserModel {
         }
 
         if (filters.is_active !== undefined) {
-            sql += ' AND is_active = ?'
+            sql += ' AND u.is_active = ?'
             params.push(filters.is_active)
         }
 
         sql += ' ORDER BY u.full_name ASC'
 
         const [rows] = await this.#db.query(sql, params)
+        return rows.map(row => new User_all_DTO(row))
+    }
+
+    async listUsers() {
+        const sql = `SELECT
+        BIN_TO_UUID(id) as id,
+        full_name
+        FROM ${this.#table}
+        WHERE is_active = 1
+        ORDER BY full_name ASC`
+        const [rows] = await this.#db.query(sql)
         return rows.map(row => new User_list_DTO(row))
     }
 
@@ -98,16 +110,14 @@ export class UserModel {
     async findById(id) {
         const sql =
             `SELECT 
-        BIN_TO_UUID(u.id) as id,
-        u.full_name,
-        u.email,
-        b.name as branch,
-        u.is_admin,
-        u.is_active
-        FROM ${this.#table} u
-        LEFT JOIN ${this.#table2} b
-        ON u.branch_id = b.id    
-        WHERE u.id = UUID_TO_BIN(?)`
+        BIN_TO_UUID(id) as id,
+        full_name,
+        email,
+        branch_id,
+        is_admin,
+        is_active
+        FROM ${this.#table} 
+        WHERE id = UUID_TO_BIN(?)`
 
         const [rows] = await this.#db.query(sql, [id])
         if (rows.length === 0) return null
