@@ -36,13 +36,18 @@ export class AuthService {
         if (user.requires_password_change) {
             tokenPayload = {
                 id: user.id,
-                requires_password_change: true
+                requires_password_change: true,
+                name: user.name,
+                email: user.email
             };
         } else {
             tokenPayload = {
                 id: user.id,
+                name: user.name,
+                email: user.email,
                 is_admin: user.is_admin,
-                branch_id: user.branch_id
+                branch_id: user.branch_id,
+                role: user.is_admin ? 'admin' : 'empleado'
             };
         }
 

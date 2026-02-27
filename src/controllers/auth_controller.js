@@ -44,8 +44,7 @@ export class AuthController {
             });
 
             res.status(200).json({
-                message: 'Inicio de sesión exitoso',
-                user
+                message: 'Inicio de sesión exitoso'
             });
 
         } catch (error) {
@@ -55,12 +54,29 @@ export class AuthController {
 
     /**
      * Cierra la sesión del usuario.
-     * Simplemente elimina la cookie 'access_token' del navegador.
-     * * @param {import('express').Request} req 
+     * Elimina la cookie 'access_token' del navegador con las mismas opciones que se usaron para crearla.
+     * @param {import('express').Request} req 
      * @param {import('express').Response} res 
      */
     logout = async (req, res) => {
-        res.clearCookie('access_token');
-        res.status(200).json({ message: 'Sesión cerrada correctamente' });
+        try {
+            res.clearCookie('access_token', {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'strict',
+                path: '/'
+            });
+            
+            // Si viene de un formulario, redirige a login
+            // Si es una petición AJAX, devuelve JSON
+            if (req.headers.accept && req.headers.accept.includes('application/json')) {
+                return res.status(200).json({ message: 'Sesión cerrada correctamente' });
+            }
+            
+            return res.redirect('/login');
+        } catch (error) {
+            console.error('Error en logout:', error);
+            return res.status(500).json({ status: 'error', message: 'Error al cerrar sesión' });
+        }
     }
 }

@@ -3,45 +3,49 @@ import jwt from 'jsonwebtoken';
 /**
  * Middleware de Autenticación.
  * Verifica la existencia y validez del JWT en la cookie 'access_token'.
+ * Si no existe token, redirige a /login.
  */
 export const checkAuth = (req, res, next) => {
     try {
         const token = req.cookies.access_token;
 
         if (!token) {
-            return res.status(401).json({ 
-                status: 'error',
-                message: 'No autorizado: No se encontró token de sesión' 
-            });
+            return res.redirect('/login');
         }
+        
         const payload = jwt.verify(token, process.env.JWT_SECRET);
         req.user = payload;
-
-        if (payload.requires_password_change) {
-
-            const isChangePasswordRoute = req.originalUrl.includes('/password');
-
-            if (!isChangePasswordRoute) {
-                return res.status(403).json({
-                    status: 'error',
-                    message: 'Debe cambiar su contraseña obligatoriamente',
-                    code: 'PASSWORD_CHANGE_REQUIRED'
-                });
-            }
-        }
-
         next();
 
     } catch (error) {
-        if (error.name === 'TokenExpiredError') {
-            return res.status(401).json({ status: 'error', message: 'La sesión ha expirado' });
+        if (error.name === 'TokenExpiredError' || error.name === 'JsonWebTokenError') {
+            return res.redirect('/login');
         }
-        if (error.name === 'JsonWebTokenError') {
-            return res.status(401).json({ status: 'error', message: 'Token inválido' });
-        }
-        
         return res.status(500).json({ status: 'error', message: 'Error interno de autenticación' });
     }
+};
+
+/**
+ * Middleware que redirige a /firstpass si el usuario necesita cambiar contraseña.
+ * DEBE usarse después de checkAuth.
+ */
+export const requirePasswordChange = (req, res, next) => {
+    if (req.user && req.user.requires_password_change) {
+        return res.redirect('/firstpass');
+    }
+    next();
+};
+
+/**
+ * Middleware que redirige a dashboard si el usuario NO necesita cambiar contraseña.
+ * Usarlo solo en /firstpass para asegurar que solo pueda acceder si realmente necesita cambiar pass.
+ * DEBE usarse después de checkAuth.
+ */
+export const allowPasswordChangeOnly = (req, res, next) => {
+    if (req.user && !req.user.requires_password_change) {
+        return res.redirect('/');
+    }
+    next();
 };
 
 /**
