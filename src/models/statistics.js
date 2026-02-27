@@ -165,28 +165,6 @@ export class StatisticModel {
     }
 
     /**
-     * Cuenta cuántos productos distintos se encuentran en estado crítico (cantidad <= mínimo).
-     * @param {number} branchId - ID de la sucursal a consultar.
-     * @returns {Promise<number>} Número total de alertas de stock para la sucursal.
-     */
-    async getCriticalStockCount(branchId = null) {
-        let sql = `
-            SELECT COUNT(*) AS total_alertas
-            FROM product_branch_stock
-            WHERE quantity <= min_quantity
-        `
-
-        const param = []
-
-        if (branchId) {
-            sql += ' AND destination_branch_id = ?'
-            param.push(branchId)
-        }
-        const [rows] = await this.#db.query(sql, param)
-        return rows[0].total_alertas
-    }
-
-    /**
      * Obtiene la cantidad de movimientos de tipo 'envio' que aún no fueron entregados.
      * @returns {Promise<number>} Total de envíos en estado 'pendiente' o 'en_progreso'.
      */
@@ -195,7 +173,7 @@ export class StatisticModel {
             SELECT COUNT(*) AS total_pendientes
             FROM movements
             WHERE type = 'envio' 
-            AND status IN ('pendiente', 'en_progreso');
+            AND status IN ('pendiente', 'en_progreso')
         `
 
         const param = []
@@ -206,5 +184,122 @@ export class StatisticModel {
         }
         const [rows] = await this.#db.query(sql, param);
         return rows[0].total_pendientes;
+    }
+
+    // --- NOTIFICACIONES PARA EMPLEADOS ---
+
+    /**
+     * Obtiene productos de una sucursal que están en stock crítico (cantidad <= mínimo permitido).
+     * El producto solo se incluye si aún tiene stock (cantidad > 0).
+     * @param {number} branchId - ID de la sucursal.
+     * @returns {Promise<Array>} Lista con 'product_name', 'quantity', 'min_quantity'.
+     */
+    async getEmployeeCriticalStock(branchId) {
+        const sql = `
+        SELECT p.name AS product_name, pbs.quantity, pbs.min_quantity
+        FROM product_branch_stock pbs
+        JOIN products p ON pbs.product_id = p.id
+        WHERE pbs.branch_id = ? 
+          AND pbs.quantity <= pbs.min_quantity 
+          AND pbs.quantity > 0
+    `;
+        const [rows] = await this.#db.query(sql, [branchId]);
+        return rows;
+    }
+
+    /**
+     * Obtiene productos de una sucursal que se han agotado (cantidad = 0).
+     * @param {number} branchId - ID de la sucursal.
+     * @returns {Promise<Array>} Lista con 'product_name'.
+     */
+    async getEmployeeZeroStock(branchId) {
+        const sql = `
+        SELECT p.name AS product_name
+        FROM product_branch_stock pbs
+        JOIN products p ON pbs.product_id = p.id
+        WHERE pbs.branch_id = ? 
+          AND pbs.quantity = 0
+    `;
+        const [rows] = await this.#db.query(sql, [branchId]);
+        return rows;
+    }
+
+    /**
+     * Obtiene los envíos en estado 'en_proceso' destinados a una sucursal específica.
+     * @param {number} branchId - ID de la sucursal destino.
+     * @returns {Promise<Array>} Lista con 'id', 'receipt_number', 'origin_name', 'date'.
+     */
+    async getEmployeeIncomingShipments(branchId) {
+        const sql = `
+        SELECT m.id, m.receipt_number, b.name AS origin_name, m.date
+        FROM movements m
+        JOIN branches b ON m.origin_branch_id = b.id
+        WHERE m.destination_branch_id = ? 
+          AND m.type = 'envio' 
+          AND m.status = 'en_proceso'
+    `;
+        const [rows] = await this.#db.query(sql, [branchId]);
+        return rows;
+    }
+
+
+    // --- NOTIFICACIONES PARA ADMINISTRADORES ---
+
+    /**
+     * Obtiene un resumen global de stock crítico por sucursal.
+     * Muestra cuántos productos están por debajo del mínimo en cada sucursal.
+     * @returns {Promise<Array>} Lista con 'branch_name', 'critical_count'.
+     */
+    async getAdminGlobalCriticalStock() {
+        const sql = `
+        SELECT b.name AS branch_name, COUNT(*) AS critical_count
+        FROM product_branch_stock pbs
+        JOIN branches b ON pbs.branch_id = b.id
+        WHERE pbs.quantity <= pbs.min_quantity
+        GROUP BY pbs.branch_id
+    `;
+        const [rows] = await this.#db.query(sql);
+        return rows;
+    }
+
+    /**
+     * Obtiene envíos que llevan más de 48 horas en estado 'en_proceso' (estancados).
+     * Útil para alertar al administrador sobre envíos que podrían tener problemas.
+     * @returns {Promise<Array>} Lista con 'id', 'receipt_number', 'origin_name', 'dest_name', 'date'.
+     */
+    async getAdminStalledShipments() {
+        const sql = `
+        SELECT m.id, m.receipt_number, 
+               orig.name AS origin_name, dest.name AS dest_name, 
+               m.date
+        FROM movements m
+        JOIN branches orig ON m.origin_branch_id = orig.id
+        JOIN branches dest ON m.destination_branch_id = dest.id
+        WHERE m.type = 'envio' 
+          AND m.status = 'en_proceso'
+          AND m.date < NOW() - INTERVAL 48 HOUR
+    `;
+        const [rows] = await this.#db.query(sql);
+        return rows;
+    }
+
+    /**
+     * Obtiene los últimos 5 envíos entregados en las últimas 48 horas.
+     * Muestra los envíos confirmados recientemente por las sucursales.
+     * @returns {Promise<Array>} Lista con 'id', 'receipt_number', 'dest_name', 'arrival_date'.
+     */
+    async getAdminRecentlyDeliveredShipments() {
+        const sql = `
+        SELECT m.id, m.receipt_number, dest.name AS dest_name, m.arrival_date
+        FROM movements m
+        JOIN branches dest ON m.destination_branch_id = dest.id
+        WHERE m.type = 'envio' 
+          AND m.status = 'entregado'
+          AND m.arrival_date >= NOW() - INTERVAL 48 HOUR
+        ORDER BY m.arrival_date DESC
+        LIMIT 5
+    `;
+        const [rows] = await this.#db.query(sql);
+        return rows;
     }
 }
