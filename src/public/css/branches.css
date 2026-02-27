@@ -1,0 +1,433 @@
+/* =========================================
+   TOOLBAR DE SUCURSALES
+   ========================================= */
+.branches-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+/* Reutilizamos estilos del buscador para consistencia */
+.search-bar {
+  display: flex;
+  align-items: center;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  flex-grow: 1;
+  max-width: 400px;
+  transition: all 0.2s ease;
+}
+
+.search-bar:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.search-bar input {
+  border: none;
+  outline: none;
+  width: 100%;
+  margin-left: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.search-icon {
+  color: #94a3b8;
+}
+
+/* Botón Primario (Reutilizable) */
+.btn-primary {
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-hover, #0f172a);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary .material-symbols-outlined {
+  font-size: 20px;
+}
+
+/* =========================================
+   GRILLA DE TARJETAS (CARDS)
+   ========================================= */
+.branches-grid {
+  display: grid;
+  /* La magia responsive: tarjetas de min 300px, llenando el espacio disponible */
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+.branch-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.branch-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 20px -8px rgba(0, 0, 0, 0.1);
+  border-color: var(--primary-light);
+}
+
+/* Cabecera de la Tarjeta */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.branch-name {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.branch-id {
+  font-family: monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: var(--bg-input);
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+/* Cuerpo de la Tarjeta (Datos) */
+.card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-grow: 1; /* Empuja el footer hacia abajo */
+}
+
+.info-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.icon-info {
+  color: var(--primary);
+  background: var(--bg-input);
+  padding: 6px;
+  border-radius: 8px;
+  font-size: 20px;
+}
+
+.info-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.info-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+}
+
+.info-text p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+/* Footer y Botones de Acción */
+.card-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: auto; /* Se asegura de quedar siempre abajo */
+}
+
+.btn-action {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-action .material-symbols-outlined {
+  font-size: 20px;
+}
+
+/* Estilos específicos para Editar */
+.btn-edit {
+  color: #3b82f6;
+  border-color: transparent;
+}
+.btn-edit:hover {
+  background-color: #eff6ff;
+  border-color: #bfdbfe;
+  color: #2563eb;
+}
+
+/* Estilos específicos para Eliminar */
+.btn-delete {
+  color: #ef4444;
+  border-color: transparent;
+}
+.btn-delete:hover {
+  background-color: #fef2f2;
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
+/* Dark theme para botones de acción */
+body.dark-theme .btn-edit {
+  color: #60a5fa;
+}
+
+body.dark-theme .btn-edit:hover {
+  background-color: rgba(96, 165, 250, 0.15);
+  border-color: rgba(96, 165, 250, 0.3);
+  color: #93c5fd;
+}
+
+body.dark-theme .btn-delete {
+  color: #f87171;
+}
+
+body.dark-theme .btn-delete:hover {
+  background-color: rgba(248, 113, 113, 0.15);
+  border-color: rgba(248, 113, 113, 0.3);
+  color: #fca5a5;
+}
+
+/* Status Badges */
+.badge.status-ok {
+  background-color: #dcfce7;
+  color: #15803d;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.badge.status-danger {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+body.dark-theme .badge.status-ok {
+  background-color: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+}
+
+body.dark-theme .badge.status-danger {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+/* =========================================
+   MODAL DE SUCURSALES (Formulario)
+   ========================================= */
+
+/* Fondo oscuro y contenedor centrado */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.5); /* Fondo azulado oscuro */
+  z-index: 2000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* Tarjeta blanca del modal */
+.modal-card {
+  background: var(--bg-card);
+  border-radius: 16px;
+  width: 90%;
+  max-width: 500px; /* Tamaño ideal para un form de 4 inputs */
+  padding: 2rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.btn-close-modal {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 4px;
+  border-radius: 50%;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+}
+.btn-close-modal:hover {
+  background-color: #fee2e2;
+  color: #ef4444;
+}
+
+/* Grilla del formulario */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Dos columnas por defecto */
+  gap: 1.25rem;
+}
+
+.full-width {
+  grid-column: span 2; /* Ocupa las dos columnas */
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+/* Inputs y Selects unificados */
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  outline: none;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  font-family: inherit;
+  transition: all 0.2s;
+  background-color: var(--bg-input);
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+/* Botones del pie */
+.modal-actions {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.btn-cancel {
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.btn-cancel:hover {
+  background: var(--bg-input);
+  color: var(--text-primary);
+}
+
+@media (max-width: 640px) {
+  .branches-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-bar {
+    max-width: 100%;
+  }
+}
+
+/* Responsive del modal */
+@media (max-width: 480px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  } /* 1 sola columna en celular */
+  .full-width {
+    grid-column: span 1;
+  }
+  .modal-actions {
+    flex-direction: column-reverse;
+  } /* Botones apilados */
+  .btn-primary,
+  .btn-cancel {
+    width: 100%;
+    justify-content: center;
+  }
+}
