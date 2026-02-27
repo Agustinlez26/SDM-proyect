@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<%- include('../partials/head', { title: 'Operaciones' , cssFile: 'operations.css' }) %>
+
+    <body>
+        <div class="layout">
+            <%- include('../partials/sidebar', { activePage: 'operations' }) %>
+
+                <main class="layout__content">
+                    <%- include('../partials/navbar', { title: 'Operaciones' }) %>
+
+                        <script>
+                            window.USER_ROLE = '<%= user && user.role === "admin" ? "admin" : "empleado" %>';
+                        </script>
+                        <script src="/js/operations.js" defer></script>
+
+                        <div class="main-container">
+
+                            <section class="alerts-section" id="alerts-section">
+                                <div class="section-header">
+                                    <span class="material-symbols-outlined icon-alert"
+                                        id="alert-icon">notifications_active</span>
+                                    <h2 id="alert-title">Requiere tu atención</h2>
+                                </div>
+
+                                <div class="alerts-grid" id="alerts-grid-container">
+                                    <div style="padding: 2rem; color: #64748b; font-size: 0.9rem;"
+                                        id="alert-empty-text">
+                                        Buscando envíos...
+                                    </div>
+                                </div>
+                            </section>
+
+                            <hr class="divider">
+
+                            <section class="actions-section">
+                                <h2>¿Qué operación deseas registrar?</h2>
+                                <div class="action-cards-grid">
+
+                                    <% if (user && user.role==='admin' ) { %>
+                                        <button class="action-card card-in" onclick="openOperationModal('in')">
+                                            <div class="card-icon"><span
+                                                    class="material-symbols-outlined">download</span></div>
+                                            <div class="card-text">
+                                                <h3>Ingreso de Mercadería</h3>
+                                                <p>Cargar compras a proveedores o ajustes a favor.</p>
+                                            </div>
+                                        </button>
+                                        <button class="action-card card-transfer"
+                                            onclick="openOperationModal('transfer')">
+                                            <div class="card-icon"><span
+                                                    class="material-symbols-outlined">local_shipping</span></div>
+                                            <div class="card-text">
+                                                <h3>Enviar a Sucursal</h3>
+                                                <p>Mover stock hacia otro local o depósito.</p>
+                                            </div>
+                                        </button>
+                                        <% } else { %>
+                                            <button class="action-card card-out" onclick="openOperationModal('out')">
+                                                <div class="card-icon"><span
+                                                        class="material-symbols-outlined">upload</span></div>
+                                                <div class="card-text">
+                                                    <h3>Egreso / Salida</h3>
+                                                    <p>Registrar ventas, mermas o productos dañados.</p>
+                                                </div>
+                                            </button>
+                                            <% } %>
+
+                                </div>
+                            </section>
+
+                        </div>
+
+                        <div class="modal-overlay" id="modal-operation">
+                            <div class="modal-card modal-large">
+                                <header class="modal-header">
+                                    <div>
+                                        <h3 id="modal-op-title">Título Operación</h3>
+                                        <p id="modal-op-subtitle" class="text-muted"
+                                            style="margin-top: 4px; font-size: 0.85rem;">Subtítulo</p>
+                                    </div>
+                                    <button class="btn-close-modal" id="btn-close-operation">
+                                        <span class="material-symbols-outlined">close</span>
+                                    </button>
+                                </header>
+
+                                <div class="modal-body">
+                                    <div class="op-controls-grid" id="op-controls">
+                                        <div class="form-group" id="group-dest" style="display: none;">
+                                            <label>Sucursal Destino</label>
+                                            <select id="op-dest">
+                                                <option value="" disabled selected>Seleccionar sucursal...</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group" id="group-search"
+                                            style="display: none; grid-column: span 2;">
+                                            <label>Buscar Producto a agregar</label>
+                                            <div class="search-bar">
+                                                <span class="material-symbols-outlined search-icon">search</span>
+                                                <input type="text" id="op-search-prod"
+                                                    placeholder="Escanear código o escribir nombre...">
+                                                <button class="btn-mini-add" type="button" id="btn-search-prod">
+                                                    <span class="material-symbols-outlined">add</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="detail-products-container mt-2">
+                                        <table class="detail-products-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Código</th>
+                                                    <th>Producto</th>
+                                                    <th class="text-center" width="120">Cantidad</th>
+                                                    <th class="text-center" width="60" id="col-action-remove"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="op-products-list">
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <div class="modal-actions">
+                                    <button class="btn-cancel" id="btn-cancel-op">Cancelar</button>
+                                    <button class="btn-primary" id="btn-confirm-op">
+                                        <span class="material-symbols-outlined"
+                                            id="btn-confirm-icon">check_circle</span>
+                                        <span id="btn-confirm-text">Confirmar</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                </main>
+        </div>
+    </body>
+
+</html>
