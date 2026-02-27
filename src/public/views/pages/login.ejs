@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<%- include('../partials/head', { title: 'Inicio de sesion - Sol de mayo' , cssFile: 'login.css', jsFile: 'login.js', excludeBaseJs: true }) %>
+
+    <body>
+        <div class="login-container">
+            <form id="login-form" class="login-form" action="">
+                <div class="login-logo"></div>
+                <h1 class="login-form__title">¡Bienvenido!</h1>
+                <h3 class="login-form__subtitle">Inciá sesión para ingresar</h3>
+
+                <div class="login-form__group">
+                    <label for="user" class="login-form__label">Email</label>
+                    <div class="login-form__input-wrapper">
+                        <img class="login-form__icon" src="../../imgs/Profile 1.svg" alt="user-logo">
+                        <input id="email" name="email" type="text" class="login-form__input" placeholder="ejemplo@email.com" required>
+                    </div>
+                </div>
+
+                <div class="login-form__group">
+                    <label for="password" class="login-form__label">Contraseña</label>
+                    <div class="login-form__input-wrapper">
+                        <img class="login-form__icon" src="../../imgs/lock.svg" alt="password-logo">
+                        <input id="password" name="password" type="password" class="login-form__input" placeholder="******" required>
+                        <button id="view-password" class="view-password"></button>
+                    </div>
+                </div>
+
+                <div class="login-form__group">
+                    <button class="login-form__submit" type="submit">Inciar sesión</button>
+                </div>
+            </form>
+        </div>
+    </body>
+
+</html>
