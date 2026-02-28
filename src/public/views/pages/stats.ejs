@@ -28,9 +28,18 @@
                         </div>
 
                         <div class="stats-grid">
+
                             <article class="stat-card">
                                 <div class="card-header">
-                                    <h3>🏆 Productos Más Vendidos (Histórico)</h3>
+                                    <h3>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                            fill="currentColor" viewBox="0 0 24 24">
+                                            <path
+                                                d="M21 4h-3V3c0-.55-.45-1-1-1H7c-.55 0-1 .45-1 1v1H3c-.55 0-1 .45-1 1v3c0 4.29 1.79 6.88 4.81 6.99A6 6 0 0 0 11 17.91V20H8v2h8v-2h-3v-2.09a5.98 5.98 0 0 0 4.19-2.92C20.2 14.88 22 12.29 22 8V5c0-.55-.45-1-1-1M4 8V6h2v6c0 .28.03.56.06.83C4.22 12.12 4 9.31 4 8m12 4c0 2.21-1.79 4-4 4s-4-1.79-4-4V4h8zm4-4c0 1.31-.22 4.12-2.06 4.83.04-.27.06-.55.06-.83V6h2z">
+                                            </path>
+                                        </svg>
+                                        Productos Más Vendidos
+                                    </h3>
                                 </div>
                                 <div class="chart-wrapper">
                                     <canvas id="topSellingChart"></canvas>
@@ -38,28 +47,23 @@
                             </article>
 
                             <article class="stat-card">
-                                <div class="card-header">
-                                    <h3>📉 Evolución de Ventas (Egresos Totales)</h3>
-                                </div>
-                                <div class="chart-wrapper">
-                                    <canvas id="monthlyEgressesChart"></canvas>
-                                </div>
-                            </article>
-
-                            <article class="stat-card">
-                                <div class="card-header">
-                                    <h3>🏢 Rendimiento por Sucursal</h3>
-                                </div>
-                                <div class="chart-wrapper">
-                                    <canvas id="branchPerformanceChart"></canvas>
-                                </div>
-                            </article>
-
-                            <article class="stat-card">
                                 <div class="card-header with-actions">
-                                    <h3>📅 Estacionalidad de Producto</h3>
+                                    <h3>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                            fill="currentColor" viewBox="0 0 24 24">
+                                            <path
+                                                d="M19 4h-2V2h-2v2H9V2H7v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2M5 20V8h14V6v14z">
+                                            </path>
+                                            <path
+                                                d="M7 11h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2zm-8 4h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2z">
+                                            </path>
+                                        </svg>
+                                        Estacionalidad
+                                    </h3>
                                     <div class="mini-search">
-                                        <input type="number" id="productIdInput" placeholder="ID Producto" min="1">
+                                        <input type="text" id="productSearchInput" placeholder="Nombre o Código..."
+                                            style="width: 150px;"
+                                            onkeypress="if(event.key === 'Enter') loadProductSeasonality()">
                                         <button onclick="loadProductSeasonality()" title="Buscar">
                                             <span class="material-symbols-outlined">search</span>
                                         </button>
@@ -69,6 +73,43 @@
                                     <canvas id="seasonalityChart"></canvas>
                                 </div>
                             </article>
+
+                            <article class="stat-card full-width">
+                                <div class="card-header">
+                                    <h3>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                            fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M3 15h2v6H3zm4-2h2v8H7zm4-1h2v9h-2zm4 1h2v8h-2zm4-5h2v13h-2z">
+                                            </path>
+                                            <path
+                                                d="m19.21 2.38-4.87 6.21-5-4-6.13 7.79 1.58 1.24 4.87-6.21 5 4 6.13-7.79z">
+                                            </path>
+                                        </svg>
+                                        Evolución de Ventas (Egresos)
+                                    </h3>
+                                </div>
+                                <div class="chart-wrapper">
+                                    <canvas id="monthlyEgressesChart"></canvas>
+                                </div>
+                            </article>
+
+                            <article class="stat-card full-width">
+                                <div class="card-header">
+                                    <h3>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                            fill="currentColor" viewBox="0 0 24 24">
+                                            <path
+                                                d="M19.1 2.8c-.38-.5-.97-.8-1.6-.8h-11c-.63 0-1.22.3-1.6.8L2.2 6.4c-.13.17-.2.38-.2.6v1c0 1.04.41 1.98 1.06 2.69-.03.1-.06.2-.06.31v9c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-9c0-.11-.03-.21-.06-.31C21.59 9.98 22 9.04 22 8V7c0-.22-.07-.43-.2-.6zm.9 4.53V8c0 1.1-.9 2-2 2s-2-.9-2-2V7q0-.12-.03-.24L15.28 4h2.22zM10.78 4h2.44L14 7.12V8c0 1.1-.9 2-2 2s-2-.9-2-2v-.88zM4 7.33 6.5 4h2.22l-.69 2.76Q8 6.88 8 7v1c0 1.1-.9 2-2 2s-2-.9-2-2zM10 20v-4h4v4zm6 0v-4c0-1.1-.9-2-2-2h-4c-1.1 0-2 .9-2 2v4H5v-8.14c.32.08.65.14 1 .14 1.2 0 2.27-.54 3-1.38.73.84 1.8 1.38 3 1.38s2.27-.54 3-1.38c.73.84 1.8 1.38 3 1.38.35 0 .68-.06 1-.14V20z">
+                                            </path>
+                                        </svg>
+                                        Rendimiento por Sucursal
+                                    </h3>
+                                </div>
+                                <div class="chart-wrapper">
+                                    <canvas id="branchPerformanceChart"></canvas>
+                                </div>
+                            </article>
+
                         </div>
                     </div>
 

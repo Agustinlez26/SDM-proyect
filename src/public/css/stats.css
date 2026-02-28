@@ -1,8 +1,9 @@
+/* --- HEADER Y CONTROLES --- */
 .stats-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--gap-grid);
+  margin-bottom: var(--gap-grid, 1.5rem);
   flex-wrap: wrap;
   gap: 1rem;
 }
@@ -23,6 +24,7 @@
   border-radius: 12px;
   border: 1px solid var(--border-color);
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+  flex-wrap: wrap; /* Permite que los controles bajen si no entran */
 }
 
 .input-group {
@@ -46,6 +48,7 @@
   outline: none;
   width: 80px;
   transition: border-color 0.2s;
+  background-color: var(--bg-input, #fff);
 }
 
 .stats-input:focus {
@@ -55,6 +58,7 @@
 .stats-btn {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
   background-color: var(--primary);
   color: white;
@@ -71,26 +75,31 @@
   background-color: var(--primary-hover);
 }
 
-/* --- GRID SYSTEM --- */
+/* --- GRID SYSTEM ACTUALIZADO --- */
 .stats-grid {
   display: grid;
-  /* Responsive automático: columnas de mínimo 450px */
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 450px), 1fr));
-  gap: var(--gap-grid);
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.full-width {
+  grid-column: 1 / -1;
 }
 
 /* --- TARJETAS (CARDS) --- */
 .stat-card {
   background-color: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: 16px; /* Bordes más redondeados tipo app moderna */
+  border-radius: 16px;
   padding: 1.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
   display: flex;
   flex-direction: column;
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease;
+  width: 100%;
+  overflow: hidden; /* Evita que el contenido desborde en móviles */
 }
 
 .stat-card:hover {
@@ -98,59 +107,140 @@
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
 }
 
-/* Header de la tarjeta */
+/* Header de la tarjeta y SVGs */
 .card-header {
   margin-bottom: 1.5rem;
-  border-bottom: 1px solid var(--primary-light); /* Usamos el light para separar sutilmente */
+  border-bottom: 1px solid var(--border-color);
   padding-bottom: 0.8rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap; /* CLAVE: Si el título choca con el buscador, bajan de línea */
+  gap: 1rem;
 }
 
 .card-header h3 {
-  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1.05rem;
   font-weight: 700;
-  color: var(
-    --text-secondary
-  ); /* Color secundario para títulos de gráficos queda muy pro */
-  text-transform: uppercase;
+  color: var(--text-primary);
   letter-spacing: 0.5px;
 }
 
-/* --- CONTENEDOR DE CHART --- */
+.card-header h3 svg {
+  color: var(--primary);
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0; /* Evita que el ícono se achique si el texto es largo */
+}
+
 .chart-wrapper {
   position: relative;
-  height: 300px;
+  height: 320px;
   width: 100%;
 }
 
-/* --- MINI BÚSQUEDA (Para estacionalidad) --- */
+/* --- MINI BÚSQUEDA --- */
 .mini-search {
   display: flex;
   gap: 5px;
+  max-width: 100%; /* Para que no se salga de la tarjeta en móviles */
 }
 
 .mini-search input {
-  padding: 0.3rem 0.6rem;
+  padding: 0.4rem 0.8rem;
   border: 1px solid var(--border-color);
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 0.85rem;
-  width: 100px;
+  outline: none;
+  flex-grow: 1; /* Ocupa el espacio disponible */
+  min-width: 120px;
+  background-color: var(--bg-input, #fff);
+  color: var(--text-primary);
+}
+
+.mini-search input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(33, 77, 92, 0.1);
 }
 
 .mini-search button {
   background: var(--primary-light);
   color: var(--primary);
   border: none;
-  border-radius: 6px;
-  padding: 0.3rem 0.6rem;
+  border-radius: 8px;
+  padding: 0.4rem 0.6rem;
   cursor: pointer;
   display: flex;
   align-items: center;
-  transition: background 0.2s;
+  transition: 0.2s;
+  flex-shrink: 0;
 }
 
 .mini-search button:hover {
   background: var(--border-color);
+}
+
+/* =========================================
+   RESPONSIVE DESIGN (Media Queries)
+   ========================================= */
+
+/* Tablets y pantallas pequeñas (Pasa de 2 columnas a 1) */
+@media (max-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Teléfonos (Ajustes de UI fina) */
+@media (max-width: 768px) {
+  /* Los controles del título se estiran */
+  .stats-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  /* La mini búsqueda toma todo el ancho disponible si se cae a otra línea */
+  .mini-search {
+    width: 100%;
+  }
+
+  /* Hacemos los gráficos un poco más bajitos para que quepan en la pantalla del celu sin scrollear tanto */
+  .chart-wrapper {
+    height: 280px;
+  }
+
+  /* Un poco menos de padding en las tarjetas para aprovechar espacio */
+  .stat-card {
+    padding: 1.2rem;
+  }
+}
+
+/* Teléfonos muy angostos (ej. iPhone SE) */
+@media (max-width: 480px) {
+  /* Apilamos Año y el Botón de Actualizar */
+  .stats-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .input-group {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .stats-btn {
+    width: 100%;
+  }
+
+  /* Achicamos la tipografía del título principal un poco */
+  .stats-title {
+    font-size: 1.25rem;
+  }
+
+  .card-header h3 {
+    font-size: 0.95rem;
+  }
 }
