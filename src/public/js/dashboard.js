@@ -1,9 +1,11 @@
 // ============================================================================
-// VARIABLES GLOBALES (Para almacenar catálogos y no pedir a la API cada vez)
+// VARIABLES GLOBALES
 // ============================================================================
 let globalCategories = [];
 let globalBranches = [];
 let currentOperationType = null;
+let searchTimeout = null; 
+let selectedProductsForOp = []; 
 
 // ============================================================================
 // INICIALIZACIÓN
@@ -11,10 +13,8 @@ let currentOperationType = null;
 document.addEventListener('DOMContentLoaded', () => {
     loadDashboardCards();
     loadRecentMovements();
-
     fetchCategories();
     fetchBranches();
-
     setupModalListeners();
 });
 
@@ -120,7 +120,7 @@ async function loadRecentMovements() {
 }
 
 // ============================================================================
-// 3. PRE-CARGA DE DATOS PARA MODALES (Fetchs iniciales)
+// 3. PRE-CARGA DE DATOS PARA MODALES
 // ============================================================================
 async function fetchCategories() {
     try {
@@ -147,29 +147,41 @@ async function fetchBranches() {
 function populateCategorySelect() {
     const select = document.getElementById('product-category-select');
     if (!select) return;
-
     select.innerHTML = '<option value="" disabled selected>Seleccionar...</option>';
-
-    globalCategories.forEach(cat => {
-        select.innerHTML += `<option value="${cat.id}">${cat.name}</option>`;
-    });
+    globalCategories.forEach(cat => select.innerHTML += `<option value="${cat.id}">${cat.name}</option>`);
 }
 
 function populateBranchSelect() {
     const select = document.getElementById('op-dest');
     if (!select) return;
-
     select.innerHTML = '<option value="" disabled selected>Seleccionar sucursal...</option>';
-
-    globalBranches.forEach(branch => {
-        select.innerHTML += `<option value="${branch.id}">${branch.name}</option>`;
-    });
+    globalBranches.forEach(branch => select.innerHTML += `<option value="${branch.id}">${branch.name}</option>`);
 }
 
 // ============================================================================
-// 4. LÓGICA DE APERTURA/CIERRE DE MODALES
+// 4. LÓGICA DE APERTURA Y CIERRE (LIMPIEZA) DE MODALES
 // ============================================================================
+function handleSearchInput() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        searchProductsForOperation();
+    }, 300);
+}
+
+// ESTA FUNCIÓN LIMPIA TODO AL CERRAR
+function closeAndCleanOperationModal() {
+    document.getElementById('modal-operation').classList.remove('active');
+    selectedProductsForOp = []; 
+    document.getElementById('op-search-prod').value = '';
+    const destSelect = document.getElementById('op-dest');
+    if(destSelect) destSelect.value = '';
+    const resultsList = document.getElementById('search-results-list');
+    if(resultsList) resultsList.style.display = 'none';
+    renderEmptyEditableRow();
+}
+
 function setupModalListeners() {
+    // Abrir modal crear producto
     document.querySelectorAll('.btn-modal-trigger').forEach(btn => {
         btn.addEventListener('click', () => {
             const targetId = btn.getAttribute('data-target');
@@ -178,7 +190,8 @@ function setupModalListeners() {
         });
     });
 
-    document.querySelectorAll('.btn-close-modal, .btn-cancel').forEach(btn => {
+    // Cierre genérico (Crear Producto)
+    document.querySelectorAll('.btn-close-modal:not(#btn-close-operation), .btn-cancel:not(#btn-cancel-op)').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const targetId = btn.getAttribute('data-target');
             if (targetId) {
@@ -188,17 +201,26 @@ function setupModalListeners() {
         });
     });
 
-    document.getElementById('btn-close-operation').addEventListener('click', () => document.getElementById('modal-operation').classList.remove('active'));
-    document.getElementById('btn-cancel-op').addEventListener('click', () => document.getElementById('modal-operation').classList.remove('active'));
+    // Cierre Específico Modal Operaciones
+    document.getElementById('btn-close-operation').addEventListener('click', closeAndCleanOperationModal);
+    document.getElementById('btn-cancel-op').addEventListener('click', closeAndCleanOperationModal);
 
+    // Click afuera
     document.querySelectorAll('.modal-overlay').forEach(overlay => {
         overlay.addEventListener('click', (e) => {
             if (e.target === overlay) {
-                overlay.classList.remove('active');
+                if (overlay.id === 'modal-operation') {
+                    closeAndCleanOperationModal();
+                } else {
+                    overlay.classList.remove('active');
+                }
             }
         });
     });
 
+    const searchInput = document.getElementById('op-search-prod');
+    if (searchInput) searchInput.addEventListener('input', handleSearchInput);
+    
     document.getElementById('btn-search-prod').addEventListener('click', searchProductsForOperation);
 }
 
@@ -207,6 +229,7 @@ function setupModalListeners() {
 // ============================================================================
 function openOperationModal(type) {
     currentOperationType = type;
+    selectedProductsForOp = []; // Reseteo de seguridad al abrir
 
     const modalOp = document.getElementById('modal-operation');
     const titleOp = document.getElementById('modal-op-title');
@@ -214,19 +237,21 @@ function openOperationModal(type) {
     const controlsDiv = document.getElementById('op-controls');
     const groupDest = document.getElementById('group-dest');
     const groupSearch = document.getElementById('group-search');
-    const colAction = document.getElementById('col-action-remove');
-    const prodList = document.getElementById('op-products-list');
+    
+    // Cambiamos el header de la tabla dependiendo de la operación
+    const thead = document.querySelector('.detail-products-table thead tr');
+    
     const btnConfirmText = document.getElementById('btn-confirm-text');
     const btnConfirmIcon = document.getElementById('btn-confirm-icon');
     const btnConfirmOp = document.getElementById('btn-confirm-op');
 
-    prodList.innerHTML = '';
     document.getElementById('op-search-prod').value = '';
+    const resultsList = document.getElementById('search-results-list');
+    if (resultsList) resultsList.style.display = 'none';
 
     controlsDiv.style.display = 'grid';
     groupSearch.style.display = 'block';
     groupDest.style.display = 'none';
-    colAction.textContent = 'Acción';
     btnConfirmOp.className = 'btn-primary';
 
     switch (type) {
@@ -235,7 +260,12 @@ function openOperationModal(type) {
             subtitleOp.textContent = 'Busca productos para ingresar al depósito.';
             btnConfirmIcon.textContent = 'save';
             btnConfirmText.textContent = 'Guardar Ingreso';
-            renderEmptyEditableRow();
+            thead.innerHTML = `
+                <th>Código</th>
+                <th>Producto</th>
+                <th class="text-center" width="140">Cant. a Ingresar</th>
+                <th class="text-center" width="60"></th>
+            `;
             break;
 
         case 'transfer':
@@ -244,7 +274,13 @@ function openOperationModal(type) {
             groupDest.style.display = 'block';
             btnConfirmIcon.textContent = 'send';
             btnConfirmText.textContent = 'Confirmar Envío';
-            renderEmptyEditableRow();
+            thead.innerHTML = `
+                <th>Código</th>
+                <th>Producto</th>
+                <th class="text-center" width="100">Stock Disp.</th>
+                <th class="text-center" width="140">Cant. a Enviar</th>
+                <th class="text-center" width="60"></th>
+            `;
             break;
 
         case 'out':
@@ -253,54 +289,36 @@ function openOperationModal(type) {
             btnConfirmIcon.textContent = 'remove_circle_outline';
             btnConfirmText.textContent = 'Registrar Egreso';
             btnConfirmOp.className = 'btn-danger';
-            renderEmptyEditableRow();
+            thead.innerHTML = `
+                <th>Código</th>
+                <th>Producto</th>
+                <th class="text-center" width="100">Stock Disp.</th>
+                <th class="text-center" width="140">Cant. a Egresar</th>
+                <th class="text-center" width="60"></th>
+            `;
             break;
     }
 
+    renderEmptyEditableRow();
     modalOp.classList.add('active');
 }
 
 function renderEmptyEditableRow() {
+    const colSpan = currentOperationType === 'in' ? "4" : "5";
     document.getElementById('op-products-list').innerHTML = `
         <tr>
-            <td colspan="4" class="text-center text-muted" style="padding: 2rem;">
+            <td colspan="${colSpan}" class="text-center text-muted" style="padding: 2rem;">
                 Utiliza el buscador de arriba para agregar productos a la lista.
             </td>
         </tr>
     `;
 }
 
-async function searchProductsForOperation() {
-    const searchTerm = document.getElementById('op-search-prod').value;
-    if (!searchTerm) return alert('Ingresá un término de búsqueda');
-
-    let apiUrl = '';
-
-    if (currentOperationType === 'in') {
-        apiUrl = `/api/products/catalog?search=${encodeURIComponent(searchTerm)}`;
-    } else {
-        apiUrl = `/api/stocks/catalog?search=${encodeURIComponent(searchTerm)}`;
-    }
-
-    try {
-        const res = await fetch(apiUrl);
-        const json = await res.json();
-
-        if (json.status === 'success') {
-            console.log("Resultados encontrados:", json.data);
-            alert(`Se encontraron ${json.data.length} productos. Falta renderizar la fila interactiva.`);
-        }
-    } catch (err) {
-        console.error('Error buscando producto:', err);
-    }
-}
-
+// CREACIÓN DE PRODUCTO DESDE EL MODAL RAPIDO
 const formAddProduct = document.getElementById('form-add-product');
 if (formAddProduct) {
     formAddProduct.addEventListener('submit', async (e) => {
-        e.preventDefault(); // Evita que la página se recargue
-
-        // Recolectamos los datos del formulario
+        e.preventDefault();
         const payload = {
             name: document.getElementById('prod-name').value,
             barcode: document.getElementById('prod-code').value,
@@ -314,13 +332,12 @@ if (formAddProduct) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
-
             const data = await res.json();
 
             if (data.status === 'success') {
                 alert('¡Producto creado exitosamente!');
                 document.getElementById('modal-add-product').classList.remove('active');
-                formAddProduct.reset(); // Limpiamos el formulario
+                formAddProduct.reset();
             } else {
                 alert('Error al crear: ' + (data.message || 'Verifica los datos'));
             }
@@ -331,12 +348,18 @@ if (formAddProduct) {
     });
 }
 
-let selectedProductsForOp = [];
+// ============================================================================
+// BUSCADOR INTELIGENTE EN EL MODAL DE OPERACIONES
+// ============================================================================
 
-// Función para buscar y agregar producto a la tabla (Reemplaza la que tenías)
 async function searchProductsForOperation() {
-    const searchTerm = document.getElementById('op-search-prod').value;
-    if (!searchTerm) return alert('Ingresá un término de búsqueda');
+    const searchTerm = document.getElementById('op-search-prod').value.trim();
+    const resultsList = document.getElementById('search-results-list');
+
+    if (searchTerm.length < 2) {
+        if (resultsList) resultsList.style.display = 'none';
+        return;
+    }
 
     let apiUrl = currentOperationType === 'in'
         ? `/api/products/catalog?search=${encodeURIComponent(searchTerm)}`
@@ -346,40 +369,101 @@ async function searchProductsForOperation() {
         const res = await fetch(apiUrl);
         const json = await res.json();
 
+        if (!resultsList) return;
+        resultsList.innerHTML = ''; 
+
         if (json.status === 'success' && json.data.length > 0) {
-            // MVP: Tomamos el primer producto que coincide con la búsqueda
-            const product = json.data[0];
+            json.data.forEach(product => {
+                const li = document.createElement('li');
+                li.className = 'search-result-item';
 
-            // Verificamos si ya está en la lista
-            if (selectedProductsForOp.some(p => p.id === product.id)) {
-                return alert('El producto ya está en la lista.');
-            }
+                const code = product.cod_bar || product.code || 'S/C';
+                const name = product.name || product.product_name;
+                const id = product.id || product.product_id;
+                
+                // Si es ingreso asumimos infinito, sino tomamos el stock que viene de la API
+                const stockDisponible = currentOperationType === 'in' ? Infinity : (product.quantity || 0);
 
-            // Lo agregamos con cantidad 1 por defecto
-            selectedProductsForOp.push({
-                id: product.id,
-                code: product.barcode || product.code || 'S/C',
-                name: product.name || product.product_name,
-                quantity: 1
+                const stockBadge = product.quantity !== undefined
+                    ? `<span class="prod-stock">Stock: ${product.quantity}</span>`
+                    : '';
+
+                li.innerHTML = `
+                    <div class="prod-info">
+                        <span class="prod-code">${code}</span>
+                        <span class="prod-name">${name}</span>
+                    </div>
+                    ${stockBadge}
+                `;
+
+                li.onclick = () => addProductToTable(id, code, name, stockDisponible);
+                resultsList.appendChild(li);
             });
 
-            renderOperationTable();
-            document.getElementById('op-search-prod').value = ''; // Limpiamos buscador
-
         } else {
-            alert('No se encontró ningún producto con ese nombre o código.');
+            const emptyLi = document.createElement('li');
+            emptyLi.style.padding = '1.5rem 1rem';
+            emptyLi.style.textAlign = 'center';
+            emptyLi.style.color = 'var(--text-muted)';
+
+            if (currentOperationType === 'in') {
+                emptyLi.innerHTML = `
+                    <span class="material-symbols-outlined" style="display:block; font-size: 28px; margin-bottom: 8px; color: #94a3b8;">inventory_2</span>
+                    <span style="font-weight: 500;">No se encontró el producto en el catálogo.</span>
+                `;
+            } else {
+                emptyLi.innerHTML = `
+                    <span class="material-symbols-outlined" style="display:block; font-size: 28px; margin-bottom: 8px; color: #ef4444;">error</span>
+                    <span style="font-weight: 500; color: #ef4444;">No hay stock disponible de este producto.</span>
+                `;
+            }
+            resultsList.appendChild(emptyLi);
         }
+
+        resultsList.style.display = 'block';
+
     } catch (err) {
         console.error('Error buscando producto:', err);
     }
 }
+
+function addProductToTable(id, code, name, stockDisponible) {
+    if (selectedProductsForOp.some(p => p.id === id)) {
+        return alert('El producto ya está en la lista de la operación.');
+    }
+
+    if (stockDisponible === 0 && currentOperationType !== 'in') {
+        return alert('No puedes agregar este producto porque su stock disponible es 0.');
+    }
+
+    selectedProductsForOp.push({
+        id: id,
+        code: code,
+        name: name,
+        quantity: 1,
+        stockDisponible: stockDisponible
+    });
+
+    renderOperationTable();
+
+    document.getElementById('op-search-prod').value = '';
+    document.getElementById('search-results-list').style.display = 'none';
+}
+
+document.addEventListener('click', (e) => {
+    const resultsList = document.getElementById('search-results-list');
+    const searchBar = document.querySelector('.search-bar');
+    if (resultsList && searchBar && !searchBar.contains(e.target)) {
+        resultsList.style.display = 'none';
+    }
+});
 
 // Función para dibujar la tabla de productos seleccionados
 function renderOperationTable() {
     const tbody = document.getElementById('op-products-list');
 
     if (selectedProductsForOp.length === 0) {
-        renderEmptyEditableRow(); // Vuelve a poner el mensaje "Utiliza el buscador..."
+        renderEmptyEditableRow();
         return;
     }
 
@@ -387,17 +471,37 @@ function renderOperationTable() {
 
     selectedProductsForOp.forEach((prod, index) => {
         const tr = document.createElement('tr');
+        
+        // Columna de Stock Disponible (solo visible si no es ingreso)
+        const stockCol = currentOperationType !== 'in' 
+            ? `<td class="text-center font-bold" style="color: var(--primary);">${prod.stockDisponible}</td>` 
+            : '';
+
+        // El input de cantidad
+        const maxAttr = currentOperationType !== 'in' ? `max="${prod.stockDisponible}"` : '';
+
+        // El SVG de Basura
+        const trashSvg = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M17 6V4c0-1.1-.9-2-2-2H9c-1.1 0-2 .9-2 2v2H2v2h2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8h2V6zM9 4h6v2H9zm9 16H6V8h12z"></path>
+                <path d="M14.29 10.29 12 12.59l-2.29-2.3-1.42 1.42 2.3 2.29-2.3 2.29 1.42 1.42 2.29-2.3 2.29 2.3 1.42-1.42-2.3-2.29 2.3-2.29z"></path>
+            </svg>
+        `;
+
         tr.innerHTML = `
-            <td class="font-mono text-muted">${prod.code}</td>
+            <td class="font-mono text-muted" style="font-size: 0.85rem;">${prod.code}</td>
             <td class="font-bold">${prod.name}</td>
+            ${stockCol}
             <td class="text-center">
-                <input type="number" min="1" value="${prod.quantity}" 
-                       class="form-control text-center" style="width: 80px;"
+                <input type="number" min="1" ${maxAttr} value="${prod.quantity}" 
+                       style="width: 80px; padding: 0.4rem; text-align: center; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-input); color: var(--text-primary); font-weight: 600;"
                        onchange="updateProductQuantity(${index}, this.value)">
             </td>
             <td class="text-center">
-                <button class="btn-icon delete" onclick="removeProductFromOp(${index})">
-                    <span class="material-symbols-outlined icon-small">delete</span>
+                <button type="button" onclick="removeProductFromOp(${index})" 
+                        style="background: transparent; border: none; color: #ef4444; cursor: pointer; padding: 6px; border-radius: 6px; display: inline-flex; transition: 0.2s;"
+                        onmouseover="this.style.background='rgba(239,68,68,0.1)'" onmouseout="this.style.background='transparent'">
+                    ${trashSvg}
                 </button>
             </td>
         `;
@@ -406,7 +510,19 @@ function renderOperationTable() {
 }
 
 window.updateProductQuantity = function (index, newQuantity) {
-    selectedProductsForOp[index].quantity = parseInt(newQuantity) || 1;
+    const prod = selectedProductsForOp[index];
+    let qty = parseInt(newQuantity) || 1;
+
+    // Control estricto de no superar el stock
+    if (currentOperationType !== 'in' && qty > prod.stockDisponible) {
+        alert(`Stock insuficiente. Solo hay ${prod.stockDisponible} unidades disponibles de ${prod.name}.`);
+        qty = prod.stockDisponible; 
+    }
+    
+    if (qty < 1) qty = 1;
+
+    prod.quantity = qty;
+    renderOperationTable(); 
 }
 
 window.removeProductFromOp = function (index) {
@@ -414,8 +530,8 @@ window.removeProductFromOp = function (index) {
     renderOperationTable();
 }
 
+// CONFIRMACIÓN DE OPERACIÓN
 document.getElementById('btn-confirm-op').addEventListener('click', async () => {
-
     if (selectedProductsForOp.length === 0) {
         return alert('Debes agregar al menos un producto a la operación.');
     }
@@ -441,6 +557,10 @@ document.getElementById('btn-confirm-op').addEventListener('click', async () => 
 
     if (!confirm(`¿Estás seguro de registrar este ${dbType}?`)) return;
 
+    // Desactivar botón mientras carga
+    const btn = document.getElementById('btn-confirm-op');
+    btn.disabled = true;
+    
     try {
         const res = await fetch('/api/movements', {
             method: 'POST',
@@ -452,12 +572,7 @@ document.getElementById('btn-confirm-op').addEventListener('click', async () => 
 
         if (data.status === 'success') {
             alert('¡Operación registrada con éxito!');
-
-            // Cerramos modal y limpiamos variables
-            document.getElementById('modal-operation').classList.remove('active');
-            selectedProductsForOp = [];
-
-            // Magia: ¡Recargamos las tarjetas y la tabla para ver los cambios en vivo!
+            closeAndCleanOperationModal();
             loadDashboardCards();
             loadRecentMovements();
         } else {
@@ -466,5 +581,7 @@ document.getElementById('btn-confirm-op').addEventListener('click', async () => 
     } catch (error) {
         console.error('Error registrando movimiento:', error);
         alert('Ocurrió un error de conexión con el servidor.');
+    } finally {
+        btn.disabled = false;
     }
 });

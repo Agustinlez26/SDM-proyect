@@ -304,7 +304,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.5); /* Esto se oscurece más abajo en Dark Mode */
   z-index: 2000;
   display: flex;
   justify-content: center;
@@ -323,41 +323,53 @@
   background: var(--bg-card);
   width: 90%;
   max-width: 500px;
-  border-radius: 12px;
+  border-radius: 16px; /* Más curvo, más moderno */
   padding: 2rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2); /* Sombra más suave y difuminada */
   max-height: 90vh;
   overflow-y: auto;
+  border: 1px solid var(--border-color);
 }
 
 .modal-large {
-  max-width: 700px;
+  max-width: 750px;
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start; /* Alineado arriba por si el subtítulo es largo */
   margin-bottom: 1.5rem;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color); /* Usa variable de tema */
+  padding-bottom: 1.5rem;
 }
 
 .modal-header h3 {
-  font-size: 1.2rem;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-primary);
   margin: 0;
+  letter-spacing: -0.5px;
 }
 
 .btn-close-modal {
-  background: none;
-  border: none;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 50%; /* Botón redondo moderno */
   cursor: pointer;
-  color: #999;
-  padding: 5px;
+  color: var(--text-secondary);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.2s;
 }
 
 .btn-close-modal:hover {
-  color: var(--text-primary);
+  background: #fee2e2;
+  color: #ef4444;
+  border-color: #fca5a5;
 }
 
 .modal-form {
@@ -436,6 +448,72 @@
   align-items: center;
   justify-content: center;
 }
+.search-results-dropdown {
+  position: absolute;
+  top: calc(100% + 8px); /* Separado un poquito del input */
+  left: 0;
+  width: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  max-height: 300px; /* Un poco más alto */
+  overflow-y: auto;
+  z-index: 2001; /* Asegurar que flote sobre todo */
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.search-result-item {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.2s;
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+.search-result-item:hover {
+  background-color: var(--bg-input);
+}
+
+.search-result-item .prod-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.search-result-item .prod-code {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-family: monospace;
+  background: var(--bg-input);
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-block;
+  width: fit-content;
+}
+
+.search-result-item .prod-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.search-result-item .prod-stock {
+  font-size: 0.8rem;
+  color: var(--primary);
+  font-weight: 700;
+  background: var(--primary-light);
+  padding: 4px 10px;
+  border-radius: 20px; /* Tipo Pastilla */
+}
 
 .op-controls-grid {
   display: grid;
@@ -446,8 +524,9 @@
 
 .detail-products-container {
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
+  background: var(--bg-card);
 }
 
 .detail-products-table {
@@ -457,16 +536,39 @@
 }
 
 .detail-products-table th {
-  background: var(--bg-input);
-  padding: 0.8rem;
+  background: var(--bg-body); /* Para que contraste con el fondo del modal */
+  padding: 1rem;
   text-align: left;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-secondary);
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .detail-products-table td {
-  padding: 0.8rem;
-  border-top: 1px solid #eee;
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+}
+
+.detail-products-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* El input de cantidad dentro de la tabla */
+.detail-products-table input[type="number"] {
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  border-radius: 6px;
+  padding: 0.5rem;
+  font-weight: 600;
+}
+.detail-products-table input[type="number"]:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(47, 111, 138, 0.15); /* Tu primary color con opacidad */
 }
 
 .modal-actions {
@@ -578,4 +680,49 @@
     min-width: 600px;
     grid-template-columns: 60px 120px 100px 100px 100px;
   }
+}
+
+body.dark-theme .modal-overlay {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+/* El botón circular de cerrar en modo oscuro */
+body.dark-theme .btn-close-modal {
+  background: var(--bg-input);
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+}
+body.dark-theme .btn-close-modal:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* Lista desplegable del buscador */
+body.dark-theme .search-results-dropdown {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); /* Sombra más fuerte en oscuro */
+}
+
+body.dark-theme .search-result-item:hover {
+  background-color: var(--bg-body);
+}
+
+body.dark-theme .search-result-item .prod-stock {
+  background: rgba(77, 184, 208, 0.15);
+  color: var(--primary);
+}
+
+body.dark-theme .search-result-item .prod-code {
+  background: var(--bg-body);
+}
+
+body.dark-theme .detail-products-table th {
+  background: var(
+    --bg-input
+  );
+  border-bottom-color: var(--border-color);
+}
+
+body.dark-theme .detail-products-container {
+  box-shadow: none;
 }

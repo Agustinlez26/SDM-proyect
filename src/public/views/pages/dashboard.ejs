@@ -60,28 +60,29 @@
 
                             <h2 class="section-title">Acciones Rápidas</h2>
                             <section class="actions-grid">
-                                <% if (user.role === 'admin') { %>
-                                <button class="action-card btn-modal-trigger" data-target="modal-add-product">
-                                    <span class="material-symbols-outlined" style="font-size: 32px;">add_box</span>
-                                    <span>Crear Producto</span>
-                                </button>
+                                <% if (user.role==='admin' ) { %>
+                                    <button class="action-card btn-modal-trigger" data-target="modal-add-product">
+                                        <span class="material-symbols-outlined" style="font-size: 32px;">add_box</span>
+                                        <span>Crear Producto</span>
+                                    </button>
 
-                                <button class="action-card" onclick="openOperationModal('in')">
-                                    <span class="material-symbols-outlined" style="font-size: 32px;">login</span>
-                                    <span>Realizar Ingreso</span>
-                                </button>
+                                    <button class="action-card" onclick="openOperationModal('in')">
+                                        <span class="material-symbols-outlined" style="font-size: 32px;">login</span>
+                                        <span>Realizar Ingreso</span>
+                                    </button>
 
-                                <button class="action-card" onclick="openOperationModal('transfer')">
-                                    <span class="material-symbols-outlined"
-                                        style="font-size: 32px;">local_shipping</span>
-                                    <span>Realizar Envío</span>
-                                </button>
-                                <% } else { %>
-                                <button class="action-card" onclick="openOperationModal('out')">
-                                    <span class="material-symbols-outlined" style="font-size: 32px;">logout</span>
-                                    <span>Realizar Egreso</span>
-                                </button>
-                                <% } %>
+                                    <button class="action-card" onclick="openOperationModal('transfer')">
+                                        <span class="material-symbols-outlined"
+                                            style="font-size: 32px;">local_shipping</span>
+                                        <span>Realizar Envío</span>
+                                    </button>
+                                    <% } else { %>
+                                        <button class="action-card" onclick="openOperationModal('out')">
+                                            <span class="material-symbols-outlined"
+                                                style="font-size: 32px;">logout</span>
+                                            <span>Realizar Egreso</span>
+                                        </button>
+                                        <% } %>
                             </section>
 
                             <h2 class="section-title">Últimos Movimientos</h2>
@@ -189,13 +190,21 @@
                                             <div class="form-group" id="group-search"
                                                 style="display: none; grid-column: span 2;">
                                                 <label>Buscar Producto a agregar</label>
-                                                <div class="search-bar">
+
+                                                <div class="search-bar" style="position: relative;">
                                                     <span class="material-symbols-outlined search-icon">search</span>
                                                     <input type="text" id="op-search-prod"
-                                                        placeholder="Escanear código o escribir nombre...">
-                                                    <button class="btn-mini-add" type="button"
-                                                        id="btn-search-prod"><span
-                                                            class="material-symbols-outlined">add</span></button>
+                                                        placeholder="Escanear código o escribir nombre..."
+                                                        onkeypress="if(event.key === 'Enter') searchProductsForOperation()">
+
+                                                    <button class="btn-mini-add" type="button" id="btn-search-prod"
+                                                        onclick="searchProductsForOperation()">
+                                                        <span class="material-symbols-outlined">search</span>
+                                                    </button>
+
+                                                    <ul id="search-results-list" class="search-results-dropdown"
+                                                        style="display: none;">
+                                                    </ul>
                                                 </div>
                                             </div>
                                         </div>
@@ -203,12 +212,7 @@
                                         <div class="detail-products-container mt-2">
                                             <table class="detail-products-table">
                                                 <thead>
-                                                    <tr>
-                                                        <th>Código</th>
-                                                        <th>Producto</th>
-                                                        <th class="text-center" width="120">Cantidad</th>
-                                                        <th class="text-center" width="60" id="col-action-remove"></th>
-                                                    </tr>
+                                                    <tr></tr>
                                                 </thead>
                                                 <tbody id="op-products-list">
                                                 </tbody>
