@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { pageSchema } from './shared_schema.js'
+import { pageSchema } from './shared-schema.js'
 
 const categorySchema = z.object({
     name: z.string().min(3, 'El nombre debe ser mayor a 3 digitos').max(100),

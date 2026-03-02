@@ -1,6 +1,6 @@
 import { Router } from "express"
 import { notificationController } from "../src/config/dependencies.js"
-import { checkAuth } from "../src/middlewares/auth_middleware.js"
+import { checkAuth } from "../src/middlewares/auth-middleware.js"
 
 const router = Router()
 

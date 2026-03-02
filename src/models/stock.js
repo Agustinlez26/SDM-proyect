@@ -1,5 +1,5 @@
 import { StockDTO } from "../dtos/stocks/stock-dto.js"
-import { StockListDTO, StocklistDTO } from "../dtos/stocks/stock-list-dto.js"
+import { StockListDTO } from "../dtos/stocks/stock-list-dto.js"
 import { Database } from "../config/connection.js"
 
 /**

@@ -1,5 +1,5 @@
 import z from 'zod'
-import { pageSchema, dateValidation } from './shared_schema.js'
+import { pageSchema, dateValidation } from './shared-schema.js'
 
 const MOVEMENT_TYPES = ['ingreso', 'egreso', 'envio']
 const STATUS_TYPES = ['pendiente', 'en_progreso', 'entregado']

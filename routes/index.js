@@ -1,14 +1,14 @@
 import { Router } from "express";
-import product_routes from './product_routes.js'
-import stock_routes from './stock_routes.js'
-import view_routes from './view_routes.js'
-import auth_routes from './auth_routes.js'
-import user_routes from './user_routes.js'
-import branch_routers from './branch_routes.js'
-import location_routes from './location_routes.js'
-import movements_routes from './movement_routes.js'
-import statistic_routes from './statistic_routes.js'
-import notification_routes from './notification_routes.js'
+import product_routes from './product-routes.js'
+import stock_routes from './stock-routes.js'
+import view_routes from './view-routes.js'
+import auth_routes from './auth-routes.js'
+import user_routes from './user-routes.js'
+import branch_routers from './branch-routes.js'
+import location_routes from './location-routes.js'
+import movements_routes from './movement-routes.js'
+import statistic_routes from './statistic-routes.js'
+import notification_routes from './notification-routes.js'
 
 const router = Router()
 

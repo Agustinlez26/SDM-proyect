@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { branchController } from '../src/config/dependencies.js'
-import { checkAuth, isAdmin } from '../src/middlewares/auth_middleware.js'
+import { checkAuth, isAdmin } from '../src/middlewares/auth-middleware.js'
 
 const router = Router()
 

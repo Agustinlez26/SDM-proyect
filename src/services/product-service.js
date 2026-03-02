@@ -1,4 +1,4 @@
-import { processProductImage, deleteProductImage } from '../utils/image_processor.js'
+import { processProductImage, deleteProductImage } from '../utils/image-processor.js'
 import { ValidationError, NotFoundError } from '../utils/errors.js'
 
 export class ProductService {

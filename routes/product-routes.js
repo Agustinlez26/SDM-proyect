@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { productController } from '../src/config/dependencies.js'
 import { upload } from '../src/middlewares/upload.js'
-import { checkAuth, isAdmin } from '../src/middlewares/auth_middleware.js'
+import { checkAuth, isAdmin } from '../src/middlewares/auth-middleware.js'
 
 const router = Router()
 
