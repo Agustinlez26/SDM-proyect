@@ -6,8 +6,8 @@ import {
     validateUserProfile,
     validateChangePassword,
     validateFirstChangePassword
-} from "../schemas/user_schema.js";
-import { handleError } from '../utils/error_handler.js'
+} from "../schemas/user-schema.js";
+import { handleError } from '../utils/error-handler.js'
 
 /**
  * Controlador de Usuarios.
@@ -17,7 +17,7 @@ import { handleError } from '../utils/error_handler.js'
 export class UserController {
 
     /**
-     * @param {import('../services/user_service').UserService} userService - Instancia del servicio de usuarios.
+     * @param {import('../services/user_service.js').UserService} userService - Instancia del servicio de usuarios.
      */
     constructor({ userService }) {
         this.userService = userService;

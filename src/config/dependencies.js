@@ -1,32 +1,32 @@
 import { Database } from './connection.js'
 
 import { ProductModel } from '../models/product.js'
-import { ProductService } from '../services/product_service.js'
-import { ProductController } from '../controllers/product_controller.js'
+import { ProductService } from '../services/product-service.js'
+import { ProductController } from '../controllers/product-controller.js'
 
 import { StockModel } from '../models/stock.js'
-import { StockService } from '../services/stock_service.js'
-import { StockController } from '../controllers/stock_controller.js'
+import { StockService } from '../services/stock-service.js'
+import { StockController } from '../controllers/stock-controller.js'
 
 import { UserModel } from '../models/user.js'
-import { UserService } from '../services/user_service.js'
-import { UserController } from '../controllers/user_controller.js'
+import { UserService } from '../services/user-service.js'
+import { UserController } from '../controllers/user-controller.js'
 
-import { AuthService } from '../services/auth_service.js'
-import { AuthController } from '../controllers/auth_controller.js'
+import { AuthService } from '../services/auth-service.js'
+import { AuthController } from '../controllers/auth-controller.js'
 
 import { BranchModel } from '../models/branch.js'
-import { BranchService } from '../services/branch_service.js'
-import { BranchController } from '../controllers/branch_controller.js'
+import { BranchService } from '../services/branch-service.js'
+import { BranchController } from '../controllers/branch-controller.js'
 
 import { MovementModel } from '../models/movements.js'
-import { MovementService } from '../services/movement_service.js'
-import { MovementController } from '../controllers/movement_controller.js'
+import { MovementService } from '../services/movement-service.js'
+import { MovementController } from '../controllers/movement-controller.js'
 
 import { StatisticModel } from '../models/statistics.js'
-import { StatisticService } from '../services/statistic_service.js'
-import { StatisticController } from '../controllers/statistic_controller.js'
-import { NotificationController } from '../controllers/notification_controller.js'
+import { StatisticService } from '../services/statistic-service.js'
+import { StatisticController } from '../controllers/statistic-controller.js'
+import { NotificationController } from '../controllers/notification-controller.js'
 
 const db = Database.getInstance()
 

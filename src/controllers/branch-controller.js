@@ -1,6 +1,6 @@
-import { validateBranch, validateUpdateBranch } from '../schemas/branch_schema.js'
-import { validateId } from '../schemas/shared_schema.js'
-import { handleError } from '../utils/error_handler.js'
+import { validateBranch, validateUpdateBranch } from '../schemas/branch-schema.js'
+import { validateId } from '../schemas/shared-schema.js'
+import { handleError } from '../utils/error-handler.js'
 
 /**
  * Controlador para la gestión de Sucursales.

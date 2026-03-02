@@ -1,9 +1,9 @@
 import { Database } from "../config/connection.js";
-import { AuthDTO } from "../dtos/auth/auth_DTO.js";
-import { User_DTO } from "../dtos/users/user_DTO.js";
-import { User_all_DTO } from "../dtos/users/user_all_DTO.js";
-import {User_list_DTO } from "../dtos/users/User_list_DTO.js";
-import { User_profile_DTO } from "../dtos/users/user_profile_DTO.js";
+import { AuthDTO } from "../dtos/auth/auth-dto.js";
+import { UserDTO } from "../dtos/users/user-dto.js";
+import { UserAllDTO } from "../dtos/users/user-all-dto.js";
+import {UserlistDTO } from "../dtos/users/user-list-dto.js";
+import { UserProfileDTO } from "../dtos/users/user-profile-dto.js";
 import { randomUUID } from 'node:crypto'
 
 /**
@@ -33,7 +33,7 @@ export class UserModel {
      * @param {Object} [options.filter] - Filtros exactos.
      * @param {boolean|number} [options.filter.is_admin] - Filtrar por rol (Admin/User).
      * @param {boolean|number} [options.filter.is_active] - Filtrar por estado.
-     * @returns {Promise<User_list_DTO[]>} Array de DTOs de lista de usuarios.
+     * @returns {Promise<UserlistDTO[]>} Array de DTOs de lista de usuarios.
      */
     async findAll({ search = null, filters = {} }) {
         let sql = `SELECT 
@@ -67,7 +67,7 @@ export class UserModel {
         sql += ' ORDER BY u.full_name ASC'
 
         const [rows] = await this.#db.query(sql, params)
-        return rows.map(row => new User_all_DTO(row))
+        return rows.map(row => new UserAllDTO(row))
     }
 
     async listUsers() {
@@ -78,7 +78,7 @@ export class UserModel {
         WHERE is_active = 1
         ORDER BY full_name ASC`
         const [rows] = await this.#db.query(sql)
-        return rows.map(row => new User_list_DTO(row))
+        return rows.map(row => new UserlistDTO(row))
     }
 
     /**
@@ -86,7 +86,7 @@ export class UserModel {
          * Útil para procesos internos de autenticación o validación de cambios de clave
          * sin exponer otros datos del usuario.
          * * @param {string} id - El UUID del usuario.
-         * @returns {Promise<User_DTO|null>} Un DTO parcial conteniendo solo la contraseña, o null si no existe.
+         * @returns {Promise<UserDTO|null>} Un DTO parcial conteniendo solo la contraseña, o null si no existe.
          */
     async findPassById(id) {
         const sql =
@@ -121,7 +121,7 @@ export class UserModel {
 
         const [rows] = await this.#db.query(sql, [id])
         if (rows.length === 0) return null
-        return new User_DTO(rows[0])
+        return new UserDTO(rows[0])
     }
 
     /**
@@ -144,7 +144,7 @@ export class UserModel {
 
         const [rows] = await this.#db.query(sql, [id])
         if (rows.length === 0) return null
-        return new User_profile_DTO(rows[0])
+        return new UserProfileDTO(rows[0])
     }
 
     /**

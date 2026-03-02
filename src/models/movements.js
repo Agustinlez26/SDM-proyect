@@ -1,8 +1,8 @@
 import { Database } from "../config/connection.js"
-import { MovementDetailsDTO } from "../dtos/movements/movement_details_DTO.js"
-import { MovementRecentsDTO } from "../dtos/movements/movement_recents_DTO.js"
-import { MovementDTO } from "../dtos/movements/movements_DTO.js"
-import { ShipmentsDTO } from "../dtos/movements/shipments_DTO.js"
+import { MovementDetailsDTO } from "../dtos/movements/movement-details-dto.js"
+import { MovementRecentsDTO } from "../dtos/movements/movement-recents-dto.js"
+import { MovementDTO } from "../dtos/movements/movements-dto.js"
+import { ShipmentsDTO } from "../dtos/movements/shipments-dto.js"
 
 /**
  * Modelo de Movimientos (MovementsModel).

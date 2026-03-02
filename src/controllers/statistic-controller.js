@@ -1,5 +1,5 @@
-import { handleError } from "../utils/error_handler.js"
-import { validateYear, validateId } from "../schemas/shared_schema.js"
+import { handleError } from "../utils/error-handler.js"
+import { validateYear, validateId } from "../schemas/shared-schema.js"
 
 /**
  * @class StatisticController

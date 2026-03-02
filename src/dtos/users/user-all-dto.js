@@ -1,4 +1,4 @@
-export class User_all_DTO {
+export class UserAllDTO {
     constructor(user) {
         this.id = user.id;
         this.full_name = user.full_name;

@@ -1,5 +1,5 @@
-import { Stock_DTO } from "../dtos/stocks/stock_DTO.js"
-import { Stock_list_DTO } from "../dtos/stocks/Stock_list_DTO.js"
+import { StockDTO } from "../dtos/stocks/stock-dto.js"
+import { StockListDTO, StocklistDTO } from "../dtos/stocks/stock-list-dto.js"
 import { Database } from "../config/connection.js"
 
 /**
@@ -29,7 +29,7 @@ export class StockModel {
          * @param {Object} [params.filters] - Filtros (category, branch, lowStock, outStock).
          * @param {number|null} [params.offset] - Offset para paginación.
          * @param {number|null} [params.limit] - Límite de registros.
-         * @returns {Promise<Stock_list_DTO[]>} Lista de stocks formateada.
+         * @returns {Promise<StockListDTO[]>} Lista de stocks formateada.
          */
     async findAll({ search = null, filters = {}, offset = null, limit = null } = {}) {
         let sql = `SELECT
@@ -76,13 +76,13 @@ export class StockModel {
         }
 
         const [rows] = await this.#db.query(sql, params)
-        return rows.map(row => new Stock_list_DTO(row))
+        return rows.map(row => new StockListDTO(row))
     }
 
     /**
          * Busca un registro de stock por su ID único.
          * @param {number} id - ID de la tabla product_branch_stock.
-         * @returns {Promise<Stock_DTO|null>} El DTO del stock o null si no existe.
+         * @returns {Promise<StockDTO|null>} El DTO del stock o null si no existe.
          */
     async findById(id) {
         const sql = `
@@ -104,7 +104,7 @@ export class StockModel {
 
         const [row] = await this.#db.query(sql, [id])
         if (row.length === 0) return null
-        return new Stock_DTO(row[0])
+        return new StockDTO(row[0])
     }
 
     /**

@@ -1,4 +1,4 @@
-export class Stock_list_DTO {
+export class StockListDTO {
     constructor(stock){
         this.id = stock.id;
         this.name = stock.name;

@@ -1,8 +1,8 @@
 import { Database } from '../config/connection.js'
-import { ProductListDTO } from '../dtos/products/product_list_DTO.js'
-import { ProductDTO } from '../dtos/products/product_DTO.js'
-import { ProductCatalogDTO } from '../dtos/products/product_catalog_DTO.js'
-import { CategoryDTO } from '../dtos/products/category_DTO.js'
+import { ProductListDTO } from '../dtos/products/product-list-dto.js'
+import { ProductDTO } from '../dtos/products/product-dto.js'
+import { ProductCatalogDTO } from '../dtos/products/product-catalog-dto.js'
+import { CategoryDTO } from '../dtos/products/category-dto.js'
 
 export class ProductModel {
     #db

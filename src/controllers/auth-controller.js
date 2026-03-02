@@ -1,5 +1,5 @@
-import { validateLogin } from '../schemas/user_schema.js';
-import { handleError } from '../utils/error_handler.js'
+import { validateLogin } from '../schemas/user-schema.js';
+import { handleError } from '../utils/error-handler.js'
 
 /**
  * Controlador de Autenticación.
@@ -9,7 +9,7 @@ import { handleError } from '../utils/error_handler.js'
 export class AuthController {
 
     /**
-     * @param {import('../services/auth_service').AuthService} authService - Servicio de autenticación.
+     * @param {import('../services/auth_service.js').AuthService} authService - Servicio de autenticación.
      */
     constructor({ authService }) {
         this.authService = authService;

@@ -1,4 +1,4 @@
-import { handleError } from "../utils/error_handler.js"
+import { handleError } from "../utils/error-handler.js"
 
 /**
  * Controlador de Notificaciones (NotificationController).

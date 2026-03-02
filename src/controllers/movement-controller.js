@@ -1,6 +1,6 @@
-import { validateMovement, validateDetailMovement, validateParams } from "../schemas/movement_schema.js"
-import { validateId } from "../schemas/shared_schema.js"
-import { handleError } from "../utils/error_handler.js"
+import { validateMovement, validateDetailMovement, validateParams } from "../schemas/movement-schema.js"
+import { validateId } from "../schemas/shared-schema.js"
+import { handleError } from "../utils/error-handler.js"
 
 /**
  * Controlador de Movimientos (MovementController).

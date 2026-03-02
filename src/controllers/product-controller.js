@@ -1,6 +1,6 @@
-import { validateParams, validatePartialProduct, validateProduct, validateCategory } from '../schemas/product_schema.js'
-import { validateId } from '../schemas/shared_schema.js'
-import { handleError } from '../utils/error_handler.js'
+import { validateParams, validatePartialProduct, validateProduct, validateCategory } from '../schemas/product-schema.js'
+import { validateId } from '../schemas/shared-schema.js'
+import { handleError } from '../utils/error-handler.js'
 /**
  * Controlador para la gestión de Productos.
  * Actúa como intermediario entre las peticiones HTTP y la lógica de negocio (Servicio).

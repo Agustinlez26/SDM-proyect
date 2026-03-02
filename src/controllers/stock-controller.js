@@ -1,6 +1,6 @@
-import { validateParams, validateStock, validateUpdateStock } from '../schemas/stock_schema.js'
-import { validateId } from '../schemas/shared_schema.js'
-import { handleError } from '../utils/error_handler.js'
+import { validateParams, validateStock, validateUpdateStock } from '../schemas/stock-schema.js'
+import { validateId } from '../schemas/shared-schema.js'
+import { handleError } from '../utils/error-handler.js'
 
 /**
  * Controlador para la gestión de Inventario (Stock).

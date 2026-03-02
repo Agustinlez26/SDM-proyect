@@ -1,7 +1,7 @@
-import { BranchPerformanceDTO } from '../dtos/statistics/branch_performance_DTO.js';
-import { MonthlyEgressesDTO } from '../dtos/statistics/monthly_egresses_DTO.js';
-import { ProductSeasonalityDTO } from '../dtos/statistics/product_seasonality_DTO.js';
-import { SellingProductsDTO } from '../dtos/statistics/selling_products_DTO.js';
+import { BranchPerformanceDTO } from '../dtos/statistics/branch-performance-dto.js';
+import { MonthlyEgressesDTO } from '../dtos/statistics/monthly-egresses-dto.js';
+import { ProductSeasonalityDTO } from '../dtos/statistics/product-seasonality-dto.js';
+import { SellingProductsDTO } from '../dtos/statistics/selling-products-dto.js';
 import { Database } from '../config/connection.js'
 
 /**

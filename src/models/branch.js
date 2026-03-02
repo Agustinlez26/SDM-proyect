@@ -1,9 +1,9 @@
 import { Database } from "../config/connection.js"
-import { BranchDTO } from "../dtos/branches/branch_DTO.js"
-import { BranchListDTO } from "../dtos/branches/branch_list_DTO.js"
-import { BranchTypeDTO } from "../dtos/branches/branch_type_DTO.js"
-import { CityDTO } from "../dtos/city/city_DTO.js"
-import { ProvinceDTO } from "../dtos/province/province_DTO.js"
+import { BranchDTO } from "../dtos/branches/branch-dto.js"
+import { BranchListDTO } from "../dtos/branches/branch-list-dto.js"
+import { BranchTypeDTO } from "../dtos/branches/branch-type-dto.js"
+import { CityDTO } from "../dtos/city/city-dto.js"
+import { ProvinceDTO } from "../dtos/province/province-dto.js"
 
 /**
  * Modelo de Sucursales.
