@@ -59,6 +59,24 @@ export class StockService {
     }
 
     /**
+     * 
+     * Busca productos con soporte para filtros, búsqueda y paginación.
+     * * @param {object} params - Objeto de parámetros.
+     * @param {string|null} [params.search] - Texto para buscar por nombre o código de barras.
+     * @param {object} [params.filters] - Filtros específicos (category, branch, lowStock, outStock).
+     * @param {number|null} [params.offset] - Desplazamiento para paginación (SQL OFFSET).
+     * @returns {Promise<ProductCatalogDTO[]>} Retorna una lista de DTOs de productos.
+     * @throws {ValidationError} Si se proporcionan filtros inválidos.
+     */
+    async findCatalog({ page = 1, search, category, branch, lowStock, outStock, }) {
+        const limit = this.#PAGE_SIZE
+        const pageNumber = Math.max(1, Number(page) || 1)
+        const offset = Math.max(0, (pageNumber - 1) * limit)
+        const filters = { category, branch, lowStock, outStock };
+        return await this.stockModel.findCatalog({ search, filters, offset, limit })
+    }
+
+    /**
      * Busca un registro de stock específico por su ID.
      * * @param {number} id - ID del registro de stock.
      * @returns {Promise<Object>} Datos detallados del stock.

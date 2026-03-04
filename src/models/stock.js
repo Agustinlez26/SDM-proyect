@@ -1,5 +1,5 @@
 import { StockDTO } from "../dtos/stocks/stock-dto.js"
-import { StockListDTO } from "../dtos/stocks/stock-list-dto.js"
+import { StockCatalogDTO } from "../dtos/stocks/stock-catalog-dto.js"
 import { Database } from "../config/connection.js"
 
 /**
@@ -34,6 +34,59 @@ export class StockModel {
     async findAll({ search = null, filters = {}, offset = null, limit = null } = {}) {
         let sql = `SELECT
         s.id,
+        p.name,
+        p.cod_bar,
+        b.name as branch,
+        p.url_img_original as img,
+        s.quantity,
+        s.min_quantity
+        FROM
+        ${this.#table} s
+        JOIN ${this.#table2} p
+        ON s.product_id = p.id
+        JOIN ${this.#table3} b
+        ON s.branch_id = b.id
+        WHERE 1=1`
+
+        const params = []
+
+        if (search) {
+            sql += ' AND (p.name LIKE ? OR p.cod_bar LIKE ?)'
+            params.push(`%${search}%`, `%${search}%`)
+        }
+
+        if (filters.category) {
+            sql += ' AND p.category_id = ?'
+            params.push(filters.category)
+        }
+
+        if (filters.branch) {
+            sql += ' AND s.branch_id = ?'
+            params.push(filters.branch)
+        }
+
+        if (filters.lowStock) {
+            sql += ' AND s.quantity <= s.min_quantity'
+        }
+
+        if (filters.outStock) {
+            sql += ' AND s.quantity = 0'
+        }
+
+        sql += ' ORDER BY s.id DESC'
+
+        if (Number.isFinite(limit) && Number.isFinite(offset) && offset >= 0) {
+            sql += ` LIMIT ${limit} OFFSET ${offset}`
+        }
+
+        const [rows] = await this.#db.query(sql, params)
+        return rows.map(row => new StockDTO(row))
+    }
+
+    async findCatalog({ search = null, filters = {}, offset = null, limit = null } = {}) {
+        let sql = `SELECT
+        s.id AS stock_id,
+        s.product_id,
         p.name,
         p.cod_bar,
         p.url_img_small as img,
@@ -76,7 +129,7 @@ export class StockModel {
         }
 
         const [rows] = await this.#db.query(sql, params)
-        return rows.map(row => new StockListDTO(row))
+        return rows.map(row => new StockCatalogDTO(row))
     }
 
     /**

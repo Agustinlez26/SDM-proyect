@@ -150,20 +150,26 @@ export class ProductModel {
     * @returns {boolean} True o false si las filas fueron afectadas
     */
     async update(id, productData) {
-        const keys = Object.keys(productData);
+        const cleanData = Object.fromEntries(
+            Object.entries(productData).filter(([_, v]) => v !== undefined)
+        );
+
+        const keys = Object.keys(cleanData);
         const allowedKeys = keys.filter(key => this.#fieldsToInsert.includes(key));
+
         if (allowedKeys.length === 0) {
             return false;
         }
-        const setClausule = allowedKeys.map(key => `${key} = ?`).join(', ')
+
+        const setClausule = allowedKeys.map(key => `${key} = ?`).join(', ');
+
         const values = allowedKeys.map(key => {
-            // Convertir boolean a 0/1 para MySQL
-            const value = productData[key];
+            const value = cleanData[key];
             if (key === 'is_active' && typeof value === 'boolean') {
                 return value ? 1 : 0;
             }
             return value;
-        })
+        });
 
         const parameters = [...values, id]
 
@@ -197,16 +203,26 @@ export class ProductModel {
      * @throws {Error} Si ocurre un fallo en la base de datos.
      */
     async searchCatalog(search = null) {
-        let sql = `SELECT id, name, cod_bar, url_img_small FROM ${this.#table} WHERE is_active = 1`
+        let sql = `SELECT 
+            p.id, 
+            p.name,
+            p.cod_bar, 
+            p.url_img_small,
+            IF(s.product_id IS NULL, 0, 1) AS is_registered
+        FROM ${this.#table} p
+        LEFT JOIN product_branch_stock s 
+            ON p.id = s.product_id AND s.branch_id = 1
+        WHERE p.is_active = 1`
+
         const params = []
         if (search) {
             sql += ' AND ('
             const isNumeric = /^\d+$/.test(search)
 
             if (isNumeric) {
-                sql += 'cod_bar LIKE ?'
+                sql += 'p.cod_bar LIKE ?'
             } else {
-                sql += 'name LIKE ?'
+                sql += 'p.name LIKE ?'
             }
 
             params.push(`%${search}%`)

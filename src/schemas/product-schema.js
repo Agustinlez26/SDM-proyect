@@ -8,7 +8,7 @@ const categorySchema = z.object({
 const productSchema = z.object({
     name: z.string().min(3, 'El nombre debe ser mayor a 3 digitos').max(100),
     cod_bar: z.string().max(50),
-    description: z.string().min(10, 'La descripcion debe ser mas larga').max(200),
+    description: z.string().min(5, 'La descripcion debe ser mas larga').max(200),
     category_id: z.coerce.number().int().positive(),
     is_active: z.string().optional().transform(val => {
         if (val === undefined || val === null) return undefined

@@ -89,7 +89,7 @@ export class StockController {
         filters.branch = req.user.branch_id
 
         try {
-            const stocks = await this.stockService.findAll(filters)
+            const stocks = await this.stockService.findCatalog(filters)
             res.json({ status: 'success', data: stocks })
         } catch (error) {
             handleError(res, error)
