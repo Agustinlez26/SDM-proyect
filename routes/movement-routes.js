@@ -10,7 +10,7 @@ router.get('/shipments', checkAuth, (req, res) => movementController.getShipment
 
 router.post('/', checkAuth, (req, res) => movementController.create(req, res))
 router.get('/:id', checkAuth, (req, res) => movementController.getById(req, res))
-router.get('/details/:id', checkAuth, (req, res) => movementController.getDetails(req, res))
+router.get('/:id/details', checkAuth, (req, res) => movementController.getDetails(req, res))
 router.patch('/changeStatus/:id', checkAuth, (req, res) => movementController.changeStatus(req, res))
 
 export default router

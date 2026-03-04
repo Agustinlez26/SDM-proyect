@@ -1,3 +1,4 @@
+import { de } from "zod/locales"
 import { validateMovement, validateDetailMovement, validateParams } from "../schemas/movement-schema.js"
 import { validateId } from "../schemas/shared-schema.js"
 import { handleError } from "../utils/error-handler.js"
@@ -151,54 +152,67 @@ export class MovementController {
      * @param {Object} res - Response.
      */
     create = async (req, res) => {
+        console.log(req.body)
         const result = validateMovement(req.body)
+        console.log("DATOS LIMPIOS POR ZOD:", result.data)
+
         if (!result.success) {
             return res.status(400).json({
                 status: 'error',
-                message: 'Datos para la creacion de movimiento invalidos',
-                error: result.error.errors
-            })
+                message: 'Datos enviados inválidos',
+                errors: result.error.errors
+            });
         }
 
-        const data = result.data
-        const detailsRaw = req.body.details
-        const validDetails = []
+        const { type, destination_branch_id, details } = result.data;
 
-        for (const item of detailsRaw) {
-            const detailVal = validateDetailMovement(item)
-            if (!detailVal.success) {
-                return res.status(400).json({
+        const userId = req.user.id;
+        const userBranchId = req.user.branch_id;
+        const userRole = req.user.role;
+        const MAIN_BRANCH_ID = 1;
+
+        let origin = null;
+        let destination = null;
+
+        if (type === 'ingreso') {
+            if (userRole !== 'admin') {
+                return res.status(403).json({ status: 'error', message: 'Solo los administradores pueden hacer ingresos.' });
+            }
+            origin = null;
+            destination = MAIN_BRANCH_ID;
+        }
+        else if (type === 'egreso') {
+            if (!userBranchId) {
+                return res.status(403).json({
                     status: 'error',
-                    message: `Error en producto ID ${item.product_id}`,
-                    error: detailVal.error.errors
-                })
+                    message: 'Tu usuario no tiene una sucursal asignada para realizar egresos.'
+                });
             }
-            validDetails.push(detailVal.data)
+            origin = userBranchId;
+            destination = null;
+        }
+        else if (type === 'envio') {
+            if (userBranchId !== MAIN_BRANCH_ID) {
+                return res.status(403).json({ status: 'error', message: 'Los envíos solo pueden realizarse desde la Sucursal Principal.' });
+            }
+            origin = MAIN_BRANCH_ID;
+            destination = destination_branch_id;
         }
 
-        if (!req.user.is_admin) {
-            if (data.type !== 'egreso') {
-                return res.status(403).json({
-                    message: 'Acceso denegado. Solo el administrador puede crear Envíos o Ingresos.'
-                })
-            }
-
-            if (data.origin_branch_id !== req.user.branch_id) {
-                return res.status(403).json({
-                    message: 'No puedes registrar ventas de una sucursal ajena.'
-                })
-            }
-        }
+        const dbPayload = {
+            receipt_number: `MOV-${Date.now()}`,
+            type: type,
+            user_id: userId,
+            origin_branch_id: origin,
+            destination_branch_id: destination,
+            status: type === 'envio' ? 'en_progreso' : 'entregado'
+        };
 
         try {
-            const serviceResult = await this.movementService.create(data, validDetails)
-            res.status(201).json({
-                status: 'success',
-                message: serviceResult.message,
-                id: serviceResult.id
-            })
+            await this.movementService.create(dbPayload, details);
+            res.status(201).json({ status: 'success', message: 'Operación registrada correctamente' });
         } catch (error) {
-            handleError(res, error)
+            handleError(res, error);
         }
     }
 
@@ -214,9 +228,9 @@ export class MovementController {
         const { movementId } = req.params.id
         try {
             const result = await this.movementService.changeStatusShipment(movementId)
-            res.json({ 
+            res.json({
                 status: 'success',
-                message: result.message 
+                message: result.message
             })
         } catch (error) {
             handleError(res, error)

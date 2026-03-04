@@ -253,12 +253,21 @@ export class MovementModel {
 
             for (const item of details) {
                 if (stockAction === 'ADD') {
+
+                    const minQty = item.min_quantity || 0;
+
                     const sqlUpsert = `
-                        INSERT INTO ${this.#tableStock} (branch_id, product_id, quantity)
-                        VALUES (?, ?, ?) 
+                        INSERT INTO ${this.#tableStock} (branch_id, product_id, quantity, min_quantity)
+                        VALUES (?, ?, ?, ?) 
                         ON DUPLICATE KEY UPDATE quantity = quantity + ?
                     `
-                    await connection.query(sqlUpsert, [targetBranchId, item.product_id, item.quantity, item.quantity])
+                    await connection.query(sqlUpsert, [
+                        targetBranchId,
+                        item.product_id,
+                        item.quantity,
+                        minQty,
+                        item.quantity
+                    ])
 
                 } else if (stockAction === 'SUBTRACT') {
                     const sqlUpdate = `
