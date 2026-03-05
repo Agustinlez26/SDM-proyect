@@ -25,18 +25,21 @@ export class MovementService {
          * @param {number} page - Número de página actual (default 1).
          * @returns {Promise<Object[]>} Lista de movimientos.
          */
-    async findAll({ search, type, origin, destination, user, date_start, date_end, page }) {
+    async findAll({ search, type, origin_branch_id, destination_branch_id, employee_branch_id, user, date_start, date_end, page }) {
         const limit = this.#PAGE_SIZE
         const pageNumber = Math.max(1, Number(page) || 1)
         const offset = Math.max(0, (pageNumber - 1) * limit)
+
         const filters = {
             type,
-            origin_branch_id: origin,
-            destination_branch_id: destination,
+            origin_branch_id,
+            destination_branch_id,
+            employee_branch_id, 
             date_start,
             date_end,
             user_id: user
         }
+
         return await this.movementModel.findAll({ search, filters, offset, limit })
     }
 
@@ -78,8 +81,7 @@ export class MovementService {
      */
     async findShipmentsInProcess(branchId = null) {
         if (branchId) {
-            const shipments = await this.movementModel.findShipmentsInProcess(branchId)
-            return shipments.map(row => row.branch = 'Producción')
+            return await this.movementModel.findShipmentsInProcess(branchId)
         }
         return await this.movementModel.findShipmentsInProcess()
     }

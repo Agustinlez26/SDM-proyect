@@ -2,9 +2,8 @@ import { z } from 'zod'
 import { pageSchema, dateValidation } from './shared-schema.js'
 
 const MOVEMENT_TYPES = ['ingreso', 'egreso', 'envio']
-const STATUS_TYPES = ['pendiente', 'en_progreso', 'entregado']
+const STATUS_TYPES = ['pendiente', 'en_proceso', 'entregado']
 
-// Esquema para validar los productos dentro del movimiento
 const movementDetailSchema = z.object({
     product_id: z.coerce.number().int().positive(),
     quantity: z.coerce.number().int().positive(),
@@ -29,8 +28,8 @@ export const movementSchema = z.object({
 const params = z.object({
     search: z.string().optional(),
     type: z.enum(MOVEMENT_TYPES).optional(),
-    origin: z.coerce.number().int().positive().optional(),
-    destination: z.coerce.number().int().positive().optional(),
+    origin_branch_id: z.coerce.number().int().positive().optional(),
+    destination_branch_id: z.coerce.number().int().positive().optional(),
     user: z.string().uuid().optional(),
     date_start: dateValidation.optional(),
     date_end: dateValidation.optional(),

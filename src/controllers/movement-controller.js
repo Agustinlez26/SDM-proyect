@@ -33,23 +33,41 @@ export class MovementController {
          * @param {Object} res - Response de Express.
          */
     getAll = async (req, res) => {
-        const params = validateParams(req.query)
+        const params = validateParams(req.query);
         if (!params.success) return res.status(400).json({
             status: 'error',
             message: 'Parametros de filtrado invalidos',
             error: params.error.errors
-        })
+        });
+
+        const queryData = params.data;
 
         if (!req.user.is_admin) {
-            params.origin_branch_id = req.user.branch_id
-            params.destination_branch_id = req.user.branch_id
+
+            if (queryData.type === 'ingreso') {
+                return res.status(403).json({
+                    status: 'error',
+                    message: 'No tienes permiso para ver los ingresos.'
+                });
+            }
+
+            if (queryData.type === 'envio') {
+                queryData.destination_branch_id = req.user.branch_id;
+            }
+
+            else if (queryData.type === 'egreso') {
+                queryData.origin_branch_id = req.user.branch_id;
+            }
+            else {
+                queryData.employee_branch_id = req.user.branch_id;
+            }
         }
 
         try {
-            const movements = await this.movementService.findAll(params.data)
-            res.json({ status: 'success', data: movements })
+            const movements = await this.movementService.findAll(queryData);
+            res.json({ status: 'success', data: movements });
         } catch (error) {
-            handleError(res, error)
+            handleError(res, error);
         }
     }
 
@@ -71,8 +89,16 @@ export class MovementController {
 
         try {
             const movement = await this.movementService.findById(result.data)
+
+            if (!movement) {
+                return res.status(404).json({
+                    status: 'error',
+                    message: 'Movimiento no encontrado'
+                })
+            }
+
             if (!req.user.is_admin) {
-                const validateUser = (movement.origin_branch_id === req.user.branch_id || movement.destination_branch_id === req.user.branch_id)
+                const validateUser = (movement.origin_branch_id == req.user.branch_id || movement.destination_branch_id == req.user.branch_id)
                 if (!validateUser) {
                     return res.status(403).json({
                         status: 'error',
@@ -80,6 +106,9 @@ export class MovementController {
                     })
                 }
             }
+
+            delete movement.origin_branch_id;
+            delete movement.destination_branch_id;
 
             res.json({ status: 'success', data: movement })
         } catch (error) {
@@ -101,8 +130,33 @@ export class MovementController {
         })
 
         try {
+            const movement = await this.movementService.findById(result.data)
+
+            if (!movement) {
+                return res.status(404).json({
+                    status: 'error',
+                    message: 'Movimiento no encontrado'
+                })
+            }
+
+            if (!req.user.is_admin) {
+                const validateUser = (movement.origin_branch_id == req.user.branch_id || movement.destination_branch_id == req.user.branch_id)
+                if (!validateUser) {
+                    return res.status(403).json({
+                        status: 'error',
+                        message: 'No tienes permiso para ver los detalles de este movimiento',
+                    })
+                }
+            }
+
             const details = await this.movementService.findDetails(result.data)
-            res.json({ status: 'success', data: details })
+
+            const cleanDetails = details.map(item => {
+                delete item.id;
+                return item;
+            });
+
+            res.json({ status: 'success', data: cleanDetails })
         } catch (error) {
             handleError(res, error)
         }
@@ -225,7 +279,7 @@ export class MovementController {
      * @param {Object} res - Response.
      */
     changeStatus = async (req, res) => {
-        const { movementId } = req.params.id
+        const movementId = req.params.id
         try {
             const result = await this.movementService.changeStatusShipment(movementId)
             res.json({

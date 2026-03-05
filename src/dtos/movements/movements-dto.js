@@ -9,6 +9,8 @@ export class MovementDTO {
 
         this.origin = data.origin_branch
         this.destination = data.destination_branch
+        this.origin_branch_id = data.origin_branch_id
+        this.destination_branch_id = data.destination_branch_id
 
         this.user = {
             id: data.user_id,

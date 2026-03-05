@@ -86,6 +86,11 @@ export class MovementModel {
             params.push(filters.destination_branch_id)
         }
 
+        if (filters.employee_branch_id) {
+            sql += ` AND m.type != 'ingreso' AND (m.origin_branch_id = ? OR m.destination_branch_id = ?)`;
+            params.push(filters.employee_branch_id, filters.employee_branch_id);
+        }
+
         if (filters.date_start) {
             sql += ' AND m.date >= ?'
             params.push(filters.date_start)
@@ -126,6 +131,8 @@ export class MovementModel {
                 m.date,
                 COALESCE(m.arrival_date, m.date) as effective_date,
                 m.status,
+                m.origin_branch_id,
+                m.destination_branch_id,
                 BIN_TO_UUID(m.user_id) as user_id, u.full_name as user_name,
                 
                 CASE 
@@ -162,6 +169,7 @@ export class MovementModel {
             SELECT 
                 md.id,
                 p.name as product_name,
+                p.id as product_id,
                 p.cod_bar,
                 p.url_img_small as product_img,
                 md.quantity
@@ -301,7 +309,7 @@ export class MovementModel {
      * * @param {number} movementId 
      * @param {Array} details 
      */
-    async dispatchShipment(movementId, details) {
+    async dispatchShipment(movementId) {
         const connection = await this.#db.getConnection()
         try {
             await connection.beginTransaction()
@@ -352,13 +360,23 @@ export class MovementModel {
             const destinationBranchId = rows[0].destination_branch_id
 
             for (const item of details) {
+
+                const productId = item.product.id
+
+                const [centralStock] = await connection.query(
+                    `SELECT min_quantity FROM ${this.#tableStock} WHERE branch_id = 1 AND product_id = ? LIMIT 1`,
+                    [productId]
+                );
+
+                const inheritedMinQty = centralStock[0].min_quantity
+
                 const sqlUpsert = `
-                    INSERT INTO ${this.#tableStock} (branch_id, product_id, quantity)
-                    VALUES (?, ?, ?)
+                    INSERT INTO ${this.#tableStock} (branch_id, product_id, quantity, min_quantity)
+                    VALUES (?, ?, ?, ?)
                     ON DUPLICATE KEY UPDATE quantity = quantity + ?
                 `
                 await connection.query(sqlUpsert, [
-                    destinationBranchId, item.product_id, item.quantity, item.quantity
+                    destinationBranchId, item.product.id, item.quantity, inheritedMinQty, item.quantity
                 ])
             }
 
