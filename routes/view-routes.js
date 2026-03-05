@@ -15,9 +15,9 @@ router.get('/stock', checkAuth, requirePasswordChange, viewsController.renderSto
 router.get('/products', checkAuth, requirePasswordChange, viewsController.renderProducts)
 router.get('/movements', checkAuth, requirePasswordChange, viewsController.renderMovements)
 router.get('/operations', checkAuth, requirePasswordChange, viewsController.renderOperations)
-router.get('/stats', isAdmin, checkAuth, requirePasswordChange, viewsController.renderStats)
-router.get('/branches', isAdmin, checkAuth, requirePasswordChange, viewsController.renderBranches)
-router.get('/users', isAdmin, checkAuth, requirePasswordChange, viewsController.renderUsers)
+router.get('/stats', checkAuth, requirePasswordChange, viewsController.renderStats)
+router.get('/branches', checkAuth, requirePasswordChange, viewsController.renderBranches)
+router.get('/users', checkAuth, requirePasswordChange, viewsController.renderUsers)
 router.get('/profile', checkAuth, requirePasswordChange, viewsController.renderProfile)
 
 export default router
