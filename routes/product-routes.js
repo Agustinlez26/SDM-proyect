@@ -9,7 +9,7 @@ router.get('/catalog', checkAuth, isAdmin, (req, res) => productController.getPu
 router.get('/', checkAuth, isAdmin, (req, res) => productController.getAll(req, res))
 router.post('/', checkAuth, isAdmin, upload.single('image'), (req, res) => productController.create(req, res))
 
-router.get('/categories', checkAuth, isAdmin, (req, res) => productController.getCategories(req, res))
+router.get('/categories', checkAuth, (req, res) => productController.getCategories(req, res))
 router.post('/categories', checkAuth, isAdmin, (req, res) => productController.createCategory(req, res))
 router.delete('/categories/:id', checkAuth, isAdmin, (req, res) => productController.deleteCategory(req, res))
 

@@ -93,7 +93,7 @@ export class StatisticService {
         return {
             total: current,
             variation: averageVar,
-            trend: trend 
+            trend: trend
         };
     }
 
@@ -103,7 +103,11 @@ export class StatisticService {
      * @returns {Promise<number>} Ej: 4
      */
     async getPendingShipmentsCount(branchId = null) {
-        return await this.statisticsModel.getPendingShipmentsCount(branchId)
+        if (branchId) {
+            const branchShipmentsCount = await this.statisticsModel.getPendingShipmentsCount(branchId)
+            return branchShipmentsCount || 0
+        }
+        return await this.statisticsModel.getPendingShipmentsCount()
     }
 
     // --- NOTIFICACIONES PARA EMPLEADOS ---

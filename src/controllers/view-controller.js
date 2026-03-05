@@ -28,7 +28,7 @@ export class ViewsController {
     }
 
     renderProfile(req, res) {
-        res.render('pages/my_profile', {
+        res.render('pages/my-profile', {
             title: 'Mi perfil',
             activePage: 'profile',
             cssFile: 'my-profile.css',

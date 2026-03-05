@@ -29,7 +29,7 @@ export class StockModel {
          * @param {Object} [params.filters] - Filtros (category, branch, lowStock, outStock).
          * @param {number|null} [params.offset] - Offset para paginación.
          * @param {number|null} [params.limit] - Límite de registros.
-         * @returns {Promise<StockListDTO[]>} Lista de stocks formateada.
+         * @returns {Promise<StockDTO[]>} Lista de stocks formateada.
          */
     async findAll({ search = null, filters = {}, offset = null, limit = null } = {}) {
         let sql = `SELECT

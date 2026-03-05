@@ -132,7 +132,7 @@ export class StatisticModel {
         const param = []
 
         if (branchId) {
-            sql += ' AND destination_branch_id = ?'
+            sql += ' AND origin_branch_id = ?'
             param.push(branchId)
         }
         const [rows] = await this.#db.query(sql, param)
@@ -157,7 +157,7 @@ export class StatisticModel {
         const param = []
 
         if (branchId) {
-            sql += ' AND destination_branch_id = ?'
+            sql += ' AND origin_branch_id = ?'
             param.push(branchId)
         }
         const [rows] = await this.#db.query(sql, param);
@@ -166,20 +166,20 @@ export class StatisticModel {
 
     /**
      * Obtiene la cantidad de movimientos de tipo 'envio' que aún no fueron entregados.
-     * @returns {Promise<number>} Total de envíos en estado 'pendiente' o 'en_progreso'.
+     * @returns {Promise<number>} Total de envíos en estado 'pendiente' o 'en_proceso'.
      */
     async getPendingShipmentsCount(branchId = null) {
         let sql = `
             SELECT COUNT(*) AS total_pendientes
             FROM movements
             WHERE type = 'envio' 
-            AND status IN ('pendiente', 'en_progreso')
+            AND status IN ('pendiente', 'en_proceso')
         `
 
         const param = []
 
         if (branchId) {
-            sql += ' AND origin_branch_id = ?'
+            sql += ' AND destination_branch_id = ?'
             param.push(branchId)
         }
         const [rows] = await this.#db.query(sql, param);
