@@ -1,12 +1,30 @@
 let currentPage = 1;
 let currentProducts = [];
-let isEditing = false;
 let searchTimeout;
 
 document.addEventListener('DOMContentLoaded', () => {
-    setupUI();
-    setupSearchDebounce();
-    fetchCategories();
+    startWebSocket()
+    setupUI()
+    setupSearchDebounce()
+    fetchCategories()
+    fetchProducts()
+});
+
+function startWebSocket() {
+    const socket = io()
+
+    //triggers of products
+    socket.on('new_product', fetchProducts)
+    socket.on('product_updated', fetchProducts)
+    socket.on('product_deleted', fetchProducts)
+    socket.on('product_activated', fetchProducts)
+
+    //triggers of categories
+    socket.on('new_category', fetchCategories)
+    socket.on('category_deleted', fetchCategories)
+}
+
+window.addEventListener('productSaved', () => {
     fetchProducts();
 });
 
@@ -19,29 +37,28 @@ async function fetchCategories() {
 
         if (json.status === 'success') {
             const filterSelect = document.getElementById('filter-category');
-            const formSelect = document.getElementById('prod-category');
             const managerList = document.getElementById('categories-list-container');
 
-            filterSelect.innerHTML = '<option value="">Todas</option>';
-            formSelect.innerHTML = '<option value="" disabled selected>Seleccionar...</option>';
-            managerList.innerHTML = '';
+            if (filterSelect) filterSelect.innerHTML = '<option value="">Todas</option>';
+            if (managerList) managerList.innerHTML = '';
 
             json.data.forEach(cat => {
                 const opt = `<option value="${cat.id}">${cat.name}</option>`;
-                filterSelect.innerHTML += opt;
-                formSelect.innerHTML += opt;
+                if (filterSelect) filterSelect.innerHTML += opt;
 
-                managerList.innerHTML += `
-                    <li>
-                        <span>${cat.name}</span>
-                        <button class="btn-icon-delete" onclick="deleteCategory(${cat.id})" title="Eliminar Categoría">
-                            <span class="material-symbols-outlined">delete</span>
-                        </button>
-                    </li>
-                `;
+                if (managerList) {
+                    managerList.innerHTML += `
+                        <li>
+                            <span>${cat.name}</span>
+                            <button class="btn-icon-delete" onclick="deleteCategory(${cat.id})" title="Eliminar Categoría">
+                                <span class="material-symbols-outlined">delete</span>
+                            </button>
+                        </li>
+                    `;
+                }
             });
         }
-    } catch (error) { console.error(error); }
+    } catch (error) { console.error("Error cargando categorías:", error); }
 }
 
 async function fetchProducts() {
@@ -95,8 +112,9 @@ function renderProductGrid(isActiveView) {
 
         let actionButtons = '';
         if (isActiveView) {
+            // Nota: editProduct() vive en el componente add-product.js, pero al ser global funciona perfecto aquí.
             actionButtons = `
-                <button class="btn-icon" title="Editar" onclick="editProduct(${prod.id})"><span class="material-symbols-outlined">edit</span></button>
+                <button class="btn-icon" title="Editar" onclick="window.editProduct(${prod.id})"><span class="material-symbols-outlined">edit</span></button>
                 <button class="btn-icon delete" title="Eliminar" onclick="deleteProduct(${prod.id})"><span class="material-symbols-outlined">delete</span></button>
             `;
         } else {
@@ -128,89 +146,6 @@ function renderProductGrid(isActiveView) {
     });
 }
 
-// --- MODAL: PRODUCTOS ---
-
-window.openProductModal = function () {
-    isEditing = false;
-    document.getElementById('product-modal-title').textContent = 'Añade un producto';
-    document.getElementById('form-product').reset();
-    document.getElementById('prod-id').value = '';
-    document.getElementById('prod-is-active').value = '1';
-    document.getElementById('prod-img').value = '';
-    
-    // Resetear la imagen
-    document.getElementById('prod-img-preview').src = '';
-
-    document.getElementById('modal-add-product').classList.add('active');
-}
-
-window.editProduct = async function (id) {
-    try {
-        const res = await fetch(`/api/products/${id}`);
-        const json = await res.json();
-
-        if (json.status === 'success') {
-            const p = json.data;
-            isEditing = true;
-            document.getElementById('product-modal-title').textContent = 'Editar producto';
-
-            document.getElementById('prod-id').value = p.id;
-            document.getElementById('prod-name').value = p.name;
-            document.getElementById('prod-code').value = p.cod_bar;
-            document.getElementById('prod-category').value = p.category_id || '';
-            document.getElementById('prod-desc').value = p.description;
-            document.getElementById('prod-is-active').value = p.is_active ? '1' : '0';
-
-            // Actualizar la imagen destacada de la derecha
-            const previewImg = document.getElementById('prod-img-preview');
-            if (p.url_img_original) {
-                previewImg.src = p.url_img_original;
-            }
-            document.getElementById('prod-img').value = '';
-
-            document.getElementById('modal-add-product').classList.add('active');
-        }
-    } catch (e) { console.error(e); alert('Error al cargar datos'); }
-}
-
-document.getElementById('form-product').addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const formData = new FormData();
-    formData.append('name', document.getElementById('prod-name').value);
-    formData.append('cod_bar', document.getElementById('prod-code').value);
-    formData.append('category_id', document.getElementById('prod-category').value);
-    formData.append('description', document.getElementById('prod-desc').value);
-    formData.append('is_active', document.getElementById('prod-is-active').value);
-
-    const fileInput = document.getElementById('prod-img');
-    if (fileInput.files.length > 0) {
-        formData.append('image', fileInput.files[0]);
-    }
-
-    const id = document.getElementById('prod-id').value;
-    const url = isEditing ? `/api/products/${id}` : '/api/products/';
-    const method = isEditing ? 'PATCH' : 'POST';
-
-    try {
-        const res = await fetch(url, {
-            method: method,
-            body: formData
-        });
-
-        const json = await res.json();
-
-        if (res.ok || json.status === 'success') {
-            alert(isEditing ? 'Producto actualizado' : 'Producto creado');
-            document.getElementById('modal-add-product').classList.remove('active');
-            fetchProducts();
-        } else {
-            console.error('Error:', json);
-            alert('Error al guardar. Revisa los datos.');
-        }
-    } catch (err) { console.error(err); }
-});
-
 // --- ESTADOS DE PRODUCTO ---
 
 window.deleteProduct = async function (id) {
@@ -231,35 +166,47 @@ window.activateProduct = async function (id) {
 
 // --- MODAL: CATEGORIAS ---
 
-document.getElementById('btn-open-categories').addEventListener('click', () => {
-    document.getElementById('modal-manage-categories').classList.add('active');
-});
+const btnOpenCategories = document.getElementById('btn-open-categories');
+if (btnOpenCategories) {
+    btnOpenCategories.addEventListener('click', () => {
+        document.getElementById('modal-manage-categories').classList.add('active');
+    });
+}
 
-document.getElementById('form-category').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const nameInput = document.getElementById('new-category-name');
+const formCategory = document.getElementById('form-category');
+if (formCategory) {
+    formCategory.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const nameInput = document.getElementById('new-category-name');
 
-    try {
-        const res = await fetch('/api/products/categories', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: nameInput.value })
-        });
-        if (res.ok) {
-            nameInput.value = '';
-            fetchCategories();
-        } else {
-            alert('Error al crear categoría.');
-        }
-    } catch (err) { console.error(err); }
-});
+        try {
+            const res = await fetch('/api/products/categories', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: nameInput.value })
+            });
+            if (res.ok) {
+                nameInput.value = '';
+                fetchCategories();
+                // Avisamos globalmente por si "add-product.js" necesita recargar su select
+                window.dispatchEvent(new CustomEvent('categoryChanged'));
+            } else {
+                alert('Error al crear categoría.');
+            }
+        } catch (err) { console.error(err); }
+    });
+}
 
 window.deleteCategory = async function (id) {
     if (!confirm('¿Seguro que deseas eliminar esta categoría?')) return;
     try {
         const res = await fetch(`/api/products/categories/${id}`, { method: 'DELETE' });
-        if (res.ok) fetchCategories();
-        else alert('No se puede eliminar. ¿Tiene productos asociados?');
+        if (res.ok) {
+            fetchCategories();
+            window.dispatchEvent(new CustomEvent('categoryChanged'));
+        } else {
+            alert('No se puede eliminar. ¿Tiene productos asociados?');
+        }
     } catch (e) { console.error(e); }
 }
 
@@ -267,17 +214,20 @@ window.deleteCategory = async function (id) {
 
 function setupSearchDebounce() {
     const searchInput = document.getElementById('product-search');
-    searchInput.addEventListener('input', () => {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
-            applyFilters();
-        }, 500);
-    });
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                applyFilters();
+            }, 500);
+        });
+    }
 }
 
-function applyFilters() {
+window.applyFilters = function () {
     currentPage = 1;
-    document.getElementById('filter-wrapper').classList.remove('active');
+    const fw = document.getElementById('filter-wrapper');
+    if (fw) fw.classList.remove('active');
     fetchProducts();
 }
 
@@ -291,16 +241,21 @@ function setupUI() {
     const filterBtn = document.getElementById('btn-filter-toggle');
     const filterWrapper = document.getElementById('filter-wrapper');
 
-    filterBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        filterWrapper.classList.toggle('active');
-    });
+    if (filterBtn && filterWrapper) {
+        filterBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            filterWrapper.classList.toggle('active');
+        });
+    }
 
     document.querySelectorAll('.btn-close-modal, .btn-cancel').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
             const targetId = btn.getAttribute('data-target');
-            if (targetId) document.getElementById(targetId).classList.remove('active');
+            if (targetId) {
+                const modal = document.getElementById(targetId);
+                if (modal) modal.classList.remove('active');
+            }
         });
     });
 

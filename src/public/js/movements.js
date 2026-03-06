@@ -2,12 +2,20 @@ let currentPage = 1;
 let searchTimeout;
 
 document.addEventListener('DOMContentLoaded', () => {
-    setupFiltersUI();
-    setupSearchDebounce();
-    loadCatalogs();
-    fetchMovements();
-    setupModalListeners();
+    startWebSocket()
+    setupFiltersUI()
+    setupSearchDebounce()
+    loadCatalogs()
+    fetchMovements()
+    setupModalListeners()
 });
+
+function startWebSocket() {
+    const socket = io()
+
+    socket.on('movements_updated', fetchMovements)
+    socket.on('new_movement', fetchMovements)
+}
 
 // ---- INTERFAZ DE FILTROS ----
 
@@ -155,6 +163,8 @@ function renderMovementsTable(movements) {
 
         const tr = document.createElement('tr');
         tr.className = 'movement-item';
+
+        // CORRECCIÓN DE RUTAS DE OBJETOS SEGÚN EL DTO
         tr.innerHTML = `
             <td class="col-id">#${mov.id}</td>
             <td class="col-receipt font-mono">${mov.receipt_number || 'S/N'}</td>
@@ -168,10 +178,10 @@ function renderMovementsTable(movements) {
                 <span class="badge ${mov.status.toLowerCase()}">${mov.status.replace('_', ' ')}</span>
             </td>
             <td class="col-date">${dateStr}</td>
-            <td class="col-branch" title="${mov.origin_branch_name}">${mov.origin_branch_name || '-'}</td>
-            <td class="col-branch" title="${mov.dest_branch_name}">${mov.dest_branch_name || '-'}</td>
+            <td class="col-branch" title="${mov.origin || 'Externo'}">${mov.origin || '-'}</td>
+            <td class="col-branch" title="${mov.destination || 'Externo'}">${mov.destination || '-'}</td>
             <td class="col-user">
-                <span class="user-name">${mov.user_name || 'Desconocido'}</span>
+                <span class="user-name">${mov.user?.name || 'Desconocido'}</span>
             </td>
             <td class="col-info">
                 <button class="btn-icon-info" onclick="loadMovementDetails(${mov.id})">
@@ -230,15 +240,46 @@ async function loadMovementDetails(id) {
             fetch(`/api/movements/${id}/details`)
         ]);
 
-        const dataHeader = await resHeader.json();
         const dataDetails = await resDetails.json();
 
-        if (dataHeader.status === 'success' && dataDetails.status === 'success') {
-            openDetailModal(dataHeader.data, dataDetails.data);
-        } else {
-            alert('No se pudo cargar el detalle del movimiento.');
+        let dataHeader = { status: 'error' };
+
+        // Si el empleado no tiene permiso para ver la cabecera (suele dar 403 Forbidden)
+        if (resHeader.ok) {
+            dataHeader = await resHeader.json();
         }
-    } catch (error) { console.error(error); }
+
+        // Si los detalles de los productos cargan bien, abrimos el modal igual
+        if (dataDetails.status === 'success') {
+
+            // Si falló la cabecera (por ser empleado), le inventamos una vacía 
+            // usando los pocos datos que tenemos para que el modal no explote.
+            let mov = {};
+            if (dataHeader.status === 'success') {
+                mov = dataHeader.data;
+            } else {
+                mov = {
+                    id: id,
+                    receipt_number: 'Acceso Restringido',
+                    type: 'Desconocido',
+                    status: '-',
+                    date: new Date().toISOString(),
+                    origin: 'Restringido',
+                    destination: 'Restringido',
+                    user: { name: '-' }
+                };
+                console.warn("No se pudo cargar la cabecera del movimiento por permisos.");
+            }
+
+            openDetailModal(mov, dataDetails.data);
+
+        } else {
+            alert('No se pudo cargar la lista de productos del movimiento.');
+        }
+    } catch (error) {
+        console.error(error);
+        alert('Ocurrió un error de red al intentar abrir el detalle.');
+    }
 }
 
 function openDetailModal(mov, details) {
@@ -252,9 +293,11 @@ function openDetailModal(mov, details) {
     document.getElementById('detail-status').textContent = (mov.status || '').replace('_', ' ').toUpperCase();
     document.getElementById('detail-date').textContent = new Date(mov.date).toLocaleDateString();
     document.getElementById('detail-created').textContent = new Date(mov.created_at || mov.date).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' });
-    document.getElementById('detail-user').textContent = mov.user_name || 'Desconocido';
-    document.getElementById('detail-origin').textContent = mov.origin_branch_name || 'Externo / N/A';
-    document.getElementById('detail-dest').textContent = mov.dest_branch_name || 'Externo / N/A';
+
+    // CORRECCIÓN DE RUTAS DE CABECERA
+    document.getElementById('detail-user').textContent = mov.user?.name || 'Desconocido';
+    document.getElementById('detail-origin').textContent = mov.origin || 'Externo / N/A';
+    document.getElementById('detail-dest').textContent = mov.destination || 'Externo / N/A';
 
     const prodList = document.getElementById('detail-products-list');
     prodList.innerHTML = '';
@@ -262,9 +305,11 @@ function openDetailModal(mov, details) {
     if (details && details.length > 0) {
         details.forEach(prod => {
             const row = document.createElement('tr');
+
+            // CORRECCIÓN DE RUTAS DE PRODUCTO SEGÚN EL DTO
             row.innerHTML = `
-                <td class="font-mono text-muted">${prod.barcode || 'S/C'}</td>
-                <td class="font-bold">${prod.product_name}</td>
+                <td class="font-mono text-muted">${prod.product?.barcode || 'S/C'}</td>
+                <td class="font-bold">${prod.product?.name || 'Producto sin nombre'}</td>
                 <td class="text-right"><span class="qty-badge-modal">${prod.quantity}</span></td>
             `;
             prodList.appendChild(row);

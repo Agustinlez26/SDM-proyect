@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
-<%- include('../partials/head', { title: 'Productos' , cssFile: 'products.css' }) %>
+
+<%- include('../partials/head', { title: 'Productos' , cssFile: 'products.css' , extraCss:
+    [ '/css/components/modals-base.css' , '/css/components/product-modal.css' ] }) %>
 
     <body>
         <div class="layout">
@@ -8,10 +10,11 @@
 
                 <main class="layout__content">
                     <%- include('../partials/navbar', { title: 'Productos' }) %>
+
                         <script src="/js/products.js" defer></script>
 
-
                         <div class="main-container">
+
                             <div class="products-toolbar">
                                 <div class="toolbar-left">
                                     <div class="search-bar">
@@ -71,106 +74,43 @@
                             </div>
 
                             <footer class="pagination-footer">
-                                <button class="btn-page" id="btn-prev-page" onclick="changePage(-1)" disabled><span
-                                        class="material-symbols-outlined">chevron_left</span></button>
+                                <button class="btn-page" id="btn-prev-page" onclick="changePage(-1)" disabled>
+                                    <span class="material-symbols-outlined">chevron_left</span>
+                                </button>
                                 <span class="page-info" id="page-info">Página 1</span>
-                                <button class="btn-page" id="btn-next-page" onclick="changePage(1)"><span
-                                        class="material-symbols-outlined">chevron_right</span></button>
+                                <button class="btn-page" id="btn-next-page" onclick="changePage(1)">
+                                    <span class="material-symbols-outlined">chevron_right</span>
+                                </button>
                             </footer>
-                        </div>
 
-                        <div class="modal-overlay" id="modal-add-product">
-                            <div class="modal-card">
-                                <header class="modal-header">
-                                    <h3 id="product-modal-title">Añade un producto</h3>
-                                    <button class="btn-close-modal" data-target="modal-add-product">
-                                        <span class="material-symbols-outlined">close</span>
-                                    </button>
-                                </header>
+                        </div> <%- include('../partials/modals/modal-add-product') %>
+                            <script src="/js/components/add-product.js" defer></script>
 
-                                <form class="modal-form" id="form-product">
-                                    <input type="hidden" id="prod-id">
-                                    <input type="hidden" id="prod-is-active" value="1">
-
-                                    <div class="modal-form-grid">
-                                        <!-- Columna Izquierda: Inputs de Texto -->
-                                        <div class="modal-text-col">
-                                            <div class="form-group">
-                                                <label>Nombre del Producto</label>
-                                                <input type="text" id="prod-name" placeholder="Ej: Coca Cola 2.25L" required>
-                                            </div>
-
-                                            <div class="form-row">
-                                                <div class="form-group">
-                                                    <label>Código de Barras</label>
-                                                    <input type="text" id="prod-code" placeholder="Ej: 779123456789" required>
-                                                </div>
-                                                <div class="form-group">
-                                                    <label>Categoría</label>
-                                                    <select id="prod-category" required>
-                                                        <option value="" disabled selected>Seleccionar...</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-
-                                            <div class="form-group">
-                                                <label>Descripción</label>
-                                                <textarea id="prod-desc" rows="4" placeholder="Detalles del producto..." required></textarea>
-                                            </div>
-                                        </div>
-
-                                        <!-- Columna Derecha: Imagen -->
-                                        <div class="modal-image-col">
-                                            <div>
-                                                <label>Imagen Actual / Vista Previa</label>
-                                                <div class="preview-img-container">
-                                                    <img id="prod-img-preview" src="" alt="Producto">
-                                                </div>
-                                            </div>
-                                            
-                                            <div>
-                                                <label>Cambiar Imagen</label>
-                                                <input type="file" id="prod-img" name="image" accept="image/*">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="modal-actions">
-                                        <button type="button" class="btn-cancel"
-                                            data-target="modal-add-product">Cancelar</button>
-                                        <button type="submit" class="btn-confirm" id="btn-save-product">Guardar
-                                            Producto</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-
-                        <div class="modal-overlay" id="modal-manage-categories">
-                            <div class="modal-card modal-medium">
-                                <header class="modal-header">
-                                    <h3>Administrar Categorías</h3>
-                                    <button class="btn-close-modal" data-target="modal-manage-categories">
-                                        <span class="material-symbols-outlined">close</span>
-                                    </button>
-                                </header>
-
-                                <div class="categories-manager">
-                                    <form class="add-category-row" id="form-category">
-                                        <input type="text" id="new-category-name" placeholder="Nueva categoría..."
-                                            required>
-                                        <button type="submit" class="btn-mini-add">
-                                            <span class="material-symbols-outlined">add</span>
+                            <div class="modal-overlay" id="modal-manage-categories">
+                                <div class="modal-card modal-medium">
+                                    <header class="modal-header">
+                                        <h3>Administrar Categorías</h3>
+                                        <button class="btn-close-modal" data-target="modal-manage-categories">
+                                            <span class="material-symbols-outlined">close</span>
                                         </button>
-                                    </form>
-                                    <ul class="categories-list" id="categories-list-container">
-                                    </ul>
+                                    </header>
+
+                                    <div class="categories-manager">
+                                        <form class="add-category-row" id="form-category">
+                                            <input type="text" id="new-category-name" placeholder="Nueva categoría..."
+                                                required>
+                                            <button type="submit" class="btn-mini-add">
+                                                <span class="material-symbols-outlined">add</span>
+                                            </button>
+                                        </form>
+                                        <ul class="categories-list" id="categories-list-container">
+                                        </ul>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
                 </main>
         </div>
-
     </body>
 
 </html>

@@ -24,6 +24,7 @@ const modernTooltip = {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+    startWebSocket()
     loadTopSelling();
     loadDefaultSeasonality();
     loadGlobalData();
@@ -41,6 +42,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
 });
+
+function startWebSocket() {
+    const socket = io()
+
+    socket.on('movements_updated', loadTopSelling)
+    socket.on('movements_updated', loadDefaultSeasonality)
+    socket.on('new_movement', loadTopSelling)
+    socket.on('new_movement', loadDefaultSeasonality)
+}
 
 function loadGlobalData() {
     const year = document.getElementById('globalYear').value;

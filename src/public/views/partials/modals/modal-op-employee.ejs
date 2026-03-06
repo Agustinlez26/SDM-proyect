@@ -1,0 +1,58 @@
+<div class="modal-overlay" id="modal-operation">
+    <div class="modal-card modal-large">
+        <header class="modal-header">
+            <div>
+                <h3 id="modal-op-title">Egreso / Salida</h3>
+                <p id="modal-op-subtitle" class="text-muted" style="margin-top: 4px; font-size: 0.85rem;">Busca
+                    productos en tu stock para descontar.</p>
+            </div>
+            <button class="btn-close-modal" id="btn-close-operation">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </header>
+
+        <div class="modal-body">
+            <div class="op-controls-grid" id="op-controls" style="grid-template-columns: 1fr;">
+                <div class="form-group" id="group-search">
+                    <label>Buscar Producto a egresar</label>
+                    <div class="search-bar" style="position: relative;">
+                        <span class="material-symbols-outlined search-icon">search</span>
+                        <input type="text" id="op-search-prod" placeholder="Escanear código o escribir nombre..."
+                            onkeypress="if(event.key === 'Enter') searchProductsForOperation()">
+                        <button class="btn-mini-add" type="button" id="btn-search-prod"
+                            onclick="searchProductsForOperation()">
+                            <span class="material-symbols-outlined">search</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="catalog-wrapper mt-2">
+                <div id="catalog-grid" class="catalog-grid"></div>
+            </div>
+
+            <div class="detail-products-container mt-2">
+                <table class="detail-products-table">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Producto</th>
+                            <th class="text-center" width="100">Stock Disp.</th>
+                            <th class="text-center" width="140">Cant. a Egresar</th>
+                            <th class="text-center" width="60"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="op-products-list"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn-cancel" id="btn-cancel-op">Cancelar</button>
+            <button class="btn-danger" id="btn-confirm-op">
+                <span class="material-symbols-outlined" id="btn-confirm-icon">remove_circle_outline</span>
+                <span id="btn-confirm-text">Registrar Egreso</span>
+            </button>
+        </div>
+    </div>
+</div>

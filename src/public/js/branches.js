@@ -2,11 +2,33 @@ let isEditing = false;
 let currentBranches = [];
 
 document.addEventListener('DOMContentLoaded', () => {
+    startWebSocket()
     setupModalEvents();
     fetchProvinces();
     fetchBranchTypes();
     fetchBranches();
 });
+
+function startWebSocket() {
+    const socket = io()
+
+    socket.on('new_branch', () => {
+        if (typeof fetchBranches === 'function') fetchCategories()
+    })
+
+    socket.on('branch_updated', () => {
+        if (typeof fetchBranches === 'function') fetchCategories()
+    })
+
+    socket.on('branch_deleted', () => {
+        if (typeof fetchBranches === 'function') fetchCategories()
+    })
+
+    socket.on('brach_activated', () => {
+        if (typeof fetchBranches === 'function') fetchCategories()
+    })
+}
+
 
 async function fetchBranches() {
     const container = document.getElementById('branches-list-container');

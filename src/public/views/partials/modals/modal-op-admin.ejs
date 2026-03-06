@@ -1,0 +1,58 @@
+<div class="modal-overlay" id="modal-operation">
+    <div class="modal-card modal-large">
+        <header class="modal-header">
+            <div>
+                <h3 id="modal-op-title">Título Operación</h3>
+                <p id="modal-op-subtitle" class="text-muted" style="margin-top: 4px; font-size: 0.85rem;">Subtítulo</p>
+            </div>
+            <button class="btn-close-modal" id="btn-close-operation">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </header>
+
+        <div class="modal-body">
+            <div class="op-controls-grid" id="op-controls">
+                <div class="form-group" id="group-dest" style="display: none;">
+                    <label>Sucursal Destino</label>
+                    <select id="op-dest">
+                        <option value="" disabled selected>Seleccionar sucursal...</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="group-search" style="display: none; grid-column: span 2;">
+                    <label>Buscar Producto a agregar</label>
+                    <div class="search-bar" style="position: relative;">
+                        <span class="material-symbols-outlined search-icon">search</span>
+                        <input type="text" id="op-search-prod" placeholder="Escanear código o escribir nombre..."
+                            onkeypress="if(event.key === 'Enter') searchProductsForOperation()">
+                        <button class="btn-mini-add" type="button" id="btn-search-prod"
+                            onclick="searchProductsForOperation()">
+                            <span class="material-symbols-outlined">search</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="catalog-wrapper mt-2">
+                <div id="catalog-grid" class="catalog-grid"></div>
+            </div>
+
+            <div class="detail-products-container mt-2">
+                <table class="detail-products-table">
+                    <thead>
+                        <tr></tr>
+                    </thead>
+                    <tbody id="op-products-list"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn-cancel" id="btn-cancel-op">Cancelar</button>
+            <button class="btn-primary" id="btn-confirm-op">
+                <span class="material-symbols-outlined" id="btn-confirm-icon">check_circle</span>
+                <span id="btn-confirm-text">Confirmar</span>
+            </button>
+        </div>
+    </div>
+</div>

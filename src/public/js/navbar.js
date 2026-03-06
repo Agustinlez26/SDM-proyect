@@ -1,11 +1,18 @@
 document.addEventListener('DOMContentLoaded', () => {
+    startWebSocket()
     setupDropdowns();
     setupThemeToggle();
     fetchNotifications();
-
-    // Opcional: Refrescar notificaciones cada 5 minutos
-    setInterval(fetchNotifications, 300000);
+    setupLogout()
 });
+
+function startWebSocket() {
+    const socket = io()
+
+    socket.on('movements_updated', fetchNotifications)
+    socket.on('new_movement', fetchNotifications)
+}
+
 
 // --- DROPDOWNS Y CERRADO FUERA DEL MENÚ ---
 function setupDropdowns() {
@@ -77,6 +84,35 @@ function setupThemeToggle() {
         }
 
         localStorage.setItem('theme', theme);
+    });
+}
+
+function setupLogout() {
+    // Asegurate de que tu botón/enlace de cerrar sesión en el HTML tenga id="btn-logout"
+    const logoutBtn = document.getElementById('btn-logout');
+
+    if (!logoutBtn) return;
+
+    logoutBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+
+        try {
+            const response = await fetch('/api/auth/logout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                window.location.href = '/login';
+            } else {
+                alert('No se pudo cerrar la sesión. Intenta nuevamente.');
+            }
+        } catch (error) {
+            console.error('Error cerrando sesión:', error);
+            alert('Error de conexión al intentar cerrar sesión.');
+        }
     });
 }
 
@@ -166,6 +202,6 @@ function formatDate(dateString) {
     if (diffMins < 60) return `Hace ${diffMins} min`;
     if (diffHours < 24) return `Hace ${diffHours}h`;
     if (diffDays < 7) return `Hace ${diffDays}d`;
-    
+
     return date.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
 }

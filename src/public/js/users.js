@@ -9,6 +9,18 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchUsers();
 });
 
+function startWebSocket() {
+    const socket = io()
+
+    socket.on('new_branch', fetchBranches)
+    socket.on('branch_updated', fetchBranches)
+    socket.on('branch_deleted', fetchBranches)
+    socket.on('brach_activated', fetchBranches)
+    socket.on('new_user', fetchUsers)
+    socket.on('user_toggle', fetchUsers)
+    
+}
+
 // --- CARGA DE DATOS ---
 
 async function fetchBranches() {

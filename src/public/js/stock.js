@@ -1,10 +1,20 @@
 let currentPage = 1;
 
 document.addEventListener('DOMContentLoaded', () => {
+    startWebSocket()
     setupFiltersUI();
-    loadCatalogs(); // Carga Selects de Sucursales y Categorías
-    fetchStock();   // Carga la tabla de stock inicial
+    loadCatalogs();
+    fetchStock();
 });
+
+function startWebSocket() {
+    const socket = io()
+
+    socket.on('movements_updated', loadCatalogs)
+    socket.on('movements_updated', fetchStock)
+    socket.on('new_movement', loadCatalogs)
+    socket.on('new_movement', fetchStock)
+}
 
 // --- 1. LÓGICA DE INTERFAZ DEL MENÚ DE FILTROS ---
 function setupFiltersUI() {
@@ -66,7 +76,7 @@ async function fetchStock() {
 
     // 3.1 Construir parámetros de URL en base al schema de Zod
     const params = new URLSearchParams();
-    
+
     const search = document.getElementById('stock-search').value.trim();
     if (search) params.append('search', search);
 
@@ -91,11 +101,11 @@ async function fetchStock() {
 
         if (result.status === 'success') {
             renderStockTable(result.data); // Tu backend puede devolver datos diferentes según la paginación, ajustá si devuelve { data, totalPages, etc }
-            
+
             // Actualizar interfaz de paginación (Asumiendo que el backend te devuelve si hay más páginas o al menos un array. Modificá si tenés un totalPages real)
             document.getElementById('page-info').textContent = `Página ${currentPage}`;
             document.getElementById('btn-prev-page').disabled = currentPage === 1;
-            
+
             // Lógica simple: Si trae menos de, por ejemplo, 10 items (tamaño de tu página), deshabilitamos el "Siguiente"
             const PAGE_SIZE = 10; // Ajustá esto al tamaño de página de tu backend
             document.getElementById('btn-next-page').disabled = result.data.length < PAGE_SIZE;
@@ -113,39 +123,70 @@ function renderStockTable(items) {
     const tbody = document.getElementById('stock-list-container');
     tbody.innerHTML = '';
 
+    // Buscamos si el thead tiene la columna de acciones (solo la tiene el admin)
+    const isAdmin = document.getElementById('col-acciones') !== null;
+    const colSpan = isAdmin ? 7 : 6;
+
     if (items.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 3rem; color: var(--text-muted);">No se encontró stock.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="${colSpan}" style="text-align:center; padding: 3rem; color: var(--text-muted);">No se encontró stock.</td></tr>`;
         return;
     }
 
     items.forEach(item => {
-        // Lógica visual para stock crítico
         let qtyClass = 'qty-ok';
         if (item.quantity === 0) qtyClass = 'qty-empty';
         else if (item.quantity <= item.min_quantity) qtyClass = 'qty-low';
 
-        // Placeholder para imagen si no tiene
-        const imgSrc = item.image_url || 'https://via.placeholder.com/40';
+        const imgSrc = item.img || '/img/placeholder-product.png';
 
         const tr = document.createElement('tr');
         tr.className = 'stock-row';
-        tr.innerHTML = `
+
+        // Dibujamos las columnas base
+        let html = `
             <td class="col-id font-mono">#${item.id}</td>
-            <td class="col-code font-mono">${item.barcode || 'S/C'}</td>
+            <td class="col-code font-mono">${item.cod_bar || 'S/C'}</td>
             <td>
                 <div class="product-cell">
-                    <img src="${imgSrc}" alt="${item.product_name}" class="product-thumb">
-                    <span class="product-name font-bold">${item.product_name}</span>
+                    <img src="${imgSrc}" alt="${item.name}" class="product-thumb">
+                    <span class="product-name font-bold">${item.name}</span>
                 </div>
             </td>
-            <td>${item.branch_name}</td>
+            <td>${item.branch}</td>
             <td class="text-center">
                 <span class="qty-badge ${qtyClass}">${item.quantity}</span>
             </td>
             <td class="text-center text-muted">${item.min_quantity}</td>
         `;
+
+        // Si es Admin, le inyectamos la columna de Acciones
+        if (isAdmin) {
+            // Escapamos las comillas para evitar errores al pasar el objeto por JSON
+            const itemJSON = JSON.stringify(item).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+            html += `
+            <td class="text-center">
+                <button class="btn-icon-info" onclick="openEditModal(${itemJSON})" title="Modificar Stock">
+                    <span class="material-symbols-outlined">edit</span>
+                </button>
+            </td>`;
+        }
+
+        tr.innerHTML = html;
         tbody.appendChild(tr);
     });
+}
+
+window.openEditModal = function (item) {
+    const modal = document.getElementById('modal-edit-stock');
+    if (!modal) return;
+
+    document.getElementById('edit-stock-id').value = item.id;
+    document.getElementById('edit-prod-name').textContent = item.name;
+    document.getElementById('edit-prod-branch').textContent = item.branch;
+    document.getElementById('edit-qty').value = item.quantity;
+    document.getElementById('edit-min-qty').value = item.min_quantity;
+
+    modal.classList.add('active');
 }
 
 // --- 4. ACCIONES DE BOTONES ---
@@ -162,9 +203,9 @@ function clearFilters() {
     document.getElementById('filter-category').value = '';
     document.getElementById('filter-low-stock').checked = false;
     document.getElementById('filter-out-stock').checked = false;
-    
+
     // Buscar
-    applyFilters(); 
+    applyFilters();
 }
 
 function changePage(delta) {

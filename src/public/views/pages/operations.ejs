@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
-<%- include('../partials/head', { title: 'Operaciones' , cssFile: 'operations.css' }) %>
+
+<%- include('../partials/head', { title: 'Operaciones' , cssFile: 'operations.css' , extraCss:
+    [ '/css/components/modals-base.css' , '/css/components/operational-modal.css' ] }) %>
 
     <body>
         <div class="layout">
@@ -22,7 +24,6 @@
                                         id="alert-icon">notifications_active</span>
                                     <h2 id="alert-title">Requiere tu atención</h2>
                                 </div>
-
                                 <div class="alerts-grid" id="alerts-grid-container">
                                     <div style="padding: 2rem; color: #64748b; font-size: 0.9rem;"
                                         id="alert-empty-text">
@@ -36,7 +37,6 @@
                             <section class="actions-section">
                                 <h2>¿Qué operación deseas registrar?</h2>
                                 <div class="action-cards-grid">
-
                                     <% if (user && user.role==='admin' ) { %>
                                         <button class="action-card card-in" onclick="openOperationModal('in')">
                                             <div class="card-icon"><span
@@ -65,74 +65,89 @@
                                                 </div>
                                             </button>
                                             <% } %>
-
                                 </div>
                             </section>
 
                         </div>
+                        <% if (user && user.role==='admin' ) { %>
+                            <%- include('../partials/modals/modal-op-admin') %>
+                                <script src="/js/components/op-admin.js" defer></script>
+                                <% } else { %>
+                                    <%- include('../partials/modals/modal-op-employee') %>
+                                        <script src="/js/components/op-employee.js" defer></script>
+                                        <% } %>
 
-                        <div class="modal-overlay" id="modal-operation">
-                            <div class="modal-card modal-large">
-                                <header class="modal-header">
-                                    <div>
-                                        <h3 id="modal-op-title">Título Operación</h3>
-                                        <p id="modal-op-subtitle" class="text-muted"
-                                            style="margin-top: 4px; font-size: 0.85rem;">Subtítulo</p>
-                                    </div>
-                                    <button class="btn-close-modal" id="btn-close-operation">
-                                        <span class="material-symbols-outlined">close</span>
-                                    </button>
-                                </header>
+                                            <div class="modal-overlay" id="modal-shipment">
+                                                <div class="modal-card modal-large"
+                                                    style="padding: 0; overflow: hidden;">
 
-                                <div class="modal-body">
-                                    <div class="op-controls-grid" id="op-controls">
-                                        <div class="form-group" id="group-dest" style="display: none;">
-                                            <label>Sucursal Destino</label>
-                                            <select id="op-dest">
-                                                <option value="" disabled selected>Seleccionar sucursal...</option>
-                                            </select>
-                                        </div>
+                                                    <header class="modal-header" id="modal-shipment-header"
+                                                        style="padding: 2rem; margin: 0; display: flex; align-items: center; gap: 1.5rem;">
 
-                                        <div class="form-group" id="group-search"
-                                            style="display: none; grid-column: span 2;">
-                                            <label>Buscar Producto a agregar</label>
-                                            <div class="search-bar">
-                                                <span class="material-symbols-outlined search-icon">search</span>
-                                                <input type="text" id="op-search-prod"
-                                                    placeholder="Escanear código o escribir nombre...">
-                                                <button class="btn-mini-add" type="button" id="btn-search-prod">
-                                                    <span class="material-symbols-outlined">add</span>
-                                                </button>
+                                                        <div id="modal-shipment-icon" class="material-symbols-outlined"
+                                                            style="font-size: 32px; padding: 16px; border-radius: 16px; display: flex; align-items: center; justify-content: center;">
+                                                            local_shipping
+                                                        </div>
+
+                                                        <div style="flex-grow: 1;">
+                                                            <h3 id="modal-shipment-title"
+                                                                style="font-size: 1.5rem; margin-bottom: 4px; color: var(--text-primary);">
+                                                                Título Envío</h3>
+                                                            <p id="modal-shipment-subtitle"
+                                                                style="margin: 0; color: var(--text-secondary); font-size: 0.95rem;">
+                                                                Subtítulo</p>
+                                                        </div>
+
+                                                        <button class="btn-close-modal"
+                                                            onclick="document.getElementById('modal-shipment').classList.remove('active')"
+                                                            style="background: white; align-self: flex-start; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                                                            <span class="material-symbols-outlined">close</span>
+                                                        </button>
+
+                                                    </header>
+
+                                                    <div class="modal-body" style="padding: 2rem;">
+                                                        <h4
+                                                            style="margin-top: 0; margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">
+                                                            Detalle de Productos</h4>
+                                                        <div class="detail-products-container"
+                                                            style="border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+                                                            <table class="detail-products-table"
+                                                                style="width: 100%; border-collapse: collapse;">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th
+                                                                            style="background: var(--bg-input); padding: 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary);">
+                                                                            Código</th>
+                                                                        <th
+                                                                            style="background: var(--bg-input); padding: 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary);">
+                                                                            Producto</th>
+                                                                        <th class="text-center" width="150"
+                                                                            style="background: var(--bg-input); padding: 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary);">
+                                                                            Cantidad a Mover</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody id="shipment-products-list">
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="modal-actions"
+                                                        style="padding: 1.5rem 2rem; background: var(--bg-input); margin: 0; border-top: 1px solid var(--border-color);">
+                                                        <button class="btn-cancel"
+                                                            onclick="document.getElementById('modal-shipment').classList.remove('active')"
+                                                            style="background: white;">Volver Atrás</button>
+                                                        <button class="btn-primary" id="btn-confirm-shipment"
+                                                            style="padding: 0.75rem 1.5rem; font-size: 1rem;">
+                                                            <span class="material-symbols-outlined"
+                                                                id="btn-confirm-shipment-icon">check_circle</span>
+                                                            <span id="btn-confirm-shipment-text">Confirmar</span>
+                                                        </button>
+                                                    </div>
+
+                                                </div>
                                             </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="detail-products-container mt-2">
-                                        <table class="detail-products-table">
-                                            <thead>
-                                                <tr>
-                                                    <th>Código</th>
-                                                    <th>Producto</th>
-                                                    <th class="text-center" width="120">Cantidad</th>
-                                                    <th class="text-center" width="60" id="col-action-remove"></th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="op-products-list">
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-
-                                <div class="modal-actions">
-                                    <button class="btn-cancel" id="btn-cancel-op">Cancelar</button>
-                                    <button class="btn-primary" id="btn-confirm-op">
-                                        <span class="material-symbols-outlined"
-                                            id="btn-confirm-icon">check_circle</span>
-                                        <span id="btn-confirm-text">Confirmar</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
 
                 </main>
         </div>

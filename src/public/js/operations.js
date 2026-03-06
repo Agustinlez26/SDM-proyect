@@ -1,46 +1,55 @@
-let globalBranches = [];
-let currentOperationType = null;
-let selectedProductsForOp = [];
+// ============================================================================
+// VISTA: OPERACIONES
+// Responsabilidad: Buzón de alertas de envíos y confirmación/despacho.
+// ============================================================================
+
+let currentShipmentType = null;
 let currentShipmentId = null;
 
 document.addEventListener('DOMContentLoaded', () => {
-    fetchBranches();
+    startWebSocket()
     loadPendingShipments();
-    setupModalListeners();
 });
 
-// --- CARGA DE CATÁLOGOS ---
+function startWebSocket() {
+    const socket = io()
 
-async function fetchBranches() {
-    try {
-        const res = await fetch('/api/branches/catalog');
-        const json = await res.json();
-        if (json.status === 'success') {
-            globalBranches = json.data;
-            const select = document.getElementById('op-dest');
-            if (select) {
-                select.innerHTML = '<option value="" disabled selected>Seleccionar sucursal...</option>';
-                globalBranches.forEach(branch => {
-                    select.innerHTML += `<option value="${branch.id}">${branch.name}</option>`;
-                });
-            }
-        }
-    } catch (error) { console.error(error); }
+    socket.on('movements_updated', loadPendingShipments)
+    socket.on('new_movement', loadPendingShipments)
 }
 
-// --- ENVÍOS PENDIENTES (ALERTAS) ---
+// Refrescar si se crea un envío desde el otro componente
+window.addEventListener('operationCompleted', () => {
+    loadPendingShipments();
+});
 
+// --- CARGA DE ALERTAS ---
 async function loadPendingShipments() {
     const container = document.getElementById('alerts-grid-container');
     const alertTitle = document.getElementById('alert-title');
     const alertIcon = document.getElementById('alert-icon');
+    if (!container) return;
 
     try {
         const res = await fetch('/api/movements/shipments');
         const json = await res.json();
 
+        // MANEJO DE ERROR DEL BACKEND (Ej: "El id ingresado es invalido")
+        if (json.status === 'error') {
+            alertTitle.textContent = 'Aviso del Sistema';
+            alertIcon.textContent = 'error';
+            alertIcon.style.color = '#ef4444';
+            container.innerHTML = `
+                <div style="padding: 1.5rem; border: 1px solid #fca5a5; border-radius: 8px; background: #fef2f2; color: #b91c1c;">
+                    <strong>Error del servidor:</strong> ${json.message}
+                </div>`;
+            return;
+        }
+
         if (json.status === 'success') {
             const shipments = json.data;
+
+            console.log("Datos del envío para el empleado:", shipments);
 
             if (shipments.length === 0) {
                 alertTitle.textContent = 'Todo al día';
@@ -59,27 +68,54 @@ async function loadPendingShipments() {
                 const dateObj = new Date(shipment.date);
                 const dateStr = dateObj.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 
-                // Lógica de botones por Rol
+                // Normalizamos el estado para la lógica
+                const statusNormal = (shipment.status || '').toLowerCase();
+
                 let actionButton = '';
+
+                // LÓGICA DE ADMIN
                 if (window.USER_ROLE === 'admin') {
-                    actionButton = `
-                        <button class="btn-primary" onclick="openOperationModal('dispatch', ${shipment.id}, '${shipment.receipt_number || shipment.id}')">
-                            Verificar y Despachar
-                        </button>
-                    `;
-                } else {
-                    actionButton = `
-                        <button class="btn-primary btn-receive" onclick="openOperationModal('receive', ${shipment.id}, '${shipment.receipt_number || shipment.id}')">
-                            Revisar y Confirmar Llegada
-                        </button>
-                    `;
+                    if (statusNormal === 'pendiente') {
+                        actionButton = `
+                            <button class="btn-primary" onclick="openShipmentModal('dispatch', ${shipment.id}, '${shipment.receipt_number || shipment.id}')">
+                                Verificar y Despachar
+                            </button>
+                        `;
+                    } else {
+                        actionButton = `
+                            <button class="btn-secondary" disabled style="opacity: 0.7; cursor: not-allowed; justify-content: center;">
+                                <span class="material-symbols-outlined" style="font-size: 18px;">local_shipping</span>
+                                Envío en Camino
+                            </button>
+                        `;
+                    }
+                }
+                // LÓGICA DE EMPLEADO
+                else {
+                    if (statusNormal === 'pendiente') {
+                        // El empleado ve que se está preparando, pero no puede clickear
+                        actionButton = `
+                            <button class="btn-secondary" disabled style="opacity: 0.6; cursor: not-allowed; justify-content: center; background: var(--bg-input);">
+                                <span class="material-symbols-outlined" style="font-size: 18px;">hourglass_empty</span>
+                                Esperando despacho...
+                            </button>
+                        `;
+                    } else if (statusNormal === 'en_proceso' || statusNormal === 'en proceso') {
+                        // El envío ya fue despachado, el empleado puede confirmar la llegada
+                        actionButton = `
+                            <button class="btn-success" style="width: 100%; justify-content: center;" onclick="openShipmentModal('receive', ${shipment.id}, '${shipment.receipt_number || shipment.id}')">
+                                <span class="material-symbols-outlined" style="font-size: 18px;">inventory_2</span>
+                                Confirmar Llegada
+                            </button>
+                        `;
+                    }
                 }
 
                 const card = document.createElement('div');
                 card.className = 'alert-card';
                 card.innerHTML = `
                     <div class="alert-info">
-                        <span class="badge-pending">${(shipment.status || 'Pendiente').replace('_', ' ')}</span>
+                        <span class="badge ${statusNormal}">${(shipment.status || 'Pendiente').replace('_', ' ')}</span>
                         <h3>Envío ${shipment.receipt_number || '#' + shipment.id}</h3>
                         <p>Desde/Hacia: <strong>${shipment.branch || shipment.origin_branch_name || 'Desconocido'}</strong></p>
                         <p class="alert-date">Fecha: ${dateStr}</p>
@@ -90,292 +126,132 @@ async function loadPendingShipments() {
             });
         }
     } catch (error) {
-        console.error(error);
-        container.innerHTML = '<p style="color: #ef4444; padding: 1.5rem;">Error al cargar las alertas.</p>';
+        console.error("Error cargando alertas:", error);
+        container.innerHTML = '<p style="color: #ef4444; padding: 1.5rem;">Error de conexión al cargar las alertas.</p>';
     }
 }
 
-// --- MODAL DE OPERACIONES ---
-
-function setupModalListeners() {
-    const modalOp = document.getElementById('modal-operation');
-    document.getElementById('btn-close-operation').addEventListener('click', () => modalOp.classList.remove('active'));
-    document.getElementById('btn-cancel-op').addEventListener('click', () => modalOp.classList.remove('active'));
-
-    document.querySelectorAll('.modal-overlay').forEach(overlay => {
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) overlay.classList.remove('active');
-        });
-    });
-
-    const searchBtn = document.getElementById('btn-search-prod');
-    if (searchBtn) searchBtn.addEventListener('click', searchProductsForOperation);
-}
-
-async function openOperationModal(type, refId = null, receipt = null) {
-    currentOperationType = type;
+// --- MODAL DE ENVÍOS (AESTHETIC) ---
+window.openShipmentModal = function (type, refId, receipt) {
+    currentShipmentType = type;
     currentShipmentId = refId;
-    selectedProductsForOp = [];
 
-    const modalOp = document.getElementById('modal-operation');
-    const titleOp = document.getElementById('modal-op-title');
-    const subtitleOp = document.getElementById('modal-op-subtitle');
-    const controlsDiv = document.getElementById('op-controls');
-    const groupDest = document.getElementById('group-dest');
-    const groupSearch = document.getElementById('group-search');
-    const colAction = document.getElementById('col-action-remove');
-    const prodList = document.getElementById('op-products-list');
-    const btnConfirmText = document.getElementById('btn-confirm-text');
-    const btnConfirmIcon = document.getElementById('btn-confirm-icon');
-    const btnConfirmOp = document.getElementById('btn-confirm-op');
+    const modal = document.getElementById('modal-shipment');
+    const header = document.getElementById('modal-shipment-header');
+    const title = document.getElementById('modal-shipment-title');
+    const subtitle = document.getElementById('modal-shipment-subtitle');
+    const iconHeader = document.getElementById('modal-shipment-icon');
 
-    prodList.innerHTML = '';
-    const searchInput = document.getElementById('op-search-prod');
-    if (searchInput) searchInput.value = '';
+    const btnIcon = document.getElementById('btn-confirm-shipment-icon');
+    const btnText = document.getElementById('btn-confirm-shipment-text');
+    const btnConfirm = document.getElementById('btn-confirm-shipment');
 
-    controlsDiv.style.display = 'grid';
-    groupSearch.style.display = 'block';
-    groupDest.style.display = 'none';
-    colAction.textContent = 'Acción';
-    btnConfirmOp.className = 'btn-primary';
+    if (type === 'dispatch') {
+        // Estilo Azul para Admin (Despacho)
+        header.style.backgroundColor = '#eff6ff';
+        header.style.borderBottomColor = '#bfdbfe';
+        iconHeader.textContent = 'local_shipping';
+        iconHeader.style.color = '#3b82f6';
+        iconHeader.style.backgroundColor = '#dbeafe';
 
-    switch (type) {
-        case 'dispatch':
-            titleOp.textContent = `Despachar Envío ${receipt}`;
-            subtitleOp.textContent = 'Revisa los productos antes de marcar el envío como "En Proceso / Viajando".';
-            controlsDiv.style.display = 'none';
-            colAction.textContent = '';
-            btnConfirmIcon.textContent = 'local_shipping';
-            btnConfirmText.textContent = 'Marcar En Camino';
-            loadShipmentDetails(refId);
-            break;
+        title.textContent = `Despachar Envío ${receipt}`;
+        subtitle.textContent = 'Revisa cuidadosamente los productos antes de enviarlos a la sucursal.';
 
-        case 'receive':
-            titleOp.textContent = `Confirmar Envío ${receipt}`;
-            subtitleOp.textContent = 'Revisa los productos que llegaron en este envío.';
-            controlsDiv.style.display = 'none';
-            colAction.textContent = '';
-            btnConfirmIcon.textContent = 'done_all';
-            btnConfirmText.textContent = 'Confirmar Llegada';
-            btnConfirmOp.className = 'btn-success';
-            loadShipmentDetails(refId);
-            break;
+        btnIcon.textContent = 'local_shipping';
+        btnText.textContent = 'Marcar En Camino';
+        btnConfirm.className = 'btn-primary';
+    } else if (type === 'receive') {
+        // Estilo Verde para Empleado (Recepción)
+        header.style.backgroundColor = '#f0fdf4';
+        header.style.borderBottomColor = '#bbf7d0';
+        iconHeader.textContent = 'inventory_2';
+        iconHeader.style.color = '#15803d';
+        iconHeader.style.backgroundColor = '#dcfce7';
 
-        case 'in':
-            titleOp.textContent = 'Ingreso de Mercadería';
-            subtitleOp.textContent = 'Busca los productos y declara la cantidad a ingresar al sistema.';
-            btnConfirmIcon.textContent = 'save';
-            btnConfirmText.textContent = 'Guardar Ingreso';
-            renderEmptyEditableRow();
-            break;
+        title.textContent = `Recibir Envío ${receipt}`;
+        subtitle.textContent = 'Verifica que hayas recibido todos los productos de esta lista.';
 
-        case 'transfer':
-            titleOp.textContent = 'Enviar a Sucursal';
-            subtitleOp.textContent = 'Selecciona destino, busca los productos y declara cantidades a enviar.';
-            groupDest.style.display = 'block';
-            btnConfirmIcon.textContent = 'send';
-            btnConfirmText.textContent = 'Confirmar Envío';
-            renderEmptyEditableRow();
-            break;
-
-        case 'out':
-            titleOp.textContent = 'Egreso / Salida';
-            subtitleOp.textContent = 'Busca los productos a descontar del stock actual.';
-            btnConfirmIcon.textContent = 'remove_circle_outline';
-            btnConfirmText.textContent = 'Registrar Egreso';
-            btnConfirmOp.className = 'btn-danger';
-            renderEmptyEditableRow();
-            break;
+        btnIcon.textContent = 'done_all';
+        btnText.textContent = 'Confirmar Llegada';
+        btnConfirm.className = 'btn-success';
     }
 
-    modalOp.classList.add('active');
+    loadShipmentDetails(refId);
+    modal.classList.add('active');
 }
 
 async function loadShipmentDetails(refId) {
-    const prodList = document.getElementById('op-products-list');
-    prodList.innerHTML = '<tr><td colspan="4" class="text-center"><span class="material-symbols-outlined spin">refresh</span></td></tr>';
+    const prodList = document.getElementById('shipment-products-list');
+    prodList.innerHTML = '<tr><td colspan="3" class="text-center" style="padding: 3rem;"><span class="material-symbols-outlined spin" style="font-size: 32px; color: var(--primary);">refresh</span><br><span style="color: var(--text-muted); margin-top: 10px; display: inline-block;">Cargando detalles...</span></td></tr>';
+
     try {
         const res = await fetch(`/api/movements/${refId}/details`);
         const json = await res.json();
         if (json.status === 'success') {
-            renderReadOnlyProducts(json.data);
+            renderShipmentProducts(json.data);
+        } else {
+            throw new Error('Error en json');
         }
     } catch (e) {
         console.error(e);
-        prodList.innerHTML = '<tr><td colspan="4" class="text-center" style="color:red;">Error cargando detalles.</td></tr>';
+        prodList.innerHTML = '<tr><td colspan="3" class="text-center" style="color:red; padding: 2rem;">No se pudieron cargar los detalles del envío.</td></tr>';
     }
 }
 
-function renderReadOnlyProducts(products) {
-    const prodList = document.getElementById('op-products-list');
+function renderShipmentProducts(products) {
+    const prodList = document.getElementById('shipment-products-list');
     prodList.innerHTML = '';
 
     if (!products || products.length === 0) {
-        prodList.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No hay productos.</td></tr>';
+        prodList.innerHTML = '<tr><td colspan="3" class="text-center text-muted" style="padding: 2rem;">El envío está vacío.</td></tr>';
         return;
     }
 
     products.forEach(p => {
         prodList.innerHTML += `
-            <tr>
-                <td class="font-mono text-muted">${p.barcode || 'S/C'}</td>
-                <td class="font-bold">${p.product_name}</td>
-                <td class="text-center"><span class="qty-badge-modal" style="background:#f1f5f9; padding:4px 8px; border-radius:6px; font-weight:bold;">${p.quantity}</span></td>
-                <td></td>
+            <tr style="border-bottom: 1px solid var(--border-color);">
+                <td class="font-mono text-muted" style="padding: 1rem;">${p.barcode || 'S/C'}</td>
+                <td class="font-bold" style="padding: 1rem; color: var(--text-primary); font-size: 0.95rem;">${p.product_name}</td>
+                <td class="text-center" style="padding: 1rem;">
+                    <span style="background: var(--primary-light); color: var(--primary); padding: 6px 16px; border-radius: 20px; font-weight: 800; font-size: 1rem;">${p.quantity}</span>
+                </td>
             </tr>
         `;
     });
 }
 
-function renderEmptyEditableRow() {
-    document.getElementById('op-products-list').innerHTML = `
-        <tr>
-            <td colspan="4" class="text-center text-muted" style="padding: 2rem;">
-                Utiliza el buscador de arriba para agregar productos a la lista.
-            </td>
-        </tr>
-    `;
-}
+// --- SUBMIT: CAMBIAR ESTADO DE ENVÍO ---
+document.getElementById('btn-confirm-shipment').addEventListener('click', async () => {
+    const accion = currentShipmentType === 'receive' ? 'llegada (Entregado)' : 'salida (En Proceso)';
+    if (!confirm(`¿Confirmar la ${accion} de este envío?`)) return;
 
-// --- BÚSQUEDA Y MANEJO DE PRODUCTOS ---
-
-async function searchProductsForOperation() {
-    const searchTerm = document.getElementById('op-search-prod').value;
-    if (!searchTerm) return alert('Ingresá un término de búsqueda');
-
-    let apiUrl = currentOperationType === 'in'
-        ? `/api/products/catalog?search=${encodeURIComponent(searchTerm)}`
-        : `/api/stocks/catalog?search=${encodeURIComponent(searchTerm)}`;
+    const btn = document.getElementById('btn-confirm-shipment');
+    const originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-symbols-outlined spin">refresh</span> Procesando...';
 
     try {
-        const res = await fetch(apiUrl);
-        const json = await res.json();
-
-        if (json.status === 'success' && json.data.length > 0) {
-            const product = json.data[0];
-
-            if (selectedProductsForOp.some(p => p.id === product.id)) {
-                return alert('El producto ya está en la lista.');
-            }
-
-            selectedProductsForOp.push({
-                id: product.id,
-                code: product.barcode || product.code || 'S/C',
-                name: product.name || product.product_name,
-                quantity: 1
-            });
-
-            renderOperationTable();
-            document.getElementById('op-search-prod').value = '';
-
-        } else {
-            alert('No se encontró ningún producto.');
-        }
-    } catch (err) { console.error('Error buscando producto:', err); }
-}
-
-function renderOperationTable() {
-    const tbody = document.getElementById('op-products-list');
-    if (selectedProductsForOp.length === 0) {
-        renderEmptyEditableRow();
-        return;
-    }
-
-    tbody.innerHTML = '';
-    selectedProductsForOp.forEach((prod, index) => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td class="font-mono text-muted">${prod.code}</td>
-            <td class="font-bold">${prod.name}</td>
-            <td class="text-center">
-                <input type="number" min="1" value="${prod.quantity}" 
-                       class="form-control text-center" style="width: 80px;"
-                       onchange="updateProductQuantity(${index}, this.value)">
-            </td>
-            <td class="text-center">
-                <button class="btn-icon delete" onclick="removeProductFromOp(${index})">
-                    <span class="material-symbols-outlined icon-small">delete</span>
-                </button>
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
-}
-
-window.updateProductQuantity = function (index, newQuantity) {
-    selectedProductsForOp[index].quantity = parseInt(newQuantity) || 1;
-}
-
-window.removeProductFromOp = function (index) {
-    selectedProductsForOp.splice(index, 1);
-    renderOperationTable();
-}
-
-// --- CONFIRMACIÓN AL BACKEND ---
-
-document.getElementById('btn-confirm-op').addEventListener('click', async () => {
-
-    // Casos Especiales: Cambio de estado de Envío
-    if (currentOperationType === 'receive' || currentOperationType === 'dispatch') {
-        const accion = currentOperationType === 'receive' ? 'llegada' : 'salida y despacho';
-        if (!confirm(`¿Confirmar la ${accion} de este envío?`)) return;
-
-        try {
-            const res = await fetch(`/api/movements/changeStatus/${currentShipmentId}`, { method: 'PATCH' });
-            const data = await res.json();
-            if (res.ok || data.status === 'success') {
-                alert('¡Estado del envío actualizado!');
-                document.getElementById('modal-operation').classList.remove('active');
-                loadPendingShipments();
-            } else {
-                alert('Error: ' + data.message);
-            }
-        } catch (e) { console.error(e); }
-        return;
-    }
-
-    // Casos Regulares: Crear nueva operación
-    if (selectedProductsForOp.length === 0) {
-        return alert('Debes agregar al menos un producto a la operación.');
-    }
-
-    let dbType = currentOperationType === 'in' ? 'ingreso' : currentOperationType === 'out' ? 'egreso' : 'envio';
-
-    const payload = {
-        type: dbType,
-        details: selectedProductsForOp.map(p => ({
-            product_id: p.id,
-            quantity: p.quantity
-        }))
-    };
-
-    if (dbType === 'envio') {
-        const destSelect = document.getElementById('op-dest').value;
-        if (!destSelect) return alert('Selecciona una sucursal destino.');
-        payload.destination_branch_id = parseInt(destSelect);
-    }
-
-    if (!confirm(`¿Estás seguro de registrar este ${dbType}?`)) return;
-
-    try {
-        const res = await fetch('/api/movements', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-
+        const res = await fetch(`/api/movements/changeStatus/${currentShipmentId}`, { method: 'PATCH' });
         const data = await res.json();
 
         if (res.ok || data.status === 'success') {
-            alert('¡Operación registrada con éxito!');
-            document.getElementById('modal-operation').classList.remove('active');
-            selectedProductsForOp = [];
+            alert('¡Estado del envío actualizado correctamente!');
+            document.getElementById('modal-shipment').classList.remove('active');
             loadPendingShipments();
+            window.dispatchEvent(new CustomEvent('operationCompleted'));
         } else {
-            alert('Error al registrar: ' + (data.message || JSON.stringify(data.error)));
+            alert('Error: ' + data.message);
         }
-    } catch (error) {
-        console.error(error);
-        alert('Ocurrió un error de conexión con el servidor.');
+    } catch (e) {
+        console.error(e);
+        alert('Ocurrió un error de conexión');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
     }
+});
+
+// Cerrar tocando afuera
+document.getElementById('modal-shipment').addEventListener('click', (e) => {
+    if (e.target.id === 'modal-shipment') e.target.classList.remove('active');
 });

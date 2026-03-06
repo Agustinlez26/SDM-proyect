@@ -438,3 +438,213 @@
   color: var(--text-secondary);
   font-weight: 500;
 }
+
+.btn-icon-info {
+  background: transparent;
+  border: none;
+  color: var(--primary);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.btn-icon-info:hover {
+  background-color: rgba(
+    77,
+    184,
+    208,
+    0.1
+  ); /* Ajustá este rgba a tu color primario */
+  transform: scale(1.05);
+}
+
+.btn-icon-info span {
+  font-size: 20px;
+}
+
+/* Fondo oscuro del Modal (Overlay) */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(3px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* Animación de entrada */
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Caja del Modal */
+.modal-content {
+  background: var(--bg-card, #ffffff);
+  border-radius: 16px;
+  width: 90%;
+  max-width: 450px;
+  padding: 2rem;
+  box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.2);
+
+  /* Animación tipo "Pop" */
+  transform: translateY(-20px) scale(0.95);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.modal-overlay.active .modal-content {
+  transform: translateY(0) scale(1);
+}
+
+/* Tipografía de los Inputs del Modal */
+.modal-form label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.modal-form input[type="number"] {
+  width: 100%;
+  padding: 0.85rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-input);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+}
+
+.modal-form input[type="number"]:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(77, 184, 208, 0.15); /* Efecto halo de foco */
+  background: var(--bg-card);
+}
+
+/* Botón Guardar del Modal */
+.btn-primary {
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-dark, #1b3d49);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Ajuste del botón cancelar general para que encaje en los modales */
+.btn-cancel {
+  background-color: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-cancel:hover {
+  background-color: var(--bg-body);
+  color: var(--text-primary);
+}
+
+.modal-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.input-stock-modal {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary);
+  text-align: center;
+  font-family: monospace;
+
+  transition: all 0.2s ease;
+}
+
+.input-stock-modal:hover {
+  border-color: #94a3b8;
+  background-color: var(--bg-card);
+}
+
+.input-stock-modal:focus {
+  outline: none;
+  background-color: var(--bg-card);
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(33, 77, 92, 0.1);
+  transform: translateY(-1px);
+}
+
+.input-stock-modal {
+  width: 100%;
+  padding: 0.75rem 1rem; /* Buen espacio interior para que respiren */
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 8px; /* Mismo radio que tu buscador y botones */
+
+  /* Tipografía simple y armónica */
+  font-family: inherit; /* Hereda la fuente hermosa de tu sistema */
+  font-size: 1rem; /* Tamaño estándar, nada exagerado */
+  font-weight: 500; /* Peso medio: ni muy grueso, ni muy fino */
+  color: var(--text-primary); /* Color de texto clásico */
+  text-align: left; /* Volvemos a la alineación tradicional */
+
+  transition: all 0.2s ease;
+}
+
+.input-stock-modal:hover {
+  border-color: #94a3b8;
+}
+
+.input-stock-modal:focus {
+  outline: none;
+  background-color: var(--bg-card);
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(33, 77, 92, 0.1);
+  transform: translateY(-1px);
+}
+
+.input-stock-modal::-webkit-inner-spin-button,
+.input-stock-modal::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.input-stock-modal[type="number"] {
+  -moz-appearance: textfield;
+}

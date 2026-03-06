@@ -77,16 +77,109 @@
                                                 <th>Sucursal</th>
                                                 <th class="text-center">Cantidad</th>
                                                 <th class="text-center">Mínimo</th>
+
+                                                <% if (user.role==='admin' ) { %>
+                                                    <th class="text-center" id="col-acciones">Acciones</th>
+                                                    <% } %>
                                             </tr>
                                         </thead>
-                                        <tbody id="stock-list-container">
-                                            <tr>
-                                                <td colspan="6" class="loading-state">
-                                                    <span class="material-symbols-outlined spin">refresh</span>
-                                                    Cargando inventario...
-                                                </td>
-                                            </tr>
-                                        </tbody>
+
+                                        <% if (user.role==='admin' ) { %>
+                                            <div class="modal-overlay" id="modal-edit-stock">
+                                                <div class="modal-content" style="max-width: 450px;">
+                                                    <header class="modal-header">
+                                                        <h3><span class="material-symbols-outlined"
+                                                                style="vertical-align: middle;">inventory</span> Ajustar
+                                                            Stock</h3>
+                                                        <button type="button" class="btn-close-modal"
+                                                            onclick="document.getElementById('modal-edit-stock').classList.remove('active')">
+                                                            <span class="material-symbols-outlined">close</span>
+                                                        </button>
+                                                    </header>
+
+                                                    <form id="form-edit-stock" class="modal-form">
+                                                        <input type="hidden" id="edit-stock-id">
+
+                                                        <div
+                                                            style="background: var(--bg-body); padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem;">
+                                                            <p style="margin: 0; font-size: 0.95rem;">
+                                                                <strong>Producto:</strong> <span
+                                                                    id="edit-prod-name"></span>
+                                                            </p>
+                                                            <p
+                                                                style="margin: 5px 0 0 0; font-size: 0.85rem; color: var(--text-muted);">
+                                                                <strong>Sucursal:</strong> <span
+                                                                    id="edit-prod-branch"></span>
+                                                            </p>
+                                                        </div>
+                                                        <div class="form-row">
+                                                            <div class="form-group">
+                                                                <label for="edit-qty">Cantidad Actual</label>
+                                                                <input type="number" id="edit-qty"
+                                                                    class="input-stock-modal" min="0" required>
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label for="edit-min-qty">Stock Mín. (Alerta)</label>
+                                                                <input type="number" id="edit-min-qty"
+                                                                    class="input-stock-modal" min="0" required>
+                                                            </div>
+                                                        </div>
+
+                                                        <div
+                                                            style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 1rem;">
+                                                            <button type="button" class="btn-cancel"
+                                                                onclick="document.getElementById('modal-edit-stock').classList.remove('active')">Cancelar</button>
+                                                            <button type="submit" class="btn-primary"
+                                                                style="display: flex; align-items: center; gap: 5px;">
+                                                                <span class="material-symbols-outlined"
+                                                                    style="font-size: 18px;">save</span> Guardar
+                                                            </button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+
+                                            <script>
+                                                // Lógica para enviar el formulario (Solo se carga si es admin)
+                                                document.getElementById('form-edit-stock').addEventListener('submit', async (e) => {
+                                                    e.preventDefault();
+                                                    const stockId = document.getElementById('edit-stock-id').value;
+                                                    const payload = {
+                                                        quantity: parseInt(document.getElementById('edit-qty').value),
+                                                        min_quantity: parseInt(document.getElementById('edit-min-qty').value)
+                                                    };
+
+                                                    try {
+                                                        // Ajustá la ruta según como la tengas en tu router (ej: PUT /api/stocks/:id)
+                                                        const res = await fetch(`/api/stocks/${stockId}`, {
+                                                            method: 'PUT',
+                                                            headers: { 'Content-Type': 'application/json' },
+                                                            body: JSON.stringify(payload)
+                                                        });
+                                                        const data = await res.json();
+
+                                                        if (data.status === 'success') {
+                                                            alert('Stock modificado correctamente');
+                                                            document.getElementById('modal-edit-stock').classList.remove('active');
+                                                            fetchStock(); // Recargamos la tabla
+                                                        } else {
+                                                            alert('Error: ' + (data.message || 'Verificá los datos'));
+                                                        }
+                                                    } catch (error) {
+                                                        console.error('Error actualizando stock:', error);
+                                                        alert('Error de conexión con el servidor.');
+                                                    }
+                                                });
+                                            </script>
+                                            <% } %>
+                                                <tbody id="stock-list-container">
+                                                    <tr>
+                                                        <td colspan="6" class="loading-state">
+                                                            <span class="material-symbols-outlined spin">refresh</span>
+                                                            Cargando inventario...
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
                                     </table>
                                 </div>
 

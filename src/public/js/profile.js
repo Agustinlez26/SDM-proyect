@@ -3,6 +3,8 @@ document.addEventListener('DOMContentLoaded', () => {
     setupModalListeners();
 });
 
+
+
 // --- 1. DATOS DEL PERFIL ---
 
 async function fetchMyProfile() {

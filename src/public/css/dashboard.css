@@ -1,3 +1,8 @@
+/* =========================================
+   VISTA: DASHBOARD GENERAL
+   ========================================= */
+
+/* --- 1. KPI GRID (Tarjetas Estadísticas) --- */
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -80,22 +85,20 @@
   background-color: #eff6ff;
   color: #3b82f6;
 }
-
 .kpi-icon.green {
   background-color: #f0fdf4;
   color: #22c55e;
 }
-
 .kpi-icon.orange {
   background-color: #fff7ed;
   color: #f97316;
 }
-
 .kpi-icon.red-bg {
   background-color: #fef2f2;
   color: #ef4444;
 }
 
+/* --- 2. ACCIONES RÁPIDAS --- */
 .section-title {
   font-size: 1.1rem;
   font-weight: 700;
@@ -146,18 +149,18 @@
   font-size: 0.95rem;
 }
 
-/* --- TABLA DE MOVIMIENTOS --- */
+/* --- 3. TABLA DE ÚLTIMOS MOVIMIENTOS --- */
 .recent-movements-panel {
   background: var(--bg-card);
   border-radius: 12px;
   border: 1px solid var(--border-color);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
-  overflow: hidden; /* Para que los bordes redondeados corten la tabla */
+  overflow: hidden;
 }
 
 .table-responsive {
   width: 100%;
-  overflow-x: auto; /* Scroll horizontal en móviles */
+  overflow-x: auto;
 }
 
 .movements-table {
@@ -167,7 +170,6 @@
   text-align: left;
 }
 
-/* Cabecera */
 .movements-table thead th {
   background-color: var(--bg-body);
   border-bottom: 1px solid var(--border-color);
@@ -177,10 +179,9 @@
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  white-space: nowrap; /* Evita que el texto del header se rompa */
+  white-space: nowrap;
 }
 
-/* Filas del cuerpo */
 .movement-row {
   border-bottom: 1px solid var(--border-color);
   transition: background-color 0.15s ease;
@@ -200,38 +201,33 @@
   color: var(--text-primary);
 }
 
-/* Estilos de Columnas Específicas */
+/* Estilos de Columnas de la Tabla */
 .col-id {
-  color: var(--text-muted) !important; /* Forzamos color muted */
+  color: var(--text-muted) !important;
   font-family: monospace;
   font-size: 0.85rem;
   width: 80px;
 }
-
 .col-nro {
   font-weight: 600;
 }
-
 .col-type {
   text-transform: capitalize;
-  display: flex; /* Flex dentro de la celda para alinear icono */
+  display: flex;
   align-items: center;
   gap: 0.5rem;
   font-weight: 500;
 }
-
 .col-date {
   color: var(--text-secondary) !important;
   font-size: 0.85rem;
 }
-
-/* Icono pequeño junto al tipo */
 .icon-small {
   font-size: 18px;
   color: var(--text-secondary);
 }
 
-/* Loader dentro de la tabla */
+/* --- 4. CARGADORES DE TABLA --- */
 .loading-row td {
   padding: 3rem;
   text-align: center;
@@ -246,7 +242,29 @@
   color: var(--text-muted);
 }
 
-/* Badge (Reutilizando tus estilos anteriores) */
+.loading-state {
+  padding: 3rem;
+  text-align: center;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+  font-size: 24px;
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* --- 5. BADGES / ETIQUETAS DE ESTADO --- */
 .badge {
   padding: 0.35em 0.85em;
   border-radius: 20px;
@@ -260,7 +278,6 @@
   white-space: nowrap;
 }
 
-/* Colores de Badges */
 .badge.entregado {
   background: #dcfce7;
   color: #15803d;
@@ -282,384 +299,18 @@
   border: 1px solid #fecaca;
 }
 
-.loading-state {
-  padding: 3rem;
-  text-align: center;
-  color: var(--text-muted);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
-  font-size: 0.9rem;
-}
-
-.spin {
-  animation: spin 1s linear infinite;
-  font-size: 24px;
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5); /* Esto se oscurece más abajo en Dark Mode */
-  z-index: 2000;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  opacity: 0;
-  visibility: hidden;
-  transition: 0.3s;
-}
-
-.modal-overlay.active {
-  opacity: 1;
-  visibility: visible;
-}
-
-.modal-card {
-  background: var(--bg-card);
-  width: 90%;
-  max-width: 500px;
-  border-radius: 16px; /* Más curvo, más moderno */
-  padding: 2rem;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2); /* Sombra más suave y difuminada */
-  max-height: 90vh;
-  overflow-y: auto;
-  border: 1px solid var(--border-color);
-}
-
-.modal-large {
-  max-width: 750px;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start; /* Alineado arriba por si el subtítulo es largo */
-  margin-bottom: 1.5rem;
-  border-bottom: 1px solid var(--border-color); /* Usa variable de tema */
-  padding-bottom: 1.5rem;
-}
-
-.modal-header h3 {
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0;
-  letter-spacing: -0.5px;
-}
-
-.btn-close-modal {
-  background: var(--bg-input);
-  border: 1px solid var(--border-color);
-  border-radius: 50%; /* Botón redondo moderno */
-  cursor: pointer;
-  color: var(--text-secondary);
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: 0.2s;
-}
-
-.btn-close-modal:hover {
-  background: #fee2e2;
-  color: #ef4444;
-  border-color: #fca5a5;
-}
-
-.modal-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.form-group label {
-  display: block;
-  font-size: 0.9rem;
-  font-weight: 600;
-  margin-bottom: 0.4rem;
-  color: var(--text-secondary);
-}
-
-.form-group input,
-.form-group select,
-.form-group textarea {
-  width: 100%;
-  padding: 0.7rem;
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  font-family: inherit;
-  outline: none;
-}
-
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
-  border-color: var(--primary);
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
-.file-input-wrapper input {
-  padding: 0.5rem;
-  background: var(--bg-input);
-}
-
-.search-bar {
-  display: flex;
-  align-items: center;
-  background: var(--bg-input);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 0.4rem 0.8rem;
-  transition: all 0.2s ease;
-}
-
-.search-bar:focus-within {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px rgba(33, 77, 92, 0.1);
-}
-
-.search-bar input {
-  border: none;
-  outline: none;
-  width: 100%;
-  padding: 0.3rem;
-}
-
-.btn-mini-add {
-  background: var(--primary);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  width: 32px;
-  height: 32px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.search-results-dropdown {
-  position: absolute;
-  top: calc(100% + 8px); /* Separado un poquito del input */
-  left: 0;
-  width: 100%;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-  max-height: 300px; /* Un poco más alto */
-  overflow-y: auto;
-  z-index: 2001; /* Asegurar que flote sobre todo */
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.search-result-item {
-  padding: 1rem;
-  border-bottom: 1px solid var(--border-color);
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  transition: background-color 0.2s;
-}
-
-.search-result-item:last-child {
-  border-bottom: none;
-}
-
-.search-result-item:hover {
-  background-color: var(--bg-input);
-}
-
-.search-result-item .prod-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.search-result-item .prod-code {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  font-family: monospace;
-  background: var(--bg-input);
-  padding: 2px 6px;
-  border-radius: 4px;
-  display: inline-block;
-  width: fit-content;
-}
-
-.search-result-item .prod-name {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.search-result-item .prod-stock {
-  font-size: 0.8rem;
-  color: var(--primary);
-  font-weight: 700;
-  background: var(--primary-light);
-  padding: 4px 10px;
-  border-radius: 20px; /* Tipo Pastilla */
-}
-
-.op-controls-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.detail-products-container {
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  overflow: hidden;
-  background: var(--bg-card);
-}
-
-.detail-products-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9rem;
-}
-
-.detail-products-table th {
-  background: var(--bg-body); /* Para que contraste con el fondo del modal */
-  padding: 1rem;
-  text-align: left;
-  font-weight: 700;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  font-size: 0.75rem;
-  letter-spacing: 0.05em;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.detail-products-table td {
-  padding: 1rem;
-  border-bottom: 1px solid var(--border-color);
-  vertical-align: middle;
-}
-
-.detail-products-table tr:last-child td {
-  border-bottom: none;
-}
-
-/* El input de cantidad dentro de la tabla */
-.detail-products-table input[type="number"] {
-  background: var(--bg-input);
-  border: 1px solid var(--border-color);
-  color: var(--text-primary);
-  border-radius: 6px;
-  padding: 0.5rem;
-  font-weight: 600;
-}
-.detail-products-table input[type="number"]:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px rgba(47, 111, 138, 0.15); /* Tu primary color con opacidad */
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
-  margin-top: 1.5rem;
-  padding-top: 1rem;
-  border-top: 1px solid #eee;
-}
-
-.btn-cancel {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  padding: 0.6rem 1.2rem;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 500;
-}
-
-.btn-cancel:hover {
-  background: var(--bg-input);
-}
-
-.btn-confirm,
-.btn-primary {
-  background: var(--primary);
-  color: white;
-  border: none;
-  padding: 0.6rem 1.2rem;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.btn-confirm:hover,
-.btn-primary:hover {
-  background: var(--primary-hover);
-}
-
-.btn-danger {
-  background: #ef4444;
-  color: white;
-  border: none;
-  padding: 0.6rem 1.2rem;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.btn-danger:hover {
-  background: #dc2626;
-}
-
-.btn-success {
-  background: #10b981;
-  color: white;
-  border: none;
-  padding: 0.6rem 1.2rem;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
+/* --- 6. UTILIDADES (Por si se usan en el layout general) --- */
 .text-center {
   text-align: center;
 }
-
 .text-muted {
   color: var(--text-muted);
 }
-
 .mt-2 {
   margin-top: 1rem;
 }
 
-@keyframes spin {
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
+/* --- 7. RESPONSIVE --- */
 @media (max-width: 1024px) {
   .kpi-grid {
     grid-template-columns: 1fr 1fr;
@@ -670,59 +321,12 @@
   .kpi-grid {
     grid-template-columns: 1fr;
   }
-
   .recent-movements-panel {
     overflow-x: auto;
   }
-
   .movements-header,
   .movement-item {
     min-width: 600px;
     grid-template-columns: 60px 120px 100px 100px 100px;
   }
-}
-
-body.dark-theme .modal-overlay {
-  background: rgba(0, 0, 0, 0.7);
-}
-
-/* El botón circular de cerrar en modo oscuro */
-body.dark-theme .btn-close-modal {
-  background: var(--bg-input);
-  border-color: var(--border-color);
-  color: var(--text-secondary);
-}
-body.dark-theme .btn-close-modal:hover {
-  background: rgba(239, 68, 68, 0.15);
-  color: #fca5a5;
-  border-color: rgba(239, 68, 68, 0.3);
-}
-
-/* Lista desplegable del buscador */
-body.dark-theme .search-results-dropdown {
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); /* Sombra más fuerte en oscuro */
-}
-
-body.dark-theme .search-result-item:hover {
-  background-color: var(--bg-body);
-}
-
-body.dark-theme .search-result-item .prod-stock {
-  background: rgba(77, 184, 208, 0.15);
-  color: var(--primary);
-}
-
-body.dark-theme .search-result-item .prod-code {
-  background: var(--bg-body);
-}
-
-body.dark-theme .detail-products-table th {
-  background: var(
-    --bg-input
-  );
-  border-bottom-color: var(--border-color);
-}
-
-body.dark-theme .detail-products-container {
-  box-shadow: none;
 }

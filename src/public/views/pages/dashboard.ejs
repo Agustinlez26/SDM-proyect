@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="es">
-<%- include('../partials/head', { title: 'Dashboard General' , cssFile: 'dashboard.css' }) %>
+
+<%- include('../partials/head', { title: 'Dashboard General' , cssFile: 'dashboard.css' , extraCss:
+    [ '/css/components/modals-base.css' , '/css/components/operational-modal.css' , '/css/components/product-modal.css'
+    ] }) %>
 
     <body>
         <div class="layout">
@@ -10,11 +13,12 @@
                 <main class="layout__content">
 
                     <%- include('../partials/navbar', { title: 'Dashboard General' }) %>
+
                         <script src="/js/dashboard.js" defer></script>
+
                         <div class="main-container">
 
                             <section class="kpi-grid">
-
                                 <article class="kpi-card">
                                     <div class="kpi-info">
                                         <h3>Egresos del Mes</h3>
@@ -30,12 +34,8 @@
                                     <div class="kpi-info">
                                         <h3>Stock en Alerta</h3>
                                         <div class="kpi-value" id="stock-total">--</div>
-
-                                        <div class="kpi-trend" id="stock-status">
-                                            Cargando...
-                                        </div>
+                                        <div class="kpi-trend" id="stock-status">Cargando...</div>
                                     </div>
-
                                     <div class="kpi-icon" id="stock-icon">
                                         <span class="material-symbols-outlined">inventory_2</span>
                                     </div>
@@ -57,11 +57,10 @@
                                 </article>
                             </section>
 
-
                             <h2 class="section-title">Acciones Rápidas</h2>
                             <section class="actions-grid">
-                                <% if (user.role==='admin' ) { %>
-                                    <button class="action-card btn-modal-trigger" data-target="modal-add-product">
+                                <% if (user && user.role==='admin' ) { %>
+                                    <button class="action-card" onclick="openProductModal()">
                                         <span class="material-symbols-outlined" style="font-size: 32px;">add_box</span>
                                         <span>Crear Producto</span>
                                     </button>
@@ -76,13 +75,18 @@
                                             style="font-size: 32px;">local_shipping</span>
                                         <span>Realizar Envío</span>
                                     </button>
-                                    <% } else { %>
-                                        <button class="action-card" onclick="openOperationModal('out')">
-                                            <span class="material-symbols-outlined"
-                                                style="font-size: 32px;">logout</span>
-                                            <span>Realizar Egreso</span>
-                                        </button>
-                                        <% } %>
+                                    <%- include('../partials/modals/modal-add-product') %>
+                                        <%- include('../partials/modals/modal-op-admin') %>
+
+                                            <% } else { %>
+                                                <button class="action-card" onclick="openOperationModal('out')">
+                                                    <span class="material-symbols-outlined"
+                                                        style="font-size: 32px;">logout</span>
+                                                    <span>Realizar Egreso</span>
+                                                </button>
+                                                <%- include('../partials/modals/modal-op-employee') %>
+
+                                                    <% } %>
                             </section>
 
                             <h2 class="section-title">Últimos Movimientos</h2>
@@ -112,124 +116,14 @@
                                 </div>
                             </section>
 
-                            <div class="modal-overlay" id="modal-add-product">
-                                <div class="modal-card">
-                                    <header class="modal-header">
-                                        <h3>Añade un producto</h3>
-                                        <button class="btn-close-modal" data-target="modal-add-product">
-                                            <span class="material-symbols-outlined">close</span>
-                                        </button>
-                                    </header>
+                        </div>
+                        <% if (user && user.role==='admin' ) { %>
+                            <script src="/js/components/add-product.js" defer></script>
+                            <script src="/js/components/op-admin.js" defer></script>
+                            <% } else { %>
+                                <script src="/js/components/op-employee.js" defer></script>
+                                <% } %>
 
-                                    <form class="modal-form" id="form-add-product">
-                                        <div class="form-group">
-                                            <label>Nombre del Producto</label>
-                                            <input type="text" id="prod-name" placeholder="Ej: Coca Cola 2.25L"
-                                                required>
-                                        </div>
-
-                                        <div class="form-row">
-                                            <div class="form-group">
-                                                <label>Código de Barras</label>
-                                                <input type="text" id="prod-code" placeholder="Ej: 779123456789">
-                                            </div>
-                                            <div class="form-group">
-                                                <label>Categoría</label>
-                                                <select id="product-category-select" required>
-                                                    <option value="" disabled selected>Seleccionar...</option>
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        <div class="form-group">
-                                            <label>Descripción</label>
-                                            <textarea id="prod-desc" rows="3"
-                                                placeholder="Detalles del producto..."></textarea>
-                                        </div>
-
-                                        <div class="form-group">
-                                            <label>Imagen</label>
-                                            <div class="file-input-wrapper">
-                                                <input type="file" id="product-img" accept="image/*">
-                                            </div>
-                                        </div>
-
-                                        <div class="modal-actions">
-                                            <button type="button" class="btn-cancel"
-                                                data-target="modal-add-product">Cancelar</button>
-                                            <button type="submit" class="btn-confirm">Confirmar Creación</button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-
-                            <div class="modal-overlay" id="modal-operation">
-                                <div class="modal-card modal-large">
-                                    <header class="modal-header">
-                                        <div>
-                                            <h3 id="modal-op-title">Título Operación</h3>
-                                            <p id="modal-op-subtitle" class="text-muted"
-                                                style="margin-top: 4px; font-size: 0.85rem;">Subtítulo</p>
-                                        </div>
-                                        <button class="btn-close-modal" id="btn-close-operation">
-                                            <span class="material-symbols-outlined">close</span>
-                                        </button>
-                                    </header>
-
-                                    <div class="modal-body">
-                                        <div class="op-controls-grid" id="op-controls">
-                                            <div class="form-group" id="group-dest" style="display: none;">
-                                                <label>Sucursal Destino</label>
-                                                <select id="op-dest">
-                                                    <option value="" disabled selected>Seleccionar sucursal...</option>
-                                                    <option value="1">Sucursal Centro</option>
-                                                    <option value="2">Sucursal Norte</option>
-                                                </select>
-                                            </div>
-
-                                            <div class="form-group" id="group-search"
-                                                style="display: none; grid-column: span 2;">
-                                                <label>Buscar Producto a agregar</label>
-
-                                                <div class="search-bar" style="position: relative;">
-                                                    <span class="material-symbols-outlined search-icon">search</span>
-                                                    <input type="text" id="op-search-prod"
-                                                        placeholder="Escanear código o escribir nombre..."
-                                                        onkeypress="if(event.key === 'Enter') searchProductsForOperation()">
-
-                                                    <button class="btn-mini-add" type="button" id="btn-search-prod"
-                                                        onclick="searchProductsForOperation()">
-                                                        <span class="material-symbols-outlined">search</span>
-                                                    </button>
-
-                                                    <ul id="search-results-list" class="search-results-dropdown"
-                                                        style="display: none;">
-                                                    </ul>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="detail-products-container mt-2">
-                                            <table class="detail-products-table">
-                                                <thead>
-                                                    <tr></tr>
-                                                </thead>
-                                                <tbody id="op-products-list">
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-
-                                    <div class="modal-actions">
-                                        <button class="btn-cancel" id="btn-cancel-op">Cancelar</button>
-                                        <button class="btn-primary" id="btn-confirm-op">
-                                            <span class="material-symbols-outlined"
-                                                id="btn-confirm-icon">check_circle</span>
-                                            <span id="btn-confirm-text">Confirmar</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
                 </main>
         </div>
     </body>

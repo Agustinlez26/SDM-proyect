@@ -37,7 +37,7 @@ body::before {
   padding: 30px;
   border-radius: 16px;
   box-shadow: 0 20px 20px #0003;
-  background-color: hsla(0, 0%, 100%, 0.04);
+  background-color: #ffffffb9;
   backdrop-filter: blur(12px);
 }
 
@@ -150,6 +150,7 @@ body::before {
 .login-form__submit {
   width: 100%;
   font-size: 1rem;
+  font-weight: 500;
   color: #fff;
   margin-top: 10px;
   padding: 10px;

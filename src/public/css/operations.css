@@ -1,5 +1,6 @@
 /* =========================================
-   VISTA DE OPERACIONES
+   VISTA DE OPERACIONES (operations.ejs)
+   Solo contiene: Alertas de envíos y Botones Gigantes de Acción.
    ========================================= */
 
 .section-header {
@@ -36,7 +37,7 @@
   border: 1px solid #fde047; /* Borde amarillo suave */
   border-radius: 12px;
   padding: 1.5rem;
-  box-shadow: 0 4px 6px -1px rgba(253, 224, 71, 0.1); /* Sombra amarilla */
+  box-shadow: 0 4px 6px -1px rgba(253, 224, 71, 0.1);
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -122,6 +123,9 @@
   gap: 1.25rem;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  width: 100%; /* Asegura que tome el ancho en su grilla */
+  text-align: left; /* Alinea el texto a la izquierda porque es un botón */
+  cursor: pointer;
 }
 
 .action-card:hover {
@@ -155,9 +159,10 @@
   font-size: 0.85rem;
   color: var(--text-secondary);
   line-height: 1.4;
+  margin: 0; /* Limpieza de márgenes extra en <p> */
 }
 
-/* Colores Específicos por Tarjeta */
+/* --- Colores Específicos por Tarjeta (Hover y Backgrounds) --- */
 .card-in:hover {
   border-color: #22c55e;
 }
@@ -180,319 +185,4 @@
 .card-out .card-icon {
   background-color: #fee2e2;
   color: #b91c1c;
-}
-
-/* --- CONTROLES INTERNOS DEL MODAL DE OPERACIONES --- */
-.op-controls-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-  margin-bottom: 1rem;
-  background: var(--bg-input);
-  padding: 1.5rem;
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.form-group label {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--text-secondary);
-}
-
-.form-group select {
-  padding: 0.75rem;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  outline: none;
-  font-size: 0.95rem;
-  cursor: pointer;
-}
-
-.form-group select:focus {
-  border-color: var(--primary);
-}
-
-.mt-2 {
-  margin-top: 1rem;
-}
-
-/* Botones específicos del modal */
-.btn-success {
-  background-color: #10b981;
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-.btn-success:hover {
-  background-color: #059669;
-}
-
-.btn-danger {
-  background-color: #ef4444;
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-.btn-danger:hover {
-  background-color: #dc2626;
-}
-
-/* Botón mini de agregar producto en la barra de búsqueda */
-.btn-mini-add {
-  background: var(--primary);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  margin-left: 0.5rem;
-}
-.btn-mini-add:hover {
-  background: var(--primary-hover);
-}
-
-/* Convertimos botones de acción gigantes de a -> button para usar JS */
-button.action-card {
-  width: 100%;
-  text-align: left;
-  cursor: pointer;
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 2000;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  /* Animación y estado oculto */
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transition: all 0.3s ease;
-}
-
-.modal-overlay.active {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-}
-
-.modal-card {
-  background: var(--bg-card);
-  border-radius: 16px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  padding: 2rem;
-  max-height: 90vh;
-  overflow-y: auto;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-}
-
-.modal-large {
-  max-width: 800px; /* Un poco más ancho para la tabla de operaciones */
-  width: 95%;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.modal-header h3 {
-  font-size: 1.25rem;
-  color: var(--text-primary);
-  margin: 0;
-  font-weight: 700;
-}
-
-.btn-close-modal {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--text-secondary);
-  padding: 4px;
-  border-radius: 50%;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.btn-close-modal:hover {
-  background-color: #fee2e2;
-  color: #ef4444;
-}
-
-.modal-actions {
-  margin-top: 2rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border-color);
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem; /* Separar botones Cancelar y Confirmar */
-}
-
-/* Botón Cancelar (Outline gris) */
-.btn-cancel {
-  background: var(--bg-card);
-  color: var(--text-secondary);
-  border: 1px solid var(--border-color);
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.btn-cancel:hover {
-  background: var(--bg-input);
-  color: var(--text-primary);
-}
-
-/* --- BUSCADOR INTERNO DEL MODAL --- */
-.search-bar {
-  display: flex;
-  align-items: center;
-  background: var(--bg-input);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 0.5rem 0.75rem;
-  transition: all 0.2s ease;
-}
-
-.search-bar:focus-within {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px var(--primary-light);
-}
-
-.search-bar input {
-  border: none;
-  outline: none;
-  width: 100%;
-  margin-left: 0.5rem;
-  font-size: 0.95rem;
-  background: transparent;
-}
-
-/* --- TABLA DE PRODUCTOS (Faltantes) --- */
-.detail-products-container {
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.detail-products-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.detail-products-table th {
-  background: var(--bg-input);
-  padding: 0.75rem 1rem;
-  text-align: left;
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  font-weight: 700;
-}
-
-.detail-products-table td {
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid #f1f5f9;
-  font-size: 0.9rem;
-  color: var(--text-primary);
-}
-
-.detail-products-table tr:last-child td {
-  border-bottom: none;
-}
-
-/* Utilidades de texto para la tabla */
-.text-center {
-  text-align: center;
-}
-.text-right {
-  text-align: right;
-}
-.text-muted {
-  color: var(--text-muted);
-}
-.font-mono {
-  font-family: monospace;
-}
-.font-bold {
-  font-weight: 600;
-}
-
-.qty-badge-modal {
-  background: var(--primary-light);
-  color: var(--primary);
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-weight: 700;
-  display: inline-block;
-}
-
-.btn-primary {
-  background-color: var(--primary);
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 0.95rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  transition: all 0.2s ease;
-  font-family: inherit;
-}
-
-.btn-primary:hover {
-  background-color: var(
-    --primary-hover,
-    #0f172a
-  );
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.btn-primary .material-symbols-outlined {
-  font-size: 20px;
 }
