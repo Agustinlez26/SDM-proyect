@@ -60,23 +60,25 @@ export class AuthController {
      */
     logout = async (req, res) => {
         try {
+
+            if (req.user && req.user.id) {
+                await this.authService.logout(req.user.id);
+            }
+
             res.clearCookie('access_token', {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
                 sameSite: 'strict',
                 path: '/'
             });
-            
-            // Si viene de un formulario, redirige a login
-            // Si es una petición AJAX, devuelve JSON
+
             if (req.headers.accept && req.headers.accept.includes('application/json')) {
                 return res.status(200).json({ message: 'Sesión cerrada correctamente' });
             }
-            
+
             return res.redirect('/login');
         } catch (error) {
-            console.error('Error en logout:', error);
-            return res.status(500).json({ status: 'error', message: 'Error al cerrar sesión' });
+            handleError(res, error);
         }
     }
 }

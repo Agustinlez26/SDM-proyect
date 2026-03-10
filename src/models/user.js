@@ -2,7 +2,7 @@ import { Database } from "../config/connection.js";
 import { AuthDTO } from "../dtos/auth/auth-dto.js";
 import { UserDTO } from "../dtos/users/user-dto.js";
 import { UserAllDTO } from "../dtos/users/user-all-dto.js";
-import {UserlistDTO } from "../dtos/users/user-list-dto.js";
+import { UserlistDTO } from "../dtos/users/user-list-dto.js";
 import { UserProfileDTO } from "../dtos/users/user-profile-dto.js";
 import { randomUUID } from 'node:crypto'
 
@@ -100,12 +100,30 @@ export class UserModel {
         return rows[0]
     }
 
+    async login(id, sessionId) {
+        const sql = `UPDATE ${this.#table} SET current_session_id = ? WHERE id = UUID_TO_BIN(?)`
+        const [result] = await this.#db.query(sql, [sessionId, id])
+        return result.affectedRows > 0
+    }
+
+    async logout(id) {
+        const sql = `UPDATE ${this.#table} SET current_session_id = NULL WHERE id = UUID_TO_BIN(?)`
+        const [result] = await this.#db.query(sql, [id])
+        return result.affectedRows > 0
+    }
+
+    async checkSession(id) {
+        const sql = `SELECT current_session_id FROM users WHERE id = UUID_TO_BIN(?)`;
+        const [rows] = await this.#db.query(sql, [id]);
+        return rows[0];
+    }
+
     /**
      * Busca la información administrativa completa de un usuario por su ID.
      * Incluye datos sensibles de estado (admin, active) y la relación con su sucursal.
      * NO incluye la contraseña.
      * * @param {string} id - El UUID del usuario.
-     * @returns {Promise<User_DTO|null>} DTO con la info completa del usuario o null si no existe.
+     * @returns {Promise<UserDTO|null>} DTO con la info completa del usuario o null si no existe.
      */
     async findById(id) {
         const sql =

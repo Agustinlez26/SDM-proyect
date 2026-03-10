@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto'
 import { AuthenticationError } from '../utils/errors.js';
 
 export class AuthService {
@@ -31,19 +32,26 @@ export class AuthService {
             throw new AuthenticationError('Credenciales inválidas');
         }
 
+        const sessionId = crypto.randomUUID();
+        const resultSession = await this.userModel.login(user.id, sessionId)
+
+        if (!resultSession) throw new AuthenticationError('Ocurrio un error en asignacion de sesion');
+
         let tokenPayload;
 
         if (user.requires_password_change) {
             tokenPayload = {
                 id: user.id,
+                session_id: sessionId,
                 requires_password_change: true,
-                name: user.name,
+                name: user.full_name,
                 email: user.email
             };
         } else {
             tokenPayload = {
                 id: user.id,
-                name: user.name,
+                session_id: sessionId,
+                name: user.full_name,
                 email: user.email,
                 is_admin: user.is_admin,
                 branch_id: user.branch_id,
@@ -52,7 +60,7 @@ export class AuthService {
         }
 
         const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, {
-            expiresIn: '8h'
+            expiresIn: '4h'
         });
 
         const { password: _, ...userWithoutPassword } = user;
@@ -61,5 +69,15 @@ export class AuthService {
             user: userWithoutPassword,
             token
         };
+    }
+
+    /**
+     * Cierra la sesión del usuario eliminando el session_id de la base de datos.
+     * @param {string} userId 
+     * @returns {Promise<boolean>}
+     */
+    async logout(userId) {
+        const resultLogout = await this.userModel.logout(userId);
+        if (!resultLogout) throw new AuthenticationError('Error al cerrar sesión');
     }
 }
