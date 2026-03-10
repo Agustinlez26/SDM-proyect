@@ -11,7 +11,7 @@ export class ViewsController {
 
     renderFirstPass(req, res) {
 
-        res.render('pages/first_password', {
+        res.render('pages/first-password', {
             title: 'Primer ingreso - Sol de mayo',
             activePage: 'first-password',
             cssFile: 'login.css'
