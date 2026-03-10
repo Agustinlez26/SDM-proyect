@@ -85,6 +85,19 @@ body {
   max-width: 1600px;
   margin: 0 auto;
   width: 100%;
+  animation: fadeInUp 0.4s ease-out;
+}
+
+/* Animación de entrada del contenido */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Navbar Toggle (Oculto en Desktop) */
@@ -374,16 +387,59 @@ body.dark-theme table tbody tr:hover {
   background-color: #334155;
 }
 
-/* Badges y elementos pequeños */
-body.dark-theme .badge,
-body.dark-theme [class*="badge"] {
-  background: var(--primary);
-  color: white;
-}
+/* Badges y elementos pequeños — dark theme */
 
+/* Badge de conteo (notificaciones) — siempre rojo */
 .badge-count {
   background-color: #ef4444;
   color: white;
+}
+
+/* Estado: entregado */
+body.dark-theme .badge.entregado {
+  background: rgba(16, 185, 129, 0.15);
+  color: #4ade80;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+/* Estado: pendiente */
+body.dark-theme .badge.pendiente {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+/* Estado: en proceso */
+body.dark-theme .badge.en_proceso {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+/* Estado: cancelado */
+body.dark-theme .badge.cancelado {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* Type badges (movimientos) */
+body.dark-theme .type-in {
+  background: rgba(16, 185, 129, 0.15);
+  color: #4ade80;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+body.dark-theme .type-out {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+body.dark-theme .type-transfer {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border-color: rgba(59, 130, 246, 0.3);
 }
 
 body.dark-theme .material-symbols-outlined {

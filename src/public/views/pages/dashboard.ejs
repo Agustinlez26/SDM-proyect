@@ -18,12 +18,15 @@
 
                         <div class="main-container">
 
+                            <h1 class="welcome-title">¡Bienvenido, <%= user.name %>!</h1>
+
                             <section class="kpi-grid">
                                 <article class="kpi-card">
                                     <div class="kpi-info">
                                         <h3>Egresos del Mes</h3>
                                         <div class="kpi-value" id="egresos-total">--</div>
                                         <div class="kpi-trend" id="egresos-trend">Cargando...</div>
+                                        <p class="kpi-context" style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Variación respecto al último mes</p>
                                     </div>
                                     <div class="kpi-icon orange">
                                         <span class="material-symbols-outlined">trending_up</span>

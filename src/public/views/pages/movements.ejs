@@ -92,29 +92,31 @@
                             </div>
 
                             <section class="movements-panel">
-                                <table class="movements-table">
-                                    <thead>
-                                        <tr>
-                                            <th class="col-id">ID</th>
-                                            <th class="col-receipt">Nro. Recibo</th>
-                                            <th class="col-type">Tipo</th>
-                                            <th class="col-status">Estado</th>
-                                            <th class="col-date">Fecha</th>
-                                            <th class="col-branch">Origen</th>
-                                            <th class="col-branch">Destino</th>
-                                            <th class="col-user">Usuario</th>
-                                            <th class="col-info">Info</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="movements-list-container">
-                                        <tr class="loading-state">
-                                            <td colspan="9" style="text-align: center; padding: 3rem;">
-                                                <span class="material-symbols-outlined spin">refresh</span>
-                                                <br>Cargando historial...
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                                <div class="table-responsive">
+                                    <table class="movements-table">
+                                        <thead>
+                                            <tr>
+                                                <th class="col-id">ID</th>
+                                                <th class="col-receipt">Nro. Recibo</th>
+                                                <th class="col-type">Tipo</th>
+                                                <th class="col-status">Estado</th>
+                                                <th class="col-date">Fecha</th>
+                                                <th class="col-branch">Origen</th>
+                                                <th class="col-branch">Destino</th>
+                                                <th class="col-user">Usuario</th>
+                                                <th class="col-info">Info</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="movements-list-container">
+                                            <tr class="loading-state">
+                                                <td colspan="9" style="text-align: center; padding: 3rem;">
+                                                    <span class="material-symbols-outlined spin">refresh</span>
+                                                    <br>Cargando historial...
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
 
                                 <footer class="pagination-footer">
                                     <button class="btn-page" id="btn-prev-page" onclick="changePage(-1)" disabled>
@@ -200,9 +202,6 @@
                                 </div>
 
                                 <div class="modal-actions">
-                                    <button class="btn-primary" id="btn-print">
-                                        <span class="material-symbols-outlined">print</span> Imprimir Comprobante
-                                    </button>
                                 </div>
                             </div>
                         </div>

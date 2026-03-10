@@ -34,12 +34,14 @@
                                             </button>
                                         </header>
 
+                                        <% if (user.role === 'admin') { %>
                                         <div class="filter-group">
                                             <label>Sucursal</label>
                                             <select id="filter-branch">
                                                 <option value="">Todas</option>
                                             </select>
                                         </div>
+                                        <% } %>
 
                                         <div class="filter-group">
                                             <label>Categoría</label>

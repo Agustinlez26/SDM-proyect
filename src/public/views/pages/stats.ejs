@@ -2,7 +2,7 @@
 <html lang="es">
 
 <head>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4"></script>
     <%- include('../partials/head', { title: 'Estadísticas' , cssFile: 'stats.css' }) %>
 </head>
 
@@ -61,9 +61,13 @@
                                         Estacionalidad
                                     </h3>
                                     <div class="mini-search">
-                                        <input type="text" id="productSearchInput" placeholder="Nombre o Código..."
-                                            style="width: 150px;"
-                                            onkeypress="if(event.key === 'Enter') loadProductSeasonality()">
+                                        <div class="search-wrapper">
+                                            <input type="text" id="productSearchInput" placeholder="Nombre o Código..."
+                                                autocomplete="off"
+                                                oninput="onProductSearchInput()"
+                                                onkeypress="if(event.key === 'Enter') { selectFirstSuggestion(); }">
+                                            <ul id="productSuggestionsDropdown" class="search-dropdown" role="listbox"></ul>
+                                        </div>
                                         <button onclick="loadProductSeasonality()" title="Buscar">
                                             <span class="material-symbols-outlined">search</span>
                                         </button>

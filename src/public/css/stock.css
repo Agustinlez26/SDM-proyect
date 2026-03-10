@@ -78,13 +78,13 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background: var(--primary-light);
+  border: 2px solid var(--primary);
   border-radius: 10px;
   padding: 0.75rem 1.5rem; /* Más grande */
   font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--text-primary);
+  font-weight: 800;
+  color: var(--primary);
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
@@ -308,6 +308,9 @@
 }
 
 .stock-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   background-color: var(--bg-body);
   border-bottom: 1px solid var(--border-color);
   padding: 1rem 1.5rem;

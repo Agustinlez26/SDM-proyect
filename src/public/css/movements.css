@@ -46,15 +46,19 @@
 .btn-filter {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 0.6rem 1.2rem;
-  font-weight: 700;
-  color: var(--text-secondary);
+  gap: 0.75rem;
+  background: var(--primary-light);
+  border: 2px solid var(--primary);
+  border-radius: 10px;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--primary);
   cursor: pointer;
-  transition: 0.2s;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  min-width: 120px;
+  justify-content: center;
 }
 
 .btn-filter:hover {
@@ -63,6 +67,10 @@
   color: var(--primary);
   transform: translateY(-1px);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.btn-filter span {
+  font-size: 20px;
 }
 
 /* --- MENU FILTROS + OVERLAY --- */
@@ -247,9 +255,14 @@
   border: 1px solid var(--border-color);
   border-radius: 12px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
-  overflow-x: auto;
-  overflow-y: hidden;
   width: 100%;
+  overflow: hidden; /* Mantiene bordes redondeados limpios */
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .movements-table {
@@ -273,6 +286,10 @@
 }
 
 .movements-table th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: var(--bg-body);
   text-align: left;
   font-weight: 700;
   font-size: 0.75rem;
@@ -400,10 +417,10 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 0.7rem;
-  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 800;
   text-transform: uppercase;
 }
 .type-in {
@@ -671,6 +688,7 @@
    4. PAGINACIÓN
    ========================================= */
 .pagination-footer {
+  width: 100%;
   display: flex;
   justify-content: flex-end;
   align-items: center;
@@ -705,7 +723,7 @@
 
 @media (max-width: 1024px) {
   /* Scroll horizontal para la tabla */
-  .movements-panel {
+  .table-responsive {
     overflow-x: auto;
   }
 

@@ -44,20 +44,29 @@
 .btn-filter {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 0.6rem 1.2rem;
-  font-weight: 700;
-  color: var(--text-secondary);
+  gap: 0.75rem;
+  background: var(--primary-light);
+  border: 2px solid var(--primary);
+  border-radius: 10px;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--primary);
   cursor: pointer;
-  transition: 0.2s;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  min-width: 120px;
+  justify-content: center;
 }
 .btn-filter:hover {
   background-color: var(--bg-body);
   border-color: var(--primary);
   color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+.btn-filter span {
+  font-size: 20px;
 }
 
 .filter-menu {
@@ -283,8 +292,8 @@
   margin-top: auto;
 }
 .btn-action {
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border-radius: 8px;
   display: flex;
   align-items: center;

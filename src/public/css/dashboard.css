@@ -2,6 +2,14 @@
    VISTA: DASHBOARD GENERAL
    ========================================= */
 
+/* --- 0. BIENVENIDA --- */
+.welcome-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 1.5rem;
+}
+
 /* --- 1. KPI GRID (Tarjetas Estadísticas) --- */
 .kpi-grid {
   display: grid;
@@ -140,7 +148,6 @@
 .action-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  border-color: var(--primary);
   color: var(--primary);
 }
 
@@ -212,19 +219,43 @@
   font-weight: 600;
 }
 .col-type {
-  text-transform: capitalize;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-weight: 500;
 }
 .col-date {
   color: var(--text-secondary) !important;
   font-size: 0.85rem;
 }
-.icon-small {
-  font-size: 18px;
-  color: var(--text-secondary);
+
+/* --- Type Badges (igual que en movimientos) --- */
+.type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.type-in {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+.type-out {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+.type-transfer {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+.icon-tiny {
+  font-size: 14px;
+  font-weight: bold;
 }
 
 /* --- 4. CARGADORES DE TABLA --- */

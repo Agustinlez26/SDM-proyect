@@ -121,6 +121,9 @@
   font-size: 0.7rem;
   color: var(--text-muted);
   font-family: monospace;
+  padding: 2px 4px;
+  border-radius: 4px;
+  max-width: 100px;
 }
 
 .catalog-name {
@@ -192,6 +195,7 @@ body.dark-theme .catalog-card:hover:not(.disabled) {
 body.dark-theme .catalog-code {
   background: var(--bg-body);
   border-color: transparent;
+  color: #eee
 }
 
 body.dark-theme .detail-products-table th {
