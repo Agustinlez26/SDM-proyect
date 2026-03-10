@@ -42,6 +42,9 @@ export class ProductController {
             const idProductCreated = await this.productService.create(req.file, result.data)
             const newProduct = await this.productService.findById(idProductCreated)
 
+            const io = req.app.get('io')
+            io.emit('new_product')
+
             return res.status(201).json({
                 status: 'success',
                 message: 'Producto creado correctamente',
@@ -156,6 +159,9 @@ export class ProductController {
                 return res.status(404).json({ message: 'No se pudo actualizar' })
             }
 
+            const io = req.app.get('io')
+            io.emit('product_updated')
+
             res.json({ status: 'success', message: 'Producto actualizado correctamente' })
         } catch (error) {
             handleError(res, error)
@@ -182,6 +188,9 @@ export class ProductController {
                 status: 'error',
                 message: 'No se pudo eliminar el producto de la base de datos'
             })
+
+            const io = req.app.get('io')
+            io.emit('product_deleted')
 
             res.status(200).json({
                 status: 'success',
@@ -212,6 +221,9 @@ export class ProductController {
                 status: 'error',
                 message: 'No se pudo activar el producto en la base de datos'
             })
+
+            const io = req.app.get('io')
+            io.emit('product_activated')
 
             res.status(200).json({
                 status: 'success',
@@ -253,6 +265,10 @@ export class ProductController {
 
         try {
             const categoryId = await this.productService.createCategory(result.data.name)
+
+            const io = req.app.get('io')
+            io.emit('new_category')
+
             res.status(201).json({ status: 'success', data: { id: categoryId } })
         } catch (error) {
             handleError(res, error)
@@ -279,6 +295,9 @@ export class ProductController {
                 status: 'error',
                 message: 'No se pudo eliminar la categoría de la base de datos'
             })
+
+            const io = req.app.get('io')
+            io.emit('category_deleted')
 
             res.status(200).json({
                 status: 'success',

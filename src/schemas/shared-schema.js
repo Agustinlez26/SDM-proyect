@@ -11,8 +11,8 @@ export const pageSchema = z.coerce.number().int().min(1).positive({
 }).default(1).optional()
 
 export const yearSchema = z.object({
-    year: z.coerce.number().int().min(1900).max(2100, {
-        message: "El año debe estar entre 1900 y 2100"
+    year: z.coerce.number().int().min(2026).max(2100, {
+        message: "El año debe estar entre 2026 y 2100"
     })
 })
 

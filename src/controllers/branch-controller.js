@@ -39,6 +39,9 @@ export class BranchController {
             const newId = await this.branchService.create(result.data)
             const newBranch = await this.branchService.getById(newId)
 
+            const io = req.app.get('io')
+            io.emit('new_branch')
+
             res.status(201).json({
                 status: 'success',
                 message: 'Sucursal creada correctamente',
@@ -131,6 +134,10 @@ export class BranchController {
 
         try {
             await this.branchService.update(idResult.data, dataResult.data)
+
+            const io = req.app.get('io')
+            io.emit('branch_updated')
+
             res.json({ status: 'success', message: 'Sucursal actualizada correctamente' })
         } catch (error) {
             handleError(res, error)
@@ -148,6 +155,10 @@ export class BranchController {
 
         try {
             await this.branchService.delete(result.data)
+
+            const io = req.app.get('io')
+            io.emit('branch_deleted')
+
             res.json({ status: 'success', message: 'Sucursal eliminada correctamente' })
         } catch (error) {
             handleError(res, error)
@@ -166,6 +177,10 @@ export class BranchController {
 
         try {
             await this.branchService.active(result.data)
+
+            const io = req.app.get('io')
+            io.emit('brach_activated')
+
             res.json({ status: 'success', message: 'Sucursal activa correctamente' })
         } catch (error) {
             handleError(res, error)

@@ -18,35 +18,6 @@ export class StockController {
     }
 
     /**
-     * Crea un nuevo registro de stock (Asigna un producto a una sucursal).
-     * @param {import('express').Request} req - Petición HTTP con los datos en el body.
-     * @param {import('express').Response} res - Respuesta HTTP.
-     * @returns {Promise<void>} Retorna 201 si se crea, o 400/500 en caso de error.
-     */
-    create = async (req, res) => {
-        const result = validateStock(req.body)
-        if (!result.success) {
-            return res.status(400).json({
-                status: 'error',
-                message: 'Datos invalidos',
-                errors: result.error.errors
-            })
-        }
-
-        try {
-            const newStockId = await this.stockService.create(result.data)
-            const newStock = await this.stockService.getById(newStockId)
-            res.status(201).json({
-                status: 'success',
-                message: 'Stock creado exitosamente',
-                data: { newStock }
-            })
-        } catch (error) {
-            handleError(res, error)
-        }
-    }
-
-    /**
      * Obtiene el listado de stock con filtros y paginación.
      * @param {import('express').Request} req - Petición con query params (page, search, branch, etc).
      * @param {import('express').Response} res - Respuesta con la lista de datos.
@@ -212,6 +183,9 @@ export class StockController {
                 return res.status(404).json({ message: 'No se pudo actualizar' })
             }
 
+            const io = req.app.get('io')
+            io.emit('stock_updated')
+
             res.json({ status: 'success', message: 'Stock actualizado correctamente' })
         } catch (error) {
             handleError(res, error)
@@ -238,6 +212,9 @@ export class StockController {
             if (!deleted) {
                 return res.status(404).json({ message: 'No se pudo eliminar' })
             }
+
+            const io = req.app.get('io')
+            io.emit('stock_deleted')
 
             res.json({ status: 'success', message: 'Stock eliminado correctamente' })
 

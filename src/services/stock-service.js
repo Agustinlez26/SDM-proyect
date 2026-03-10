@@ -17,29 +17,6 @@ export class StockService {
     }
 
     /**
-     * Asigna un producto a una sucursal creando un registro de stock inicial.
-     * Valida que no exista ya una relación entre ese producto y esa sucursal.
-     * * @param {Object} data - Datos para la creación.
-     * @param {number} data.product_id - ID del producto.
-     * @param {number} data.branch_id - ID de la sucursal.
-     * @param {number} data.quantity - Cantidad inicial.
-     * @param {number} data.min_quantity - Stock mínimo de alerta.
-     * @returns {Promise<number>} ID del nuevo registro creado.
-     * @throws {ValidationError} Si el producto ya está asignado a la sucursal.
-     */
-    async create(data) {
-        const validateBranch = await this.branchModel.exists(data.branch_id)
-        if (!validateBranch) throw new ValidationError('esta sucursal no existe')
-        const validate = await this.stockModel.findByProductAndBranch(data.product_id, data.branch_id)
-        if (validate) throw new ValidationError('El producto ya tiene un registro de stock en esta sucursal')
-        const stockToSave = {
-            ...data
-        }
-
-        return await this.stockModel.create(stockToSave)
-    }
-
-    /**
      * Obtiene una lista paginada de stocks con filtros opcionales.
      * * @param {Object} params - Parámetros de búsqueda y paginación.
      * @param {number} [params.page=1] - Número de página actual.

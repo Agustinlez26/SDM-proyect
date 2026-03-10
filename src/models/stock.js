@@ -160,22 +160,6 @@ export class StockModel {
         return new StockDTO(row[0])
     }
 
-    /**
-         * Asigna un producto a una sucursal (Crea relación de stock).
-         * @param {Object} stockData - Datos del stock (product_id, branch_id, quantity, min_quantity).
-         * @returns {Promise<number>} ID del nuevo registro insertado.
-         */
-    async create(stockData) {
-        const colums = this.#fieldsToInsert.join(', ')
-        const placeholders = this.#fieldsToInsert.map(() => '?').join(', ')
-        const values = this.#fieldsToInsert.map(field => stockData[field])
-
-        const sql = `INSERT INTO ${this.#table} (${colums}) VALUES (${placeholders})`
-        const [result] = await this.#db.query(sql, values)
-        return result.insertId
-    }
-
-    /**
 /**
      * Actualiza la cantidad o el mínimo de un stock existente.
      * @param {number} id - ID del registro de stock.

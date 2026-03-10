@@ -5,28 +5,27 @@
 let isEditing = false;
 
 document.addEventListener('DOMContentLoaded', () => {
-    startWebSocket()
+    initAddProductSocket()
     setupProductModalListeners();
     fetchProductCategories();
 });
 
-function startWebSocket() {
+function initAddProductSocket() {
     const socket = io()
 
-    socket.on('new_category', () => {
-        fetchCategories()
-    })
+    const handleCategories = () => {
+        sessionStorage.removeItem('cache_categories')
+        fetchProductCategories();
+    }
 
-    socket.on('category_deleted', () => {
-        fetchCategories()
-    })
+    socket.on('new_category', handleCategories)
+    socket.on('category_deleted', handleCategories)
 }
 
 // --- LÓGICA DE CATEGORÍAS (Para el Select) ---
 async function fetchProductCategories() {
     try {
-        const res = await fetch('/api/products/categories');
-        const json = await res.json();
+        const json = await window.fetchWithCache('/api/products/categories', 'cache_categories', 120)
 
         if (json.status === 'success') {
             const formSelect = document.getElementById('prod-category');

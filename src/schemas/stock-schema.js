@@ -25,8 +25,8 @@ const params = z.object({
         search: data.search,
         category: data.category_id,
         branch: data.branch_id,
-        low_stock: data.low_stock,
-        out_stock: data.out_stock,
+        lowStock: data.low_stock,   // camelCase → coincide con el servicio
+        outStock: data.out_stock,   // camelCase → coincide con el servicio
         page: data.page
     }
 })

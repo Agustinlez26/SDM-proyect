@@ -3,15 +3,21 @@ let currentProducts = [];
 let searchTimeout;
 
 document.addEventListener('DOMContentLoaded', () => {
-    startWebSocket()
+    initProductsSocket()
     setupUI()
     setupSearchDebounce()
     fetchCategories()
     fetchProducts()
 });
 
-function startWebSocket() {
+function initProductsSocket() {
     const socket = io()
+
+    const handleCategories = () => {
+        sessionStorage.removeItem('cache_categories')
+
+        fetchCategories()
+    } 
 
     //triggers of products
     socket.on('new_product', fetchProducts)
@@ -20,8 +26,8 @@ function startWebSocket() {
     socket.on('product_activated', fetchProducts)
 
     //triggers of categories
-    socket.on('new_category', fetchCategories)
-    socket.on('category_deleted', fetchCategories)
+    socket.on('new_category', handleCategories)
+    socket.on('category_deleted', handleCategories)
 }
 
 window.addEventListener('productSaved', () => {
@@ -32,8 +38,7 @@ window.addEventListener('productSaved', () => {
 
 async function fetchCategories() {
     try {
-        const res = await fetch('/api/products/categories');
-        const json = await res.json();
+        const json = await window.fetchWithCache('/api/products/categories', 'cache_categories',120)
 
         if (json.status === 'success') {
             const filterSelect = document.getElementById('filter-category');
@@ -129,7 +134,7 @@ function renderProductGrid(isActiveView) {
         card.className = 'product-card';
         card.innerHTML = `
             <div class="card-img-container">
-                <img src="${imgSrc}" alt="${prod.name}">
+                <img src="${imgSrc}" alt="${prod.name || 'Producto'}">
                 <span class="card-badge">#${prod.id}</span>
             </div>
             <div class="card-body">
