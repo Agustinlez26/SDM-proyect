@@ -84,6 +84,8 @@ app.use((req, res, next) => {
     next();
 });
 
+app.set('trust proxy', 1);
+
 app.use(express.static(path.join(process.cwd(), 'src', 'public')));
 app.use('/api', apiLimiter);
 
