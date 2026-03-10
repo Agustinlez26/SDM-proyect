@@ -1,34 +1,23 @@
 let isEditing = false;
 let currentBranches = [];
+const modalBranch = document.getElementById('modal-branch');
 
 document.addEventListener('DOMContentLoaded', () => {
-    startWebSocket()
+    initBranchesSocket();
     setupModalEvents();
     fetchProvinces();
     fetchBranchTypes();
     fetchBranches();
 });
 
-function startWebSocket() {
-    const socket = io()
+function initBranchesSocket() {
+    const socket = io();
 
-    socket.on('new_branch', () => {
-        if (typeof fetchBranches === 'function') fetchCategories()
-    })
-
-    socket.on('branch_updated', () => {
-        if (typeof fetchBranches === 'function') fetchCategories()
-    })
-
-    socket.on('branch_deleted', () => {
-        if (typeof fetchBranches === 'function') fetchCategories()
-    })
-
-    socket.on('brach_activated', () => {
-        if (typeof fetchBranches === 'function') fetchCategories()
-    })
+    socket.on('new_branch', fetchBranches);
+    socket.on('branch_updated', fetchBranches);
+    socket.on('branch_deleted', fetchBranches);
+    socket.on('brach_activated', fetchBranches);
 }
-
 
 async function fetchBranches() {
     const container = document.getElementById('branches-list-container');
@@ -52,16 +41,17 @@ async function fetchBranches() {
 
 async function fetchBranchTypes() {
     try {
-        const res = await fetch('/api/branches/types');
-        const json = await res.json();
+        // Quitamos el if (modalBranch.classList.contains('active'))
+        const branchTypeData = await window.fetchWithCache('/api/branches/types', 'cache_branch_types', 120);
 
-        if (json.status === 'success') {
+        if (branchTypeData && branchTypeData.status === 'success') {
             const selectType = document.getElementById('branch-type');
-            selectType.innerHTML = '<option value="" disabled selected>Seleccionar tipo...</option>';
-
-            json.data.forEach(t => {
-                selectType.innerHTML += `<option value="${t.id}">${t.name}</option>`;
-            });
+            if (selectType) {
+                selectType.innerHTML = '<option value="" disabled selected>Seleccionar tipo...</option>';
+                branchTypeData.data.forEach(t => {
+                    selectType.innerHTML += `<option value="${t.id}">${t.name}</option>`;
+                });
+            }
         }
     } catch (e) {
         console.error('Error cargando tipos de sucursal:', e);
@@ -118,7 +108,7 @@ function renderBranches(branches) {
                     <div class="info-text">
                         <span class="info-label">Ubicación</span>
                         <p>${branch.address}</p>
-                        <p style="font-size: 0.8rem; color: #64748b;">${branch.city}, ${branch.province}</p>
+                        <p style="font-size: 0.8rem; color: #64748b;">${branch.city || 'Ciudad'}, ${branch.province || 'Provincia'}</p>
                     </div>
                 </div>
                 <div class="info-row">
@@ -142,37 +132,38 @@ function renderBranches(branches) {
 // ============================================================================
 async function fetchProvinces() {
     try {
-        const res = await fetch('/api/branches/provinces');
-        const json = await res.json();
+        // Quitamos el if (modalBranch.classList.contains('active'))
+        const provincesData = await window.fetchWithCache('/api/branches/provinces', 'cache_provinces', 120);
 
-        if (json.status === 'success') {
+        if (provincesData && provincesData.status === 'success') {
             const selectProv = document.getElementById('branch-province');
-            selectProv.innerHTML = '<option value="" disabled selected>Seleccionar provincia...</option>';
-
-            json.data.forEach(p => {
-                selectProv.innerHTML += `<option value="${p.id}">${p.name}</option>`;
-            });
+            if (selectProv) {
+                selectProv.innerHTML = '<option value="" disabled selected>Seleccionar provincia...</option>';
+                provincesData.data.forEach(p => {
+                    selectProv.innerHTML += `<option value="${p.id}">${p.name}</option>`;
+                });
+            }
         }
     } catch (e) { console.error('Error cargando provincias:', e); }
 }
 
 async function fetchCitiesByProvince(provinceId, selectedCityId = null) {
     const citySelect = document.getElementById('branch-city');
+    if (!citySelect) return;
+
     citySelect.innerHTML = '<option value="" disabled selected>Cargando ciudades...</option>';
     citySelect.disabled = true;
 
     try {
-        // Asumo que tu API permite filtrar por provincia con un query param.
-        // Si tu API simplemente devuelve TODAS las ciudades en /api/branches/cities, 
-        // ver la nota debajo del bloque.
-        const res = await fetch(`/api/branches/cities?province_id=${provinceId}`);
-        const json = await res.json();
+        // Usamos cache, pero la clave incluye el provinceId para no mezclar ciudades
+        const cacheKey = `cache_cities_prov_${provinceId}`;
+        const citiesData = await window.fetchWithCache(`/api/branches/cities?province_id=${provinceId}`, cacheKey, 120);
 
-        if (json.status === 'success') {
+        if (citiesData && citiesData.status === 'success') {
             citySelect.innerHTML = '<option value="" disabled selected>Seleccionar ciudad...</option>';
 
-            // Si el backend te devuelve el listado completo sin filtrar, filtramos acá en el JS:
-            const filteredCities = json.data.filter(c => c.province_id == provinceId || !c.province_id);
+            // Tu backend debería filtrar, pero si no lo hace, filtramos acá
+            const filteredCities = citiesData.data.filter(c => c.province_id == provinceId || !c.province_id);
 
             filteredCities.forEach(c => {
                 citySelect.innerHTML += `<option value="${c.id}">${c.name}</option>`;
@@ -180,33 +171,46 @@ async function fetchCitiesByProvince(provinceId, selectedCityId = null) {
 
             citySelect.disabled = false;
 
-            // Si estábamos editando y teníamos una ciudad guardada, la pre-seleccionamos
             if (selectedCityId) {
                 citySelect.value = selectedCityId;
             }
         }
-    } catch (e) { console.error('Error cargando ciudades:', e); }
+    } catch (e) {
+        console.error('Error cargando ciudades:', e);
+        citySelect.innerHTML = '<option value="" disabled>Error al cargar</option>';
+    }
 }
 
 // ============================================================================
 // 3. LÓGICA DEL MODAL Y FORMULARIO (Crear / Editar)
 // ============================================================================
 function setupModalEvents() {
-    document.getElementById('btn-close-branch').addEventListener('click', cerrarModal);
-    document.getElementById('btn-cancel-branch').addEventListener('click', cerrarModal);
-    document.getElementById('btn-save-branch').addEventListener('click', saveBranch);
+    const btnClose = document.getElementById('btn-close-branch');
+    const btnCancel = document.getElementById('btn-cancel-branch');
+    const btnSave = document.getElementById('btn-save-branch');
+    const selectProvince = document.getElementById('branch-province');
 
-    // NUEVO: Escuchador para cuando el usuario cambia de Provincia
-    document.getElementById('branch-province').addEventListener('change', (e) => {
-        const provinceId = e.target.value;
-        if (provinceId) {
-            fetchCitiesByProvince(provinceId);
-        }
-    });
+    if (btnClose) btnClose.addEventListener('click', cerrarModal);
+    if (btnCancel) btnCancel.addEventListener('click', cerrarModal);
+    if (btnSave) btnSave.addEventListener('click', saveBranch);
+
+    // Corregido el Event Listener
+    if (selectProvince) {
+        selectProvince.addEventListener('change', (e) => {
+            const provinceId = e.target.value;
+            if (provinceId) {
+                fetchCitiesByProvince(provinceId);
+            } else {
+                const citySelect = document.getElementById('branch-city');
+                citySelect.innerHTML = '<option value="" disabled selected>Seleccionar provincia primero...</option>';
+                citySelect.disabled = true;
+            }
+        });
+    }
 }
 
 function cerrarModal() {
-    document.getElementById('modal-branch').classList.remove('active');
+    if (modalBranch) modalBranch.classList.remove('active');
 }
 
 window.abrirModalNuevaSucursal = function () {
@@ -214,15 +218,18 @@ window.abrirModalNuevaSucursal = function () {
     document.getElementById('modal-branch-title').textContent = 'Nueva Sucursal';
     document.getElementById('btn-save-text').textContent = 'Crear Sucursal';
 
-    document.getElementById('form-branch').reset();
+    const form = document.getElementById('form-branch');
+    if (form) form.reset();
+
     document.getElementById('branch-id').value = '';
 
-    // Resetear el select de ciudades
     const citySelect = document.getElementById('branch-city');
-    citySelect.innerHTML = '<option value="" disabled selected>Seleccionar provincia primero...</option>';
-    citySelect.disabled = true;
+    if (citySelect) {
+        citySelect.innerHTML = '<option value="" disabled selected>Seleccionar provincia primero...</option>';
+        citySelect.disabled = true;
+    }
 
-    document.getElementById('modal-branch').classList.add('active');
+    if (modalBranch) modalBranch.classList.add('active');
 }
 
 window.editarSucursal = async function (id) {
@@ -239,18 +246,18 @@ window.editarSucursal = async function (id) {
             document.getElementById('branch-id').value = b.id;
             document.getElementById('branch-name').value = b.name;
             document.getElementById('branch-address').value = b.address;
-            document.getElementById('branch-type').value = b.branch_type_id || "";
 
-            // Lógica asíncrona para Provincia y Ciudad:
+            const typeSelect = document.getElementById('branch-type');
+            if (typeSelect && b.branch_type_id) typeSelect.value = b.branch_type_id;
+
             const provSelect = document.getElementById('branch-province');
-            provSelect.value = b.province_id || "";
+            if (provSelect && b.province_id) provSelect.value = b.province_id;
 
             if (b.province_id) {
-                // Hay que esperar a que las ciudades se carguen ANTES de setear el value de la ciudad
                 await fetchCitiesByProvince(b.province_id, b.city_id);
             }
 
-            document.getElementById('modal-branch').classList.add('active');
+            if (modalBranch) modalBranch.classList.add('active');
         }
     } catch (error) {
         console.error('Error obteniendo detalles:', error);
@@ -290,6 +297,8 @@ async function saveBranch() {
         if (json.status === 'success') {
             alert(isEditing ? 'Sucursal actualizada con éxito.' : 'Sucursal creada con éxito.');
             cerrarModal();
+            // Limpiamos el caché general de sucursales tras guardar
+            sessionStorage.removeItem('cache_branches');
             fetchBranches();
         } else {
             console.error('Errores de validación:', json.error);
@@ -309,7 +318,10 @@ window.eliminarSucursal = async function (id) {
     try {
         const res = await fetch(`/api/branches/${id}`, { method: 'DELETE' });
         const json = await res.json();
-        if (json.status === 'success') fetchBranches();
+        if (json.status === 'success') {
+            sessionStorage.removeItem('cache_branches');
+            fetchBranches();
+        }
         else alert(json.message);
     } catch (e) { console.error(e); }
 }
@@ -319,7 +331,10 @@ window.activarSucursal = async function (id) {
     try {
         const res = await fetch(`/api/branches/active/${id}`, { method: 'PATCH' });
         const json = await res.json();
-        if (json.status === 'success') fetchBranches();
+        if (json.status === 'success') {
+            sessionStorage.removeItem('cache_branches');
+            fetchBranches();
+        }
         else alert(json.message);
     } catch (e) { console.error(e); }
 }

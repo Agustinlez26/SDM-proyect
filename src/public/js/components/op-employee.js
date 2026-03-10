@@ -6,12 +6,12 @@ let searchTimeout = null;
 let selectedProductsForOp = [];
 
 document.addEventListener('DOMContentLoaded', () => {
-    startWebSocket();
+    initOpEmployeeSocket();
     setupEmployeeModalListeners();
 });
 
 // --- WEBSOCKETS (Tiempo Real) ---
-function startWebSocket() {
+function initOpEmployeeSocket() {
     const socket = io();
 
     const refreshProductSearch = () => {
@@ -25,7 +25,7 @@ function startWebSocket() {
     socket.on('product_updated', refreshProductSearch);
     socket.on('product_deleted', refreshProductSearch);
     socket.on('product_activated', refreshProductSearch);
-    socket.on('movements_update', refreshProductSearch);
+    socket.on('movements_updated', refreshProductSearch);
 }
 
 // --- UTILIDADES DE LIMPIEZA Y CIERRE ---

@@ -1,7 +1,7 @@
 // src/routes/views_routes.js
 import { Router } from 'express'
 import { ViewsController } from '../src/controllers/view-controller.js'
-import { checkAuth, isAdmin, requirePasswordChange, allowPasswordChangeOnly } from '../src/middlewares/auth-middleware.js'
+import { checkAuth, requirePasswordChange, allowPasswordChangeOnly } from '../src/middlewares/auth-middleware.js'
 
 const router = Router()
 const viewsController = new ViewsController()

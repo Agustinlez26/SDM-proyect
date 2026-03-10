@@ -4,17 +4,23 @@ let selectedProductsForOp = [];
 let adminBranches = [];
 
 document.addEventListener('DOMContentLoaded', () => {
-    startWebSocket()
+    initOpAdminSocket()
     fetchAdminBranches();
     setupAdminModalListeners();
 });
 
-function startWebSocket() {
+function initOpAdminSocket() {
     const socket = io()
-    socket.on('new_branch', fetchAdminBranches)
-    socket.on('branch_updated', fetchAdminBranches)
-    socket.on('branch_deleted', fetchAdminBranches)
-    socket.on('brach_activated', fetchAdminBranches)
+
+    const handleBranches = () => {
+        sessionStorage.removeItem('cache_branches_catalog')
+        fetchAdminBranches();
+    }
+
+    socket.on('new_branch', handleBranches)
+    socket.on('branch_updated', handleBranches)
+    socket.on('branch_deleted', handleBranches)
+    socket.on('brach_activated', handleBranches)
 
     const refreshProductSearch = () => {
         const modal = document.getElementById('modal-operation');
@@ -26,13 +32,13 @@ function startWebSocket() {
     socket.on('product_updated', refreshProductSearch);
     socket.on('product_deleted', refreshProductSearch);
     socket.on('product_activated', refreshProductSearch);
-    socket.on('movements_update', refreshProductSearch);
+    socket.on('movements_updated', refreshProductSearch);
 }
 
 async function fetchAdminBranches() {
     try {
-        const res = await fetch('/api/branches/catalog');
-        const json = await res.json();
+        const json = await window.fetchWithCache('/api/branches/catalog', 'cache_branches_catalog', 120)
+
         if (json.status === 'success') {
             adminBranches = json.data;
             const select = document.getElementById('op-dest');

@@ -62,5 +62,6 @@ export {
     branchController,
     movementController,
     statisticController,
-    notificationController
+    notificationController,
+    userModel
 }

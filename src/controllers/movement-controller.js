@@ -1,5 +1,5 @@
-import { de } from "zod/locales"
-import { validateMovement, validateDetailMovement, validateParams } from "../schemas/movement-schema.js"
+
+import { validateMovement, validateParams } from "../schemas/movement-schema.js"
 import { validateId } from "../schemas/shared-schema.js"
 import { handleError } from "../utils/error-handler.js"
 
@@ -206,9 +206,8 @@ export class MovementController {
      * @param {Object} res - Response.
      */
     create = async (req, res) => {
-        console.log(req.body)
+
         const result = validateMovement(req.body)
-        console.log("DATOS LIMPIOS POR ZOD:", result.data)
 
         if (!result.success) {
             return res.status(400).json({
@@ -264,6 +263,10 @@ export class MovementController {
 
         try {
             await this.movementService.create(dbPayload, details);
+
+            const io = req.app.get('io')
+            io.emit('new_movement')
+
             res.status(201).json({ status: 'success', message: 'Operación registrada correctamente' });
         } catch (error) {
             handleError(res, error);
@@ -282,6 +285,10 @@ export class MovementController {
         const movementId = req.params.id
         try {
             const result = await this.movementService.changeStatusShipment(movementId)
+
+            const io = req.app.get('io')
+            io.emit('movements_updated')
+
             res.json({
                 status: 'success',
                 message: result.message

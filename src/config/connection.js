@@ -21,7 +21,7 @@ export class Database {
         })
 
         Database.#instance = this
-        console.log('Pool de conexiones inicializada por primera vez')
+
     }
 
     static getInstance() {

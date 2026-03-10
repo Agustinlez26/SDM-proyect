@@ -191,7 +191,7 @@ export class MovementModel {
                 m.date
             FROM ${this.#table} m
             JOIN ${this.#tableBranches} b ON m.destination_branch_id = b.id
-            WHERE m.type = 'envio'
+            WHERE m.type = 'envio' AND m.status != 'entregado'
         `
 
         const params = []

@@ -17,3 +17,36 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+window.fetchWithCache = async function (url, cacheKey, ttlMinutes = 60, forceRefresh = false) {
+    if (!forceRefresh) {
+        const cachedData = sessionStorage.getItem(cacheKey);
+        if (cachedData) {
+            const parsed = JSON.parse(cachedData);
+            if (Date.now() < parsed.expiry) {
+
+                return parsed.data;
+            }
+        }
+    }
+
+
+    const res = await fetch(url);
+
+    if (res.status === 401) {
+        alert('Tu sesión ha expirado o iniciaste sesión en otro dispositivo.');
+        window.location.href = '/login';
+        return { status: 'error', data: [] };
+    }
+
+    const json = await res.json();
+
+    if (json.status === 'success') {
+        sessionStorage.setItem(cacheKey, JSON.stringify({
+            data: json,
+            expiry: Date.now() + (ttlMinutes * 60 * 1000)
+        }));
+    }
+
+    return json;
+}

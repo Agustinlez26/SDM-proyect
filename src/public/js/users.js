@@ -3,30 +3,38 @@ let isEditing = false;
 let searchTimeout;
 
 document.addEventListener('DOMContentLoaded', () => {
+    initUsersSocket();
     setupUI();
     setupSearchDebounce();
     fetchBranches();
     fetchUsers();
 });
 
-function startWebSocket() {
+function initUsersSocket() {
     const socket = io()
 
-    socket.on('new_branch', fetchBranches)
-    socket.on('branch_updated', fetchBranches)
-    socket.on('branch_deleted', fetchBranches)
-    socket.on('brach_activated', fetchBranches)
+    const handleCatalogs = () => {
+        sessionStorage.removeItem('cache_branches_catalog')
+
+        fetchBranches();
+    }
+
+    socket.on('new_branch', handleCatalogs)
+    socket.on('branch_updated', handleCatalogs)
+    socket.on('branch_deleted', handleCatalogs)
+    socket.on('brach_activated', handleCatalogs)
+
     socket.on('new_user', fetchUsers)
     socket.on('user_toggle', fetchUsers)
-    
+
 }
 
 // --- CARGA DE DATOS ---
 
 async function fetchBranches() {
     try {
-        const res = await fetch('/api/branches/catalog');
-        const json = await res.json();
+        const json = await window.fetchWithCache('/api/branches/catalog', 'cache_branches_catalog', 120)
+
         if (json.status === 'success') {
             const selectBranch = document.getElementById('user-branch');
             json.data.forEach(b => {

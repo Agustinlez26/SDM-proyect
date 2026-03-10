@@ -1,16 +1,21 @@
 document.addEventListener('DOMContentLoaded', () => {
-    startWebSocket()
+    initNavbarSocket();
     setupDropdowns();
     setupThemeToggle();
     fetchNotifications();
     setupLogout()
 });
 
-function startWebSocket() {
+function initNavbarSocket() {
     const socket = io()
 
-    socket.on('movements_updated', fetchNotifications)
-    socket.on('new_movement', fetchNotifications)
+    const handleNofifications = () => {
+        sessionStorage.removeItem('cache_notifications')
+        fetchNotifications(true)
+    }
+
+    socket.on('movements_updated', handleNofifications)
+    socket.on('new_movement', handleNofifications)
 }
 
 
@@ -88,7 +93,6 @@ function setupThemeToggle() {
 }
 
 function setupLogout() {
-    // Asegurate de que tu botón/enlace de cerrar sesión en el HTML tenga id="btn-logout"
     const logoutBtn = document.getElementById('btn-logout');
 
     if (!logoutBtn) return;
@@ -100,12 +104,14 @@ function setupLogout() {
             const response = await fetch('/api/auth/logout', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
                 }
             });
 
             if (response.ok) {
                 window.location.href = '/login';
+                sessionStorage.clear()
             } else {
                 alert('No se pudo cerrar la sesión. Intenta nuevamente.');
             }
@@ -116,13 +122,13 @@ function setupLogout() {
     });
 }
 
-async function fetchNotifications() {
+async function fetchNotifications(forceRefresh = false) {
     const notifList = document.getElementById('notif-list');
     const badge = document.getElementById('notif-badge');
 
     try {
-        const response = await fetch('/api/notifications');
-        const json = await response.json();
+
+        const json = await window.fetchWithCache(`/api/notifications`, 'cache_notifications', 5, forceRefresh);
 
         if (json.status !== 'success' || !json.data || json.data.length === 0) {
             badge.classList.add('hidden');
@@ -140,7 +146,7 @@ async function fetchNotifications() {
             const formattedDate = date ? formatDate(date) : '';
 
             return `
-                <div class="notif-item notif-${type}" data-movement-id="${movementId || ''}">
+                <div class="notif-item notif-${type}" data-movement-id="${movementId || ''}" data-type="${type}" style="cursor: pointer;">
                     <div class="notif-icon ${bgClass}">
                         <span class="material-symbols-outlined">${icon}</span>
                     </div>
@@ -155,13 +161,31 @@ async function fetchNotifications() {
 
         notifList.innerHTML = notifHTML;
 
-        // Agregar listeners a items clickeables
-        document.querySelectorAll('.notif-item[data-movement-id]').forEach(item => {
-            item.style.cursor = 'pointer';
+        // Navegación inteligente al hacer click en una notificación
+        document.querySelectorAll('.notif-item').forEach(item => {
             item.addEventListener('click', () => {
+                const type = item.getAttribute('data-type');
                 const movementId = item.getAttribute('data-movement-id');
-                if (movementId) {
-                    window.location.href = `/operaciones?id=${movementId}`;
+
+                switch (type) {
+                    case 'danger':
+                        window.location.href = '/stock?filter=out_stock';
+                        break;
+                    case 'warning':
+                        window.location.href = '/stock?filter=low_stock';
+                        break;
+                    case 'info':
+                        window.location.href = movementId
+                            ? `/operations?id=${movementId}`
+                            : '/operations';
+                        break;
+                    case 'success':
+                        window.location.href = movementId
+                            ? `/movements?id=${movementId}`
+                            : '/movements';
+                        break;
+                    default:
+                        break;
                 }
             });
         });

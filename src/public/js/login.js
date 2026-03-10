@@ -8,7 +8,7 @@ inputsWrappers.forEach(wrapper => {
         const wrapper = e.target.closest('.login-form__input-wrapper')
         if (wrapper) {
             const input = wrapper.querySelector('.login-form__input')
-            if (input) input.focus
+            if (input) input.focus()
         }
     })
 })
@@ -37,8 +37,8 @@ form.addEventListener('submit', async (e) => {
         window.location.href = '/'
     } else {
         const error = await response.json()
-        console.error('Ocurrio un error: ', error)
-        alert('Ha ocurrido un error al iniciar sesión')
+        if(error.status === 429) alert('Demasiados intentos fallidos, intenta de nuevo mas tarde.')
+        alert('Usuario o contraseña incorrectos.')
         form.reset()
     }
 })

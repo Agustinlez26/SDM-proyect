@@ -2,7 +2,7 @@ let currentPage = 1;
 let searchTimeout;
 
 document.addEventListener('DOMContentLoaded', () => {
-    startWebSocket()
+    initMovementsSocket()
     setupFiltersUI()
     setupSearchDebounce()
     loadCatalogs()
@@ -10,9 +10,22 @@ document.addEventListener('DOMContentLoaded', () => {
     setupModalListeners()
 });
 
-function startWebSocket() {
+function initMovementsSocket() {
     const socket = io()
 
+    const handleCatalogs = () => {
+        sessionStorage.removeItem('cache_catalog')
+        sessionStorage.removeItem('cache_user_list')
+        loadCatalogs()
+    }
+
+    socket.on('new_branch', handleCatalogs)
+    socket.on('branch_updated', handleCatalogs)
+    socket.on('branch_deleted', handleCatalogs)
+    socket.on('brach_activated', handleCatalogs)
+    socket.on('new_user', handleCatalogs)
+    socket.on('user_updated', handleCatalogs)
+    socket.on('user_toggle', handleCatalogs)
     socket.on('movements_updated', fetchMovements)
     socket.on('new_movement', fetchMovements)
 }
@@ -65,8 +78,7 @@ async function loadCatalogs() {
     if (!selectOrigin && !selectUser) return;
 
     try {
-        const branchRes = await fetch('/api/branches/catalog');
-        const branchData = await branchRes.json();
+        const branchData = await window.fetchWithCache(`/api/branches/catalog`, 'cache_catalog', 120)
         if (branchData.status === 'success') {
             let options = '';
             branchData.data.forEach(b => {
@@ -76,8 +88,7 @@ async function loadCatalogs() {
             selectDest.innerHTML += options;
         }
 
-        const userRes = await fetch('/api/users/list');
-        const userData = await userRes.json();
+        const userData = await window.fetchWithCache(`/api/users/list`, 'cache_user_list', 120)
 
         const users = Array.isArray(userData) ? userData : (userData.data || []);
         users.forEach(u => {

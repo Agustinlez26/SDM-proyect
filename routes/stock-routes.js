@@ -10,7 +10,6 @@ router.get('/low-stock/count',checkAuth, (req, res) => stockController.getLowSto
 router.get('/out-stock/count',checkAuth, (req, res) => stockController.getOutStockCount(req, res))
 
 router.get('/:id',checkAuth, (req, res) => stockController.getById(req, res))
-router.post('/',checkAuth, isAdmin, (req, res) => stockController.create(req, res))
 router.patch('/:id',checkAuth, isAdmin, (req, res) => stockController.update(req, res))
 router.delete('/:id',checkAuth, isAdmin, (req, res) => stockController.delete(req, res))
 
