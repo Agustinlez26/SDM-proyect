@@ -230,7 +230,7 @@ export class UserController {
             });
         }
 
-        const result = validateChangePassword(req.body)
+        const result = validateFirstChangePassword(req.body)
         if (!result.success) {
             return res.status(400).json({
                 status: 'error',

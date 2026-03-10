@@ -3,10 +3,10 @@ import 'dotenv/config'
 import { Database } from "../config/connection.js";
 import { UserModel } from "../models/user.js";
 import { BranchModel } from '../models/branch.js';
-import { UserService } from "../services/user_service.js";
+import { UserService } from "../services/user-service.js";
+import 'dotenv/config';
 
 async function seedAdmin() {
-
 
     const db = Database.getInstance();
     const userModel = new UserModel({ db });

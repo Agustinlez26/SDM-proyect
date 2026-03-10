@@ -21,7 +21,7 @@ formFirstPassword.addEventListener('submit', async (e) => {
     const formData = new FormData(formFirstPassword);
     const data = Object.fromEntries(formData.entries());
 
-    if (data.newPassword !== data.confirmPassword) {
+    if (data.password !== data.confirm_password) {
         passError.style.display = 'block';
         return;
     }
@@ -35,8 +35,8 @@ formFirstPassword.addEventListener('submit', async (e) => {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ 
-                password: data.newPassword,
-                confirm_password: data.confirmPassword
+                password: data.password,
+                confirm_password: data.confirm_password
             })
         });
 
