@@ -290,6 +290,7 @@ export class UserController {
                 }
 
                 updated = await this.userService.firstChangePass(idValidation.data, result.data.password);
+                res.clearCookie('access_token', { path: '/' });
             } else {
 
                 const result = validateChangePassword(req.body)

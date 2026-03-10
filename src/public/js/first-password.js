@@ -42,7 +42,7 @@ formFirstPassword.addEventListener('submit', async (e) => {
 
         if (response.ok) {
             alert("¡Contraseña actualizada con éxito!");
-            window.location.href = '/';
+            window.location.href = '/login';
         } else {
             const error = await response.json();
             alert("Error al actualizar: " + error.message);
