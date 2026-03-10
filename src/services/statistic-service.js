@@ -57,6 +57,20 @@ export class StatisticService {
         return await this.statisticsModel.getProductSeasonality(productId, year)
     }
 
+    /**
+     * Devuelve un producto activo elegido al azar para inicializar la sección de estacionalidad.
+     * @throws {NotFoundError} Si no hay productos activos en la base de datos.
+     * @returns {Promise<{id: number, name: string}>}
+     */
+    async getRandomProduct() {
+        const product = await this.statisticsModel.getRandomProduct()
+        if (!product) {
+            throw new NotFoundError('No hay productos disponibles')
+        }
+        return product
+    }
+
+
     // tarjetas del dashboard
 
     /**

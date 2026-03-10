@@ -8,6 +8,8 @@ router.get('/top-selling-products', checkAuth, isAdmin, (req, res) => statisticC
 router.get('/monthly-egresses', checkAuth, isAdmin, (req, res) => statisticController.getMonthlyEgresses(req, res))
 router.get('/branch-performance', checkAuth, isAdmin, (req, res) => statisticController.getBranchPerformanceByMonth(req, res))
 router.get('/product-seasonality/:id', checkAuth, isAdmin, (req, res) => statisticController.getProductSeasonality(req, res))
+router.get('/random-product', checkAuth, isAdmin, (req, res) => statisticController.getRandomProduct(req, res))
+
 
 router.get('/comparation-egresses', checkAuth, (req, res) => statisticController.getComparationEgresses(req, res))
 router.get('/pending-shipments-count', checkAuth, (req, res) => statisticController.getPendingShipmentsCount(req, res))

@@ -24,7 +24,7 @@ const modernTooltip = {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    startWebSocket()
+    initStatsSocket()
     loadTopSelling();
     loadDefaultSeasonality();
     loadGlobalData();
@@ -41,15 +41,137 @@ document.addEventListener('DOMContentLoaded', () => {
         loadGlobalData();
     });
     observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
+    // Cerrar dropdown al hacer clic fuera del buscador
+    document.addEventListener('click', (e) => {
+        const wrapper = document.querySelector('.search-wrapper');
+        if (wrapper && !wrapper.contains(e.target)) {
+            closeDropdown();
+        }
+    });
 });
 
-function startWebSocket() {
+/* =========================================
+   DROPDOWN DE SUGERENCIAS DE PRODUCTO
+   ========================================= */
+
+let searchDebounceTimer = null;
+let activeSuggestionIndex = -1;
+
+function onProductSearchInput() {
+    clearTimeout(searchDebounceTimer);
+    const input = document.getElementById('productSearchInput');
+    const query = input.value.trim();
+
+    if (query.length < 1) {
+        closeDropdown();
+        return;
+    }
+
+    searchDebounceTimer = setTimeout(() => fetchSuggestions(query), 280);
+
+    // Navegación con teclado
+    input.onkeydown = (e) => {
+        const dropdown = document.getElementById('productSuggestionsDropdown');
+        const items = dropdown.querySelectorAll('li:not(.no-results)');
+        if (!items.length) return;
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            activeSuggestionIndex = (activeSuggestionIndex + 1) % items.length;
+            updateActiveItem(items);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            activeSuggestionIndex = (activeSuggestionIndex - 1 + items.length) % items.length;
+            updateActiveItem(items);
+        } else if (e.key === 'Escape') {
+            closeDropdown();
+        }
+    };
+}
+
+async function fetchSuggestions(query) {
+    try {
+        const res = await fetch(`/api/products/catalog?search=${encodeURIComponent(query)}`);
+        const json = await res.json();
+        renderDropdown(json.status === 'success' ? json.data : []);
+    } catch (e) {
+        closeDropdown();
+    }
+}
+
+function renderDropdown(products) {
+    const dropdown = document.getElementById('productSuggestionsDropdown');
+    activeSuggestionIndex = -1;
+    dropdown.innerHTML = '';
+
+    if (!products || products.length === 0) {
+        dropdown.innerHTML = '<li class="no-results">Sin resultados</li>';
+    } else {
+        products.slice(0, 8).forEach(prod => {
+            const li = document.createElement('li');
+            li.textContent = prod.name || prod.product_name;
+            li.setAttribute('role', 'option');
+            li.addEventListener('click', () => {
+                document.getElementById('productSearchInput').value = li.textContent;
+                closeDropdown();
+                loadProductSeasonality(prod.id, li.textContent);
+            });
+            dropdown.appendChild(li);
+        });
+    }
+
+    dropdown.classList.add('open');
+}
+
+function updateActiveItem(items) {
+    items.forEach((item, i) => {
+        item.classList.toggle('active', i === activeSuggestionIndex);
+    });
+}
+
+function selectFirstSuggestion() {
+    const dropdown = document.getElementById('productSuggestionsDropdown');
+    const items = dropdown.querySelectorAll('li:not(.no-results)');
+
+    if (activeSuggestionIndex >= 0 && items[activeSuggestionIndex]) {
+        items[activeSuggestionIndex].click();
+    } else if (items.length > 0) {
+        items[0].click();
+    } else {
+        closeDropdown();
+        loadProductSeasonality();
+    }
+}
+
+function closeDropdown() {
+    const dropdown = document.getElementById('productSuggestionsDropdown');
+    if (dropdown) {
+        dropdown.classList.remove('open');
+        dropdown.innerHTML = '';
+    }
+    activeSuggestionIndex = -1;
+}
+
+
+function initStatsSocket() {
     const socket = io()
 
     socket.on('movements_updated', loadTopSelling)
-    socket.on('movements_updated', loadDefaultSeasonality)
+    socket.on('movements_updated', () => {
+        // Si hay un producto ya cargado, refrescar su estacionalidad sin cambiar el producto
+        const currentInput = document.getElementById('productSearchInput')
+        if (currentInput && currentInput.value.trim() !== '') {
+            loadProductSeasonality()
+        }
+    })
     socket.on('new_movement', loadTopSelling)
-    socket.on('new_movement', loadDefaultSeasonality)
+    socket.on('new_movement', () => {
+        const currentInput = document.getElementById('productSearchInput')
+        if (currentInput && currentInput.value.trim() !== '') {
+            loadProductSeasonality()
+        }
+    })
 }
 
 function loadGlobalData() {
@@ -102,14 +224,14 @@ async function loadBranchPerformance(year) {
 
 async function loadDefaultSeasonality() {
     try {
-        const res = await fetch('/api/products/catalog');
+        const res = await fetch('/api/statistics/random-product');
         const json = await res.json();
-        if (json.status === 'success' && json.data.length > 0) {
-            const prod = json.data[0];
-            document.getElementById('productSearchInput').value = prod.name || prod.product_name;
-            loadProductSeasonality(prod.id, prod.name || prod.product_name);
+        if (json.status === 'success' && json.data) {
+            const prod = json.data;
+            document.getElementById('productSearchInput').value = prod.name;
+            loadProductSeasonality(prod.id, prod.name);
         }
-    } catch (e) { }
+    } catch (e) { console.error(e); }
 }
 
 async function loadProductSeasonality(directId = null, directName = null) {
@@ -180,6 +302,12 @@ function renderPieChart(canvasId, data) {
             responsive: true,
             maintainAspectRatio: false,
             cutout: '75%', // Centro más hueco (estilo anillo fino)
+            animation: {
+                animateRotate: true,
+                animateScale: true,
+                duration: 800,
+                easing: 'easeOutQuart'
+            },
             plugins: {
                 legend: { position: 'right', labels: { color: colors.textColor, usePointStyle: true, boxWidth: 8 } },
                 tooltip: modernTooltip
@@ -218,10 +346,14 @@ function renderLineChart(canvasId, dataPoints, label, colorRgba) {
         },
         options: {
             responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { display: false }, tooltip: modernTooltip }, // Oculto leyenda por ser 1 sola línea
+            animation: {
+                duration: 1000,
+                easing: 'easeOutQuart'
+            },
+            plugins: { legend: { display: false }, tooltip: modernTooltip },
             scales: {
-                x: { ticks: { color: colors.textColor }, grid: { display: false } }, // Sin grilla vertical (más limpio)
-                y: { beginAtZero: true, min: 0, ticks: { color: colors.textColor, stepSize: 1 }, grid: { color: colors.gridColor, borderDash: [5, 5] } } // Grilla horizontal punteada
+                x: { ticks: { color: colors.textColor }, grid: { display: false } },
+                y: { beginAtZero: true, min: 0, ticks: { color: colors.textColor, stepSize: 1 }, grid: { color: colors.gridColor, borderDash: [5, 5] } }
             }
         }
     });
@@ -267,9 +399,13 @@ function renderMultiLineChart(canvasId, rawData, allBranches) {
         data: { labels: meses, datasets: datasets },
         options: {
             responsive: true, maintainAspectRatio: false,
+            animation: {
+                duration: 1000,
+                easing: 'easeOutQuart'
+            },
             plugins: {
                 legend: { position: 'top', labels: { color: colors.textColor, usePointStyle: true, pointStyle: 'rectRounded', boxWidth: 10 } },
-                tooltip: { ...modernTooltip, mode: 'index', intersect: false } // Muestra todos los datos de ese mes juntos
+                tooltip: { ...modernTooltip, mode: 'index', intersect: false }
             },
             scales: {
                 x: { ticks: { color: colors.textColor }, grid: { display: false } },

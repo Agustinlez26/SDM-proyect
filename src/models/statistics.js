@@ -1,6 +1,7 @@
 import { BranchPerformanceDTO } from '../dtos/statistics/branch-performance-dto.js';
 import { MonthlyEgressesDTO } from '../dtos/statistics/monthly-egresses-dto.js';
 import { ProductSeasonalityDTO } from '../dtos/statistics/product-seasonality-dto.js';
+import { RandomProductDTO } from '../dtos/statistics/random-product-dto.js';
 import { SellingProductsDTO } from '../dtos/statistics/selling-products-dto.js';
 import { Database } from '../config/connection.js'
 
@@ -87,6 +88,23 @@ export class StatisticModel {
         `;
         const [rows] = await this.#db.query(query, [year]);
         return rows.map(row => new BranchPerformanceDTO(row))
+    }
+
+    /**
+     * Devuelve un producto activo elegido al azar de la tabla products.
+     * @returns {Promise<RandomProductDTO|null>} Objeto con 'id' y 'name', o null si no hay productos.
+     */
+    async getRandomProduct() {
+        const query = `
+            SELECT id, name
+            FROM products
+            WHERE is_active = TRUE
+            ORDER BY RAND()
+            LIMIT 1;
+        `;
+        const [rows] = await this.#db.query(query);
+        if (rows.length === 0) return null;
+        return new RandomProductDTO(rows[0]);
     }
 
     /**

@@ -4,12 +4,12 @@
 // ============================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
-    startWebSocket()
+    initDashboardSocket();
     loadDashboardCards();
     loadRecentMovements();
 });
 
-function startWebSocket() {
+function initDashboardSocket() {
     const socket = io()
 
     socket.on('movements_updated', loadDashboardCards)
@@ -104,10 +104,11 @@ async function loadRecentMovements() {
             }
 
             result.data.forEach(mov => {
-                let icon = 'help';
-                if (mov.type.toLowerCase() === 'ingreso') icon = 'download';
-                else if (mov.type.toLowerCase() === 'egreso') icon = 'upload';
-                else if (mov.type.toLowerCase() === 'envio') icon = 'local_shipping';
+                let icon = 'sync_alt', typeClass = 'type-transfer';
+                const movType = mov.type.toLowerCase();
+
+                if (movType === 'ingreso') { icon = 'download'; typeClass = 'type-in'; }
+                else if (movType === 'egreso') { icon = 'upload'; typeClass = 'type-out'; }
 
                 const dateObj = new Date(mov.date);
                 const formattedDate = dateObj.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -117,7 +118,12 @@ async function loadRecentMovements() {
                 row.innerHTML = `
                     <td class="col-id">#${mov.id}</td>
                     <td class="col-nro">${mov.receipt_number}</td>
-                    <td class="col-type"><span class="material-symbols-outlined icon-small">${icon}</span> ${mov.type}</td>
+                    <td class="col-type">
+                        <span class="type-badge ${typeClass}">
+                            <span class="material-symbols-outlined icon-tiny">${icon}</span>
+                            ${mov.type.toUpperCase()}
+                        </span>
+                    </td>
                     <td class="col-date">${formattedDate}</td>
                     <td class="col-status"><span class="badge ${mov.status.toLowerCase()}">${mov.status.replace('_', ' ')}</span></td>
                 `;

@@ -1,5 +1,6 @@
 import { handleError } from "../utils/error-handler.js"
-import { validateYear, validateId } from "../schemas/shared-schema.js"
+import { validateStatsYear, validateProductSearch } from "../schemas/stats-schema.js"
+import { validateId } from "../schemas/shared-schema.js"
 
 /**
  * @class StatisticController
@@ -37,7 +38,7 @@ export class StatisticController {
      * @returns {Promise<Object>} JSON con el historial de egresos.
      */
     getMonthlyEgresses = async (req, res) => {
-        const yearValidation = validateYear(req.query)
+        const yearValidation = validateStatsYear(req.query)
         if (!yearValidation.success) {
             return res.status(400).json({
                 status: 'error',
@@ -61,7 +62,7 @@ export class StatisticController {
      * @returns {Promise<Object>} JSON con el historial de rendimiento por sucursal.
      */
     getBranchPerformanceByMonth = async (req, res) => {
-        const yearValidation = validateYear(req.query)
+        const yearValidation = validateStatsYear(req.query)
         if (!yearValidation.success) {
             return res.status(400).json({
                 status: 'error',
@@ -86,12 +87,21 @@ export class StatisticController {
      * @returns {Promise<Object>} JSON con la estacionalidad del producto.
      */
     getProductSeasonality = async (req, res) => {
-        const yearValidation = validateYear(req.query)
+        const yearValidation = validateStatsYear(req.query)
         if (!yearValidation.success) {
             return res.status(400).json({
                 status: 'error',
                 message: 'El año es inválido',
                 error: yearValidation.error.errors
+            })
+        }
+
+        const searchValidation = validateProductSearch(req.query)
+        if (!searchValidation.success) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'El parámetro de búsqueda es inválido',
+                error: searchValidation.error.errors
             })
         }
 
@@ -107,6 +117,21 @@ export class StatisticController {
         try {
             const productSeasonality = await this.statisticService.getProductSeasonality(idValidation.data, yearValidation.data.year)
             return res.json({ status: 'success', data: productSeasonality })
+        } catch (error) {
+            handleError(res, error)
+        }
+    }
+
+    /**
+     * Devuelve un producto activo elegido al azar para la sección de estacionalidad.
+     * @param {Object} req - Objeto de solicitud de Express.
+     * @param {Object} res - Objeto de respuesta de Express.
+     * @returns {Promise<Object>} JSON con { id, name } del producto seleccionado.
+     */
+    getRandomProduct = async (req, res) => {
+        try {
+            const randomProduct = await this.statisticService.getRandomProduct()
+            return res.json({ status: 'success', data: randomProduct })
         } catch (error) {
             handleError(res, error)
         }
