@@ -87,7 +87,10 @@ export class MovementModel {
         }
 
         if (filters.employee_branch_id) {
-            sql += ` AND m.type != 'ingreso' AND (m.origin_branch_id = ? OR m.destination_branch_id = ?)`;
+            sql += ` AND m.type != 'ingreso' AND (
+                m.origin_branch_id = ? OR 
+                (m.destination_branch_id = ? AND m.status != 'pendiente')
+            )`;
             params.push(filters.employee_branch_id, filters.employee_branch_id);
         }
 
@@ -197,7 +200,7 @@ export class MovementModel {
         const params = []
 
         if (branch_id) {
-            sql += ' AND m.destination_branch_id = ?'
+            sql += " AND m.destination_branch_id = ? AND m.status = 'en_proceso'"
             params.push(branch_id)
         }
         const [rows] = await this.#db.query(sql, params)
@@ -221,7 +224,7 @@ export class MovementModel {
             FROM ${this.#table} m
         `
         if (branchId) {
-            sql += " WHERE (m.type = 'envio' AND m.destination_branch_id = ?) OR (m.type = 'egreso' AND m.origin_branch_id = ?)"
+            sql += " WHERE (m.type = 'envio' AND m.destination_branch_id = ? AND m.status = 'en_proceso') OR (m.type = 'egreso' AND m.origin_branch_id = ?)"
             params.push(branchId, branchId)
         }
         sql += ' ORDER BY m.created_at DESC LIMIT 5'
