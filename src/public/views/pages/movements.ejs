@@ -2,13 +2,16 @@
 <html lang="es">
 <%- include('../partials/head', { title: 'Movimientos' , cssFile: 'movements.css' }) %>
 
-    <body>
+    <body data-role="<%= user ? user.role : '' %>">
         <div class="layout">
             <%- include('../partials/sidebar', { activePage: 'movements' }) %>
 
                 <main class="layout__content">
                     <%- include('../partials/navbar', { title: 'Movimientos' }) %>
                         <script src="/js/movements.js" defer></script>
+                        <script>
+                            window.USER_ROLE = '<%= user ? user.role : "" %>';
+                        </script>
 
                         <div class="main-container">
                             <div class="stock-toolbar">
@@ -103,7 +106,9 @@
                                                 <th class="col-date">Fecha</th>
                                                 <th class="col-branch">Origen</th>
                                                 <th class="col-branch">Destino</th>
+                                                <% if (user && user.role === 'admin') { %>
                                                 <th class="col-user">Usuario</th>
+                                                <% } %>
                                                 <th class="col-info">Info</th>
                                             </tr>
                                         </thead>
@@ -157,7 +162,7 @@
                                             <label>Fecha</label>
                                             <span id="detail-date">YYYY-MM-DD</span>
                                         </div>
-                                        <div class="detail-item">
+                                        <div class="detail-item" id="detail-user-container">
                                             <label>Usuario Responsable</label>
                                             <span id="detail-user">Nombre Usuario</span>
                                         </div>

@@ -178,24 +178,15 @@ function renderMovementsTable(movements) {
         // CORRECCIÓN DE RUTAS DE OBJETOS SEGÚN EL DTO
         tr.innerHTML = `
             <td class="col-id">#${mov.id}</td>
-            <td class="col-receipt font-mono">${mov.receipt_number || 'S/N'}</td>
-            <td class="col-type">
-                <span class="type-badge ${typeClass}">
-                    <span class="material-symbols-outlined icon-tiny">${icon}</span>
-                    ${mov.type.toUpperCase()}
-                </span>
-            </td>
-            <td class="col-status">
-                <span class="badge ${mov.status.toLowerCase()}">${mov.status.replace('_', ' ')}</span>
-            </td>
-            <td class="col-date">${dateStr}</td>
-            <td class="col-branch" title="${mov.origin || 'Externo'}">${mov.origin || '-'}</td>
-            <td class="col-branch" title="${mov.destination || 'Externo'}">${mov.destination || '-'}</td>
-            <td class="col-user">
-                <span class="user-name">${mov.user?.name || 'Desconocido'}</span>
-            </td>
+            <td class="col-receipt font-mono">${escapeHTML(mov.receipt_number || 'S/N')}</td>
+            <td class="col-type">${generateTypeBadge(mov.type)}</td>
+            <td class="col-status">${generateStatusBadge(mov.status)}</td>
+            <td class="col-date">${frontendDate}</td>
+            <td class="col-branch" title="${escapeHTML(mov.origin || 'Externo')}">${escapeHTML(mov.origin || '-')}</td>
+            <td class="col-branch" title="${escapeHTML(mov.destination || 'Externo')}">${escapeHTML(mov.destination || '-')}</td>
+            ${userHtml}
             <td class="col-info">
-                <button class="btn-icon-info" onclick="loadMovementDetails(${mov.id})">
+                <button class="btn-icon-info" onclick="loadMovementDetails(${mov.id})" title="Ver Detalles">
                     <span class="material-symbols-outlined">info</span>
                 </button>
             </td>
@@ -294,19 +285,25 @@ async function loadMovementDetails(id) {
 }
 
 function openDetailModal(mov, details) {
-    document.getElementById('detail-id').textContent = `#${mov.id}`;
+    document.getElementById('detail-id').textContent = '#' + mov.id;
     document.getElementById('detail-receipt').textContent = mov.receipt_number || '-';
+    document.getElementById('detail-type').innerHTML = generateTypeBadge(mov.type);
+    document.getElementById('detail-status').innerHTML = generateStatusBadge(mov.status);
+    document.getElementById('detail-date').textContent = mov.date ? new Date(mov.date).toLocaleDateString('es-AR') : '-';
+    
+    // Lógica para mostrar usuario solo si es admin
+    const userRole = typeof window.USER_ROLE !== 'undefined' ? window.USER_ROLE : '';
+    const userContainer = document.getElementById('detail-user-container');
+    if (userRole === 'admin') {
+        document.getElementById('detail-user').textContent = mov.user?.name || '-';
+        if(userContainer) userContainer.style.display = 'flex';
+    } else {
+        if(userContainer) userContainer.style.display = 'none';
+    }
 
-    const typeEl = document.getElementById('detail-type');
-    typeEl.textContent = mov.type.toUpperCase();
-    typeEl.className = `type-badge type-${mov.type.toLowerCase() === 'ingreso' ? 'in' : (mov.type.toLowerCase() === 'egreso' ? 'out' : 'transfer')}`;
-
-    document.getElementById('detail-status').textContent = (mov.status || '').replace('_', ' ').toUpperCase();
-    document.getElementById('detail-date').textContent = new Date(mov.date).toLocaleDateString();
-    document.getElementById('detail-created').textContent = new Date(mov.created_at || mov.date).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' });
+    document.getElementById('detail-created').textContent = mov.created_at ? new Date(mov.created_at).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' }) : '-';
 
     // CORRECCIÓN DE RUTAS DE CABECERA
-    document.getElementById('detail-user').textContent = mov.user?.name || 'Desconocido';
     document.getElementById('detail-origin').textContent = mov.origin || 'Externo / N/A';
     document.getElementById('detail-dest').textContent = mov.destination || 'Externo / N/A';
 

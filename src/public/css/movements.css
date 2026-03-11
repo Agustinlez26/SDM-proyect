@@ -273,10 +273,21 @@
   border-collapse: collapse;
 }
 
-.movements-table thead tr,
-.movements-table tbody tr {
+/* Desktop version (Admin): 9 columns */
+body[data-role="admin"] .movements-table thead tr,
+body[data-role="admin"] .movements-table tbody tr {
   display: grid;
   grid-template-columns: 50px 130px 100px 110px 90px 2fr 2fr 100px 50px;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  align-items: center;
+}
+
+/* Desktop version (User): 8 columns */
+body:not([data-role="admin"]) .movements-table thead tr,
+body:not([data-role="admin"]) .movements-table tbody tr {
+  display: grid;
+  grid-template-columns: 50px 130px 100px 110px 90px 2fr 2fr 50px;
   gap: 0.75rem;
   padding: 1rem 1.5rem;
   align-items: center;
@@ -636,10 +647,11 @@
 .detail-products-container {
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  overflow: hidden;
+  overflow-x: auto; /* Permite scroll horizontal en movil */
 }
 .detail-products-table {
   width: 100%;
+  min-width: 400px; /* Evita que las columnas colapsen demasiado al scrollear */
   border-collapse: collapse;
 }
 .detail-products-table th {
@@ -757,9 +769,15 @@
   }
 
   /* Ajuste Modal Detalle en Mobile */
-  .detail-grid {
-    grid-template-columns: 1fr 1fr;
+  .modal-card.modal-large {
+    padding: 1.5rem 1rem;
+    width: 95%;
   }
+
+  .detail-grid {
+    grid-template-columns: 1fr; /* Apila en una sola columna en pantallas pequeñas */
+  }
+
   .detail-route {
     flex-direction: column;
     gap: 1rem;
