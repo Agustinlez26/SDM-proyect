@@ -93,7 +93,7 @@ async function fetchProducts() {
 
             document.getElementById('page-info').textContent = `Página ${currentPage}`;
             document.getElementById('btn-prev-page').disabled = currentPage === 1;
-            document.getElementById('btn-next-page').disabled = json.data.length < 10;
+            document.getElementById('btn-next-page').disabled = json.data.length < 20;
         } else {
             throw new Error(json.message);
         }

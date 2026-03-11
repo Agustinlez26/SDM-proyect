@@ -153,7 +153,7 @@ async function fetchStock() {
             if (btnPrev) btnPrev.disabled = currentPage === 1;
 
             const btnNext = document.getElementById('btn-next-page');
-            const PAGE_SIZE = 10;
+            const PAGE_SIZE = 20;
             if (btnNext) btnNext.disabled = result.data.length < PAGE_SIZE;
 
         } else {

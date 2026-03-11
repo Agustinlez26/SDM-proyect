@@ -134,7 +134,7 @@ async function fetchMovements() {
             renderMovementsTable(result.data);
             document.getElementById('page-info').textContent = `Página ${currentPage}`;
             document.getElementById('btn-prev-page').disabled = currentPage === 1;
-            document.getElementById('btn-next-page').disabled = result.data.length < 10;
+            document.getElementById('btn-next-page').disabled = result.data.length < 20;
         } else {
             throw new Error(result.message);
         }
