@@ -146,8 +146,6 @@ window.openShipmentModal = function (type, refId, receipt) {
 
     if (type === 'dispatch') {
         // Estilo Azul para Admin (Despacho)
-        header.style.backgroundColor = '#eff6ff';
-        header.style.borderBottomColor = '#bfdbfe';
         iconHeader.textContent = 'local_shipping';
         iconHeader.style.color = '#3b82f6';
         iconHeader.style.backgroundColor = '#dbeafe';
@@ -160,8 +158,6 @@ window.openShipmentModal = function (type, refId, receipt) {
         btnConfirm.className = 'btn-primary';
     } else if (type === 'receive') {
         // Estilo Verde para Empleado (Recepción)
-        header.style.backgroundColor = '#f0fdf4';
-        header.style.borderBottomColor = '#bbf7d0';
         iconHeader.textContent = 'inventory_2';
         iconHeader.style.color = '#15803d';
         iconHeader.style.backgroundColor = '#dcfce7';

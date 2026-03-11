@@ -221,8 +221,8 @@ export class MovementModel {
             FROM ${this.#table} m
         `
         if (branchId) {
-            sql += ' WHERE m.destination_branch_id = ?'
-            params.push(branchId)
+            sql += " WHERE (m.type = 'envio' AND m.destination_branch_id = ?) OR (m.type = 'egreso' AND m.origin_branch_id = ?)"
+            params.push(branchId, branchId)
         }
         sql += ' ORDER BY m.created_at DESC LIMIT 5'
 

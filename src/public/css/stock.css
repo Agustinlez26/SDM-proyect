@@ -294,11 +294,14 @@
   border: 1px solid var(--border-color);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .table-responsive {
   width: 100%;
   overflow-x: auto;
+  min-height: calc(100dvh - 240px); /* Asegura que la tabla ocupe el espacio vació  */
 }
 
 .stock-table {

@@ -70,6 +70,7 @@
   align-items: center;
   justify-content: center;
   transition: 0.2s;
+  flex-shrink: 0;
 }
 
 .btn-close-modal:hover {

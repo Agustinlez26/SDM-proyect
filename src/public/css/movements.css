@@ -257,12 +257,15 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
   width: 100%;
   overflow: hidden; /* Mantiene bordes redondeados limpios */
+  display: flex;
+  flex-direction: column;
 }
 
 .table-responsive {
   width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  min-height: calc(100dvh - 240px);
 }
 
 .movements-table {

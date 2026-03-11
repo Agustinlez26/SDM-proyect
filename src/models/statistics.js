@@ -191,15 +191,17 @@ export class StatisticModel {
             SELECT COUNT(*) AS total_pendientes
             FROM movements
             WHERE type = 'envio' 
-            AND status IN ('pendiente', 'en_proceso')
         `
 
         const param = []
 
         if (branchId) {
-            sql += ' AND destination_branch_id = ?'
+            sql += " AND status = 'en_proceso' AND destination_branch_id = ?"
             param.push(branchId)
+        } else {
+            sql += " AND status IN ('pendiente', 'en_proceso')"
         }
+        
         const [rows] = await this.#db.query(sql, param);
         return rows[0].total_pendientes;
     }
