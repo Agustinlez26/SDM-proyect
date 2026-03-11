@@ -78,53 +78,37 @@
                                         <% } %>
 
                                             <div class="modal-overlay" id="modal-shipment">
-                                                <div class="modal-card modal-large"
-                                                    style="padding: 0; overflow: hidden;">
+                                                <div class="modal-card modal-large modal-shipment-card">
 
-                                                    <header class="modal-header" id="modal-shipment-header"
-                                                        style="padding: 2rem; margin: 0; display: flex; align-items: center; gap: 1.5rem;">
+                                                    <header class="modal-header modal-shipment-header" id="modal-shipment-header">
 
-                                                        <div id="modal-shipment-icon" class="material-symbols-outlined"
-                                                            style="font-size: 32px; padding: 16px; border-radius: 16px; display: flex; align-items: center; justify-content: center;">
+                                                        <div id="modal-shipment-icon" class="material-symbols-outlined modal-shipment-icon">
                                                             local_shipping
                                                         </div>
 
-                                                        <div style="flex-grow: 1;">
-                                                            <h3 id="modal-shipment-title"
-                                                                style="font-size: 1.5rem; margin-bottom: 4px; color: var(--text-primary);">
+                                                        <div class="modal-shipment-title-container">
+                                                            <h3 id="modal-shipment-title">
                                                                 Título Envío</h3>
-                                                            <p id="modal-shipment-subtitle"
-                                                                style="margin: 0; color: var(--text-secondary); font-size: 0.95rem;">
+                                                            <p id="modal-shipment-subtitle">
                                                                 Subtítulo</p>
                                                         </div>
 
                                                         <button class="btn-close-modal"
-                                                            onclick="document.getElementById('modal-shipment').classList.remove('active')"
-                                                            style="align-self: flex-start; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                                                            onclick="document.getElementById('modal-shipment').classList.remove('active')">
                                                             <span class="material-symbols-outlined">close</span>
                                                         </button>
 
                                                     </header>
 
-                                                    <div class="modal-body" style="padding: 2rem;">
-                                                        <h4
-                                                            style="margin-top: 0; margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">
-                                                            Detalle de Productos</h4>
-                                                        <div class="detail-products-container"
-                                                            style="border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
-                                                            <table class="detail-products-table"
-                                                                style="width: 100%; border-collapse: collapse;">
+                                                    <div class="modal-body modal-shipment-body">
+                                                        <h4>Detalle de Productos</h4>
+                                                        <div class="detail-products-container">
+                                                            <table class="detail-products-table">
                                                                 <thead>
                                                                     <tr>
-                                                                        <th
-                                                                            style="background: var(--bg-input); padding: 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary);">
-                                                                            Código</th>
-                                                                        <th
-                                                                            style="background: var(--bg-input); padding: 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary);">
-                                                                            Producto</th>
-                                                                        <th class="text-center" width="150"
-                                                                            style="background: var(--bg-input); padding: 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary);">
-                                                                            Cantidad a Mover</th>
+                                                                        <th>Código</th>
+                                                                        <th>Producto</th>
+                                                                        <th class="text-center" width="150">Cantidad a Mover</th>
                                                                     </tr>
                                                                 </thead>
                                                                 <tbody id="shipment-products-list">
@@ -133,13 +117,10 @@
                                                         </div>
                                                     </div>
 
-                                                    <div class="modal-actions"
-                                                        style="padding: 1.5rem 2rem; background: var(--bg-input); margin: 0; border-top: 1px solid var(--border-color);">
+                                                    <div class="modal-actions modal-shipment-actions">
                                                         <button class="btn-cancel"
-                                                            onclick="document.getElementById('modal-shipment').classList.remove('active')"
-                                                            style="align-self: flex-start;">Volver Atrás</button>
-                                                        <button class="btn-primary" id="btn-confirm-shipment"
-                                                            style="padding: 0.75rem 1.5rem; font-size: 1rem;">
+                                                            onclick="document.getElementById('modal-shipment').classList.remove('active')">Volver Atrás</button>
+                                                        <button class="btn-primary" id="btn-confirm-shipment">
                                                             <span class="material-symbols-outlined"
                                                                 id="btn-confirm-shipment-icon">check_circle</span>
                                                             <span id="btn-confirm-shipment-text">Confirmar</span>

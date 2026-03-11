@@ -81,7 +81,7 @@ async function loadPendingShipments() {
                         `;
                     } else {
                         actionButton = `
-                            <button class="btn-secondary" disabled style="opacity: 0.7; cursor: not-allowed; justify-content: center;">
+                            <button class="btn-secondary" disabled>
                                 <span class="material-symbols-outlined" style="font-size: 18px;">local_shipping</span>
                                 Envío en Camino
                             </button>
@@ -93,7 +93,7 @@ async function loadPendingShipments() {
                     if (statusNormal === 'pendiente') {
                         // El empleado ve que se está preparando, pero no puede clickear
                         actionButton = `
-                            <button class="btn-secondary" disabled style="opacity: 0.6; cursor: not-allowed; justify-content: center; background: var(--bg-input);">
+                            <button class="btn-secondary waiting-dispatch" disabled>
                                 <span class="material-symbols-outlined" style="font-size: 18px;">hourglass_empty</span>
                                 Esperando despacho...
                             </button>
@@ -147,8 +147,9 @@ window.openShipmentModal = function (type, refId, receipt) {
     if (type === 'dispatch') {
         // Estilo Azul para Admin (Despacho)
         iconHeader.textContent = 'local_shipping';
-        iconHeader.style.color = '#3b82f6';
-        iconHeader.style.backgroundColor = '#dbeafe';
+        iconHeader.className = 'material-symbols-outlined modal-icon-dispatch';
+        iconHeader.style.color = '';
+        iconHeader.style.backgroundColor = '';
 
         title.textContent = `Despachar Envío ${receipt}`;
         subtitle.textContent = 'Revisa cuidadosamente los productos antes de enviarlos a la sucursal.';
@@ -159,8 +160,9 @@ window.openShipmentModal = function (type, refId, receipt) {
     } else if (type === 'receive') {
         // Estilo Verde para Empleado (Recepción)
         iconHeader.textContent = 'inventory_2';
-        iconHeader.style.color = '#15803d';
-        iconHeader.style.backgroundColor = '#dcfce7';
+        iconHeader.className = 'material-symbols-outlined modal-icon-receive';
+        iconHeader.style.color = '';
+        iconHeader.style.backgroundColor = '';
 
         title.textContent = `Recibir Envío ${receipt}`;
         subtitle.textContent = 'Verifica que hayas recibido todos los productos de esta lista.';
