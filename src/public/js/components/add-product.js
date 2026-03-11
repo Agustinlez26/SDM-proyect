@@ -48,6 +48,9 @@ window.openProductModal = function () {
     document.getElementById('prod-is-active').value = '1';
     document.getElementById('prod-img').value = '';
     document.getElementById('prod-img-preview').src = '';
+    document.getElementById('prod-img-preview').style.display = 'none';
+    document.getElementById('prod-img-text').style.display = 'block';
+    document.getElementById('prod-img-label').textContent = 'Ingresar Imagen';
     document.getElementById('modal-add-product').classList.add('active');
 }
 
@@ -69,10 +72,19 @@ window.editProduct = async function (id) {
             document.getElementById('prod-is-active').value = p.is_active ? '1' : '0';
 
             const previewImg = document.getElementById('prod-img-preview');
+            const previewText = document.getElementById('prod-img-text');
+            const labelImg = document.getElementById('prod-img-label');
+            
+            labelImg.textContent = 'Cambiar Imagen';
+            
             if (p.url_img_original) {
                 previewImg.src = p.url_img_original;
+                previewImg.style.display = 'block';
+                previewText.style.display = 'none';
             } else {
                 previewImg.src = '';
+                previewImg.style.display = 'none';
+                previewText.style.display = 'block';
             }
             document.getElementById('prod-img').value = '';
 
@@ -82,6 +94,28 @@ window.editProduct = async function (id) {
 }
 
 const formProduct = document.getElementById('form-product');
+
+const prodImgInput = document.getElementById('prod-img');
+const prodImgPreview = document.getElementById('prod-img-preview');
+const prodImgText = document.getElementById('prod-img-text');
+
+if (prodImgInput) {
+    prodImgInput.addEventListener('change', function(e) {
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                prodImgPreview.src = e.target.result;
+                prodImgPreview.style.display = 'block';
+                prodImgText.style.display = 'none';
+            }
+            reader.readAsDataURL(this.files[0]);
+        } else {
+            prodImgPreview.src = '';
+            prodImgPreview.style.display = 'none';
+            prodImgText.style.display = 'block';
+        }
+    });
+}
 
 if (formProduct) {
     formProduct.addEventListener('submit', async (e) => {

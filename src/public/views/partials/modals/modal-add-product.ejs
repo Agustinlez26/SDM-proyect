@@ -40,13 +40,14 @@
                 <div class="modal-image-col">
                     <div>
                         <label>Imagen Actual / Vista Previa</label>
-                        <div class="preview-img-container">
-                            <img id="prod-img-preview" src="" alt="">
+                        <div class="preview-img-container" id="preview-img-container">
+                            <span id="prod-img-text" style="color: var(--text-muted); font-weight: 500;">Imagen</span>
+                            <img id="prod-img-preview" src="" alt="" style="display: none;">
                         </div>
                     </div>
 
                     <div>
-                        <label>Cambiar Imagen</label>
+                        <label id="prod-img-label">Ingresar Imagen</label>
                         <input type="file" id="prod-img" name="image" accept="image/*">
                     </div>
                 </div>
