@@ -21,14 +21,6 @@ const io = new Server(httpServer, {
 
 app.set('io', io)
 
-io.on('connection', (socket) => {
-    console.log(`🔌 Cliente conectado vía WebSocket: ${socket.id}`)
-
-    socket.on('disconnect', () => {
-        console.log(`🔴 Cliente desconectado: ${socket.id}`)
-    })
-})
-
 app.use(helmet({
 
     hsts: process.env.NODE_ENV === 'production' ? true : false,
@@ -115,5 +107,5 @@ app.use(checkAuth, requirePasswordChange, (req, res) => {
 })
 
 httpServer.listen(PORT, () => {
-    console.log(`🚀 App y WebSockets corriendo en http://localhost:${PORT}`)
+    console.log(`App y WebSockets corriendo en el puerto: ${PORT}`)
 })
