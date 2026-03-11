@@ -20,13 +20,13 @@ const baseUserSchema = z.object({
     password: passwordRule,
     confirm_password: confirmPasswordRule,
 
-    is_admin: z.boolean().default(false),
+    is_admin: z.boolean().optional(),
 
     branch_id: z.coerce.number({ invalid_type_error: "Debes seleccionar una sucursal" })
         .int().positive(),
 
-    is_active: z.boolean().default(true),
-    requires_password_change: z.boolean().default(true),
+    is_active: z.boolean().optional(),
+    requires_password_change: z.boolean().optional(),
 });
 
 
@@ -38,7 +38,13 @@ const baseUserSchema = z.object({
  * A. CREACIÓN (ADMIN)
  * Base + Validación de passwords coinciden.
  */
-const createUserSchema = baseUserSchema.refine((data) => data.password === data.confirm_password, {
+const createUserSchemaBase = baseUserSchema.extend({
+    is_admin: z.boolean().default(false),
+    is_active: z.boolean().default(true),
+    requires_password_change: z.boolean().default(true),
+});
+
+const createUserSchema = createUserSchemaBase.refine((data) => data.password === data.confirm_password, {
     message: "Las contraseñas no coinciden",
     path: ["confirm_password"],
 });
