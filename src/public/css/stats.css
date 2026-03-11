@@ -260,12 +260,12 @@
 }
 
 /* Dark theme */
-body.dark-theme .search-dropdown {
+html.dark-theme .search-dropdown {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
-body.dark-theme .search-dropdown li:hover,
-body.dark-theme .search-dropdown li.active {
+html.dark-theme .search-dropdown li:hover,
+html.dark-theme .search-dropdown li.active {
   background-color: rgba(77, 184, 208, 0.15);
   color: var(--primary);
 }

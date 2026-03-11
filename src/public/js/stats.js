@@ -2,7 +2,7 @@ const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'O
 let charts = {};
 
 function getChartColors() {
-    const isDarkTheme = document.body.classList.contains('dark-theme');
+    const isDarkTheme = document.documentElement.classList.contains('dark-theme');
     return {
         textColor: isDarkTheme ? '#e2e8f0' : '#475569',
         gridColor: isDarkTheme ? '#334155' : '#f1f5f9',
@@ -38,9 +38,10 @@ document.addEventListener('DOMContentLoaded', () => {
         modernTooltip.titleColor = getChartColors().tooltipText;
         modernTooltip.bodyColor = getChartColors().tooltipText;
         loadTopSelling();
+        loadTopSelling();
         loadGlobalData();
     });
-    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 
     // Cerrar dropdown al hacer clic fuera del buscador
     document.addEventListener('click', (e) => {

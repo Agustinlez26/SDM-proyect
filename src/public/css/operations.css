@@ -71,13 +71,13 @@
   cursor: not-allowed;
 }
 
-body.dark-theme .alert-card .btn-secondary {
+html.dark-theme .alert-card .btn-secondary {
   background-color: rgba(255, 255, 255, 0.03);
   border-color: rgba(255, 255, 255, 0.1);
   color: var(--text-muted);
 }
 
-body.dark-theme .alert-card .btn-secondary.waiting-dispatch {
+html.dark-theme .alert-card .btn-secondary.waiting-dispatch {
   border-color: rgba(252, 211, 77, 0.2);
   background-color: rgba(252, 211, 77, 0.05);
   color: #fbbf24;
@@ -236,7 +236,7 @@ body.dark-theme .alert-card .btn-secondary.waiting-dispatch {
   color: #3b82f6;
   background-color: #dbeafe;
 }
-body.dark-theme .modal-icon-dispatch {
+html.dark-theme .modal-icon-dispatch {
   color: #60a5fa;
   background-color: rgba(59, 130, 246, 0.2);
 }
@@ -245,7 +245,7 @@ body.dark-theme .modal-icon-dispatch {
   color: #15803d;
   background-color: #dcfce7;
 }
-body.dark-theme .modal-icon-receive {
+html.dark-theme .modal-icon-receive {
   color: #4ade80;
   background-color: rgba(34, 197, 94, 0.2);
 }

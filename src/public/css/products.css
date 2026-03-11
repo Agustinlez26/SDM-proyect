@@ -632,19 +632,19 @@
 }
 
 /* --- DARK THEME OVERRIDES --- */
-body.dark-theme .modal-overlay {
+html.dark-theme .modal-overlay {
   background: rgba(0, 0, 0, 0.7);
 }
 
-body.dark-theme .modal-header {
+html.dark-theme .modal-header {
   border-bottom-color: var(--border-color);
 }
 
-body.dark-theme .btn-close-modal {
+html.dark-theme .btn-close-modal {
   color: var(--text-secondary);
 }
 
-body.dark-theme .btn-close-modal:hover {
+html.dark-theme .btn-close-modal:hover {
   background-color: rgba(239, 68, 68, 0.15);
   color: #ef4444;
 }

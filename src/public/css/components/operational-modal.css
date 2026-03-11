@@ -188,17 +188,17 @@
 }
 
 /* --- DARK THEME OVERRIDES --- */
-body.dark-theme .catalog-card:hover:not(.disabled) {
+html.dark-theme .catalog-card:hover:not(.disabled) {
   background-color: var(--bg-body);
 }
 
-body.dark-theme .catalog-code {
+html.dark-theme .catalog-code {
   background: var(--bg-body);
   border-color: transparent;
   color: #eee
 }
 
-body.dark-theme .detail-products-table th {
+html.dark-theme .detail-products-table th {
   background: var(--bg-input);
   border-bottom-color: var(--border-color);
 }

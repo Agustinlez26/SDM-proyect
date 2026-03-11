@@ -175,6 +175,6 @@
 }
 
 /* --- DARK THEME OVERRIDES --- */
-body.dark-theme #modal-add-product .modal-header {
+html.dark-theme #modal-add-product .modal-header {
   border-bottom-color: var(--border-color);
 }

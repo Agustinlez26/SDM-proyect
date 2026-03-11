@@ -222,26 +222,26 @@
 }
 
 /* Overrides de Dark Theme Base */
-body.dark-theme .modal-overlay {
+html.dark-theme .modal-overlay {
   background: rgba(0, 0, 0, 0.7);
 }
-body.dark-theme .btn-close-modal {
+html.dark-theme .btn-close-modal {
   background: var(--bg-input);
   border-color: var(--border-color);
   color: var(--text-secondary);
 }
-body.dark-theme .btn-close-modal:hover {
+html.dark-theme .btn-close-modal:hover {
   background: rgba(239, 68, 68, 0.15);
   color: #fca5a5;
   border-color: rgba(239, 68, 68, 0.3);
 }
 
-body.dark-theme .btn-cancel {
+html.dark-theme .btn-cancel {
   background: transparent;
   border-color: var(--border-color);
   color: var(--text-secondary);
 }
-body.dark-theme .btn-cancel:hover {
+html.dark-theme .btn-cancel:hover {
   background: var(--bg-input);
   color: var(--text-primary);
 }

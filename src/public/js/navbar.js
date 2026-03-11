@@ -64,7 +64,6 @@ function setupThemeToggle() {
     const currentTheme = localStorage.getItem('theme') || 'light';
 
     if (currentTheme === 'dark') {
-        document.body.classList.add('dark-theme');
         iconMoon.classList.add('hidden');
         iconSun.classList.remove('hidden');
         themeText.textContent = 'Modo Claro';
@@ -74,10 +73,10 @@ function setupThemeToggle() {
         e.preventDefault();
         e.stopPropagation(); // Evita que se cierre el menú de usuario
 
-        document.body.classList.toggle('dark-theme');
+        document.documentElement.classList.toggle('dark-theme');
         let theme = 'light';
 
-        if (document.body.classList.contains('dark-theme')) {
+        if (document.documentElement.classList.contains('dark-theme')) {
             theme = 'dark';
             iconMoon.classList.add('hidden');
             iconSun.classList.remove('hidden');

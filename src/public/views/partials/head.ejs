@@ -11,6 +11,17 @@
 
     <script src="/socket.io/socket.io.js"></script>
     
+    <!-- Render-blocking theme check to prevent FOUC (Flash of unstyled content) -->
+    <script>
+        (function() {
+            try {
+                if (localStorage.getItem('theme') === 'dark') {
+                    document.documentElement.classList.add('dark-theme');
+                }
+            } catch(e) {}
+        })();
+    </script>
+
     <% if (!locals.excludeBaseJs) { %>
         <script src="/js/base.js?v=2.0" defer></script>
     <% } %>

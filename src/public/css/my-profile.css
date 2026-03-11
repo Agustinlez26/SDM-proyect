@@ -282,43 +282,43 @@
 }
 
 /* --- DARK THEME OVERRIDES --- */
-body.dark-theme .profile-header {
+html.dark-theme .profile-header {
   background-color: var(--bg-card);
 }
 
-body.dark-theme .profile-body {
+html.dark-theme .profile-body {
   background-color: var(--bg-card);
 }
 
-body.dark-theme .profile-security {
+html.dark-theme .profile-security {
   background-color: var(--bg-card);
 }
 
-body.dark-theme .modal-card {
+html.dark-theme .modal-card {
   background-color: var(--bg-card);
 }
 
-body.dark-theme .btn-close-modal:hover {
+html.dark-theme .btn-close-modal:hover {
   background-color: rgba(239, 68, 68, 0.15);
   color: #ef4444;
 }
 
-body.dark-theme .btn-cancel {
+html.dark-theme .btn-cancel {
   background: var(--bg-input);
   border-color: var(--border-color);
   color: var(--text-primary);
 }
 
-body.dark-theme .btn-cancel:hover {
+html.dark-theme .btn-cancel:hover {
   background-color: var(--bg-card);
 }
 
-body.dark-theme .form-group input:focus {
+html.dark-theme .form-group input:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 2px rgba(77, 184, 208, 0.1);
 }
 
-body.dark-theme .modal-overlay {
+html.dark-theme .modal-overlay {
   background: rgba(0, 0, 0, 0.6);
 }
 

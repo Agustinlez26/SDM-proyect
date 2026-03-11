@@ -790,10 +790,10 @@ body:not([data-role="admin"]) .movements-table tbody tr {
 }
 
 /* --- DARK THEME OVERRIDES --- */
-body.dark-theme .modal-overlay {
+html.dark-theme .modal-overlay {
   background: rgba(0, 0, 0, 0.7);
 }
 
-body.dark-theme .detail-products-table td {
+html.dark-theme .detail-products-table td {
   border-bottom-color: var(--border-color);
 }
