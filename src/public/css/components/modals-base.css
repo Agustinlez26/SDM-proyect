@@ -71,6 +71,7 @@
   justify-content: center;
   transition: 0.2s;
   flex-shrink: 0;
+  aspect-ratio: 1 / 1;
 }
 
 .btn-close-modal:hover {
@@ -136,7 +137,12 @@
   padding: 0.6rem 1.2rem;
   border-radius: 6px;
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 42px;
 }
 
 .btn-cancel:hover {
@@ -154,7 +160,9 @@
   font-weight: 600;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
+  height: 42px;
 }
 
 .btn-confirm:hover,
@@ -229,7 +237,7 @@ body.dark-theme .btn-close-modal:hover {
 }
 
 body.dark-theme .btn-cancel {
-  background: var(--bg-card);
+  background: transparent;
   border-color: var(--border-color);
   color: var(--text-secondary);
 }

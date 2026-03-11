@@ -44,6 +44,45 @@
   border-left: 4px solid #f59e0b; /* Detalle de color en el borde izquierdo */
 }
 
+.alert-card .btn-secondary {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 8px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  background-color: var(--bg-body);
+  border: 2px dashed var(--border-color);
+  transition: all 0.2s ease;
+}
+
+.alert-card .btn-secondary.waiting-dispatch {
+  border: 2px dashed #fcd34d;
+  background-color: rgba(252, 211, 77, 0.05);
+  color: #b45309;
+}
+
+.alert-card .btn-secondary:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+body.dark-theme .alert-card .btn-secondary {
+  background-color: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+}
+
+body.dark-theme .alert-card .btn-secondary.waiting-dispatch {
+  border-color: rgba(252, 211, 77, 0.2);
+  background-color: rgba(252, 211, 77, 0.05);
+  color: #fbbf24;
+}
+
 .alert-info h3 {
   font-size: 1.1rem;
   color: var(--text-primary);
@@ -60,6 +99,11 @@
   font-size: 0.8rem !important;
   color: var(--text-muted) !important;
   margin-top: 0.5rem;
+}
+
+.badge {
+  padding: 4px 8px;
+  border-radius: 10px;
 }
 
 .badge-pending {
@@ -185,4 +229,23 @@
 .card-out .card-icon {
   background-color: #fee2e2;
   color: #b91c1c;
+}
+
+/* Colores de íconos de modal Header Operations */
+.modal-icon-dispatch {
+  color: #3b82f6;
+  background-color: #dbeafe;
+}
+body.dark-theme .modal-icon-dispatch {
+  color: #60a5fa;
+  background-color: rgba(59, 130, 246, 0.2);
+}
+
+.modal-icon-receive {
+  color: #15803d;
+  background-color: #dcfce7;
+}
+body.dark-theme .modal-icon-receive {
+  color: #4ade80;
+  background-color: rgba(34, 197, 94, 0.2);
 }
