@@ -321,3 +321,43 @@ body.dark-theme .form-group input:focus {
 body.dark-theme .modal-overlay {
   background: rgba(0, 0, 0, 0.6);
 }
+
+/* --- RESPONSIVE --- */
+@media (max-width: 600px) {
+  .profile-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+    padding: 1.5rem;
+  }
+  
+  .profile-header > div:first-child {
+    flex-direction: column !important; /* Fuerza a apilar el avatar y titulos */
+    gap: 1rem !important;
+  }
+  
+  /* Mueve el botón de editar arriba a la derecha en móvil */
+  .profile-header {
+    position: relative;
+  }
+  .profile-header .btn-secondary {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+  }
+
+  .profile-body {
+    padding: 1.5rem;
+  }
+
+  .profile-security {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1.5rem;
+  }
+  .profile-security .btn-primary {
+    width: 100%;
+    margin-top: 0.5rem;
+    justify-content: center;
+  }
+}
