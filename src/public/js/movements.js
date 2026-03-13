@@ -144,6 +144,47 @@ async function fetchMovements() {
     }
 }
 
+// ---- UTILIDADES Y HELPERS DE UI ----
+
+function escapeHTML(str) {
+    if (!str) return '';
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return str.toString().replace(/[&<>"']/g, function (m) { return map[m]; });
+}
+
+function generateTypeBadge(type) {
+    const t = type.toLowerCase();
+    let icon = 'sync_alt', label = 'TRANSFERENCIA', cssClass = 'type-transfer';
+
+    if (t === 'ingreso') {
+        icon = 'download'; label = 'INGRESO'; cssClass = 'type-in';
+    } else if (t === 'egreso') {
+        icon = 'upload'; label = 'EGRESO'; cssClass = 'type-out';
+    } else if (t === 'envio') {
+        icon = 'local_shipping'; label = 'ENVÍO'; cssClass = 'type-transfer';
+    }
+
+    return `
+        <span class="type-badge ${cssClass}">
+            <span class="material-symbols-outlined icon-tiny">${icon}</span>
+            ${label}
+        </span>
+    `;
+}
+
+function generateStatusBadge(status) {
+    const s = status.toLowerCase();
+    let label = status.replace('_', ' ');
+
+    return `<span class="badge ${s}">${label.toUpperCase()}</span>`;
+}
+
 // ---- RENDERIZADO ----
 
 function renderMovementsTable(movements) {
@@ -171,6 +212,12 @@ function renderMovementsTable(movements) {
         if (movType === 'egreso') { icon = 'upload'; typeClass = 'type-out'; }
 
         const dateStr = new Date(mov.date).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        const frontendDate = dateStr;
+
+        const userRole = typeof window.USER_ROLE !== 'undefined' ? window.USER_ROLE : '';
+        const userHtml = userRole === 'admin' 
+            ? `<td class="col-user" title="${escapeHTML(mov.user?.name || '-')}">${escapeHTML(mov.user?.name || '-')}</td>` 
+            : '';
 
         const tr = document.createElement('tr');
         tr.className = 'movement-item';
