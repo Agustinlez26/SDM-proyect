@@ -1,6 +1,8 @@
 # Sol de Mayo - Sistema de Gestión de Stock y Sucursales
 
-Plataforma integral y en tiempo real para la administración unificada de inventario, operarios y logística inter-sucursal.
+<div align="center">
+  <h3>Sistema centralizado para la administración de inventario y logística inter-sucursal.</h3>
+</div>
 
 ---
 
@@ -17,9 +19,11 @@ Plataforma integral y en tiempo real para la administración unificada de invent
 
 ## Acerca del Proyecto
 
-**Sol de Mayo** es un sistema web B2B diseñado para resolver y optimizar la logística de empresas con múltiples puntos de venta y depósitos. Su objetivo principal es funcionar como una **Intranet Operativa** mediante la cual administradores y empleados pueden gestionar ingresos, transferencias físicas (envíos) y egresos de mercadería de manera trazable.
+**Sol de Mayo** es un sistema web de gestión operativa (ERP a medida) desarrollado específicamente para administrar el flujo de mercadería de una empresa con múltiples depósitos y puntos de venta. 
 
-El desarrollo centraliza las métricas operativas y aplica un estricto control de acceso basado en roles (RBAC) y ubicación geográfica. Esto previene quiebres de stock y errores de asignación mediante un diseño relacional robusto y sincronización de datos en tiempo real.
+Su función principal es centralizar el control del inventario y registrar todos los movimientos internos de la organización. A través de un control de acceso basado en roles (RBAC), permite a los administradores y empleados de cada local registrar ingresos, egresos y transferencias físicas de artículos entre distintas ubicaciones.
+
+El sistema aplica validaciones geográficas en los movimientos inter-sucursal y utiliza sincronización de eventos en tiempo real para asegurar la trazabilidad de cada transacción, manteniendo la consistencia de la base de datos ante operaciones simultáneas.
 
 ---
 
@@ -27,64 +31,65 @@ El desarrollo centraliza las métricas operativas y aplica un estricto control d
 
 1. **Gestión de Stock:**
    * Visualización de inventario mediante grillas dinámicas filtrables por sucursal.
-   * Paginación procesada del lado del servidor (*Server-Side Pagination*) para optimizar el consumo de memoria.
+   * Paginación procesada del lado del servidor (*Server-Side Pagination*) para la gestión eficiente de datos.
    * Exportación de lotes y alertas de límites mínimos (Stock Crítico) o Agotamientos (Stock Cero).
 
-2. **Registro de Movimientos:**
-   * Trazabilidad completa del ciclo de vida de las transacciones: Ingresos, Egresos y Envíos inter-sucursal.
-   * Lógica transaccional: Los envíos permanecen en estado "En Proceso", bloqueando lógicamente las unidades hasta que la sucursal receptora confirma la recepción, garantizando la integridad de los datos.
+2. **Registro de Movimientos (Logística):**
+   * Trazabilidad del ciclo de vida de las transacciones: Ingresos, Egresos y Envíos inter-sucursal.
+   * Lógica transaccional cruzada: Los envíos permanecen en estado "En Proceso", bloqueando lógicamente las unidades en tránsito hasta que la sucursal receptora confirma la recepción.
 
 3. **Gestión de Productos y Sucursales:**
-   * Módulo de ABM (Alta, Baja y Modificación) para el catálogo general y la red de sucursales, implementando validación espacial jerárquica (Ciudad/Provincia) mediante *Cascading Dropdowns*.
+   * Módulo de ABM (Alta, Baja y Modificación) para el catálogo de artículos y la red de locales.
+   * Implementación de validación espacial jerárquica (Ciudad/Provincia) mediante *Cascading Dropdowns*.
 
 4. **Dashboard y Business Intelligence (BI):**
-   * Alertas automatizadas para la gerencia (ej: detección de envíos pendientes de recepción por más de 48 horas).
-   * Historiales de desempeño interanual y cálculo de variaciones porcentuales (KPIs mensuales).
+   * Alertas automatizadas del estado de la logística (ej: detección de envíos pendientes de recepción por más de 48 horas).
+   * Historiales de desempeño interanual y cálculo de variaciones porcentuales de flujo de mercadería.
 
 5. **Control de Accesos y Usuarios:**
-   * Administración de perfiles de empleados con asignación de privilegios binarios (Administrador/Empleado).
-   * Gestión de seguridad de cuentas: expiración de sesiones, bloqueo de accesos anómalos y flujos de reseteo obligatorio de credenciales en el primer ingreso.
+   * Administración de perfiles de empleados con asignación de privilegios binarios (Administrador / Empleado).
+   * Gestión de sesiones y seguridad: expiración de tokens, bloqueo de accesos anómalos y reseteo obligatorio de credenciales en el primer ingreso.
 
 ---
 
 ## Arquitectura (MVC Extendido)
 
-El sistema evoluciona el patrón MVC tradicional, implementando una arquitectura de responsabilidades separadas en cuatro capas para facilitar su escalabilidad y testeo:
+El sistema utiliza el patrón MVC tradicional, implementando una arquitectura de responsabilidades separadas en cuatro capas:
 
-* **Rutas (`/routes`):** Encargadas exclusivamente de la definición de endpoints, asignación de middlewares de seguridad y derivación del tráfico.
-* **Controladores (`/src/controllers`):** Gestionan el ciclo de vida de la petición HTTP. Extraen los datos de entrada (`req`), aplican validaciones de esquemas estrictos mediante *Zod* y estructuran la respuesta (`res`).
-* **Servicios (`/src/services`):** Encapsulan la lógica de negocio central. Son agnósticos al protocolo HTTP, encargándose de los cálculos de métricas, validaciones complejas de negocio y de garantizar la integridad de las transacciones.
-* **Modelos (`/src/models`):** Capa dedicada exclusivamente a la persistencia de datos. Ejecutan consultas SQL parametrizadas, orquestando transacciones seguras (`START TRANSACTION` / `COMMIT`) mediante la librería `mysql2/promises`.
+* **Rutas (`/routes`):** Encargadas de definir los endpoints, asignar middlewares de seguridad y derivar la petición.
+* **Controladores (`/src/controllers`):** Gestionan la petición HTTP. Extraen los datos (`req`), aplican validaciones de esquema mediante *Zod* y estructuran la respuesta (`res`).
+* **Servicios (`/src/services`):** Encapsulan la lógica de negocio. Son agnósticos al protocolo HTTP, encargándose de los cálculos y validaciones de transacciones.
+* **Modelos (`/src/models`):** Capa dedicada a la persistencia de datos. Ejecutan consultas SQL parametrizadas, orquestando transacciones (`START TRANSACTION` / `COMMIT`) mediante la librería `mysql2/promises`.
 
 ---
 
 ## Stack Tecnológico
 
 **Backend & Core:**
-* **Node.js**: Entorno de ejecución asíncrono orientado a eventos.
+* **Node.js**: Entorno de ejecución asíncrono.
 * **Express.js**: Framework web para la gestión de enrutamiento y middlewares.
-* **Socket.io**: Implementación de WebSockets para comunicación bidireccional en tiempo real.
-* **Zod**: Validación declarativa de esquemas y payloads para garantizar la consistencia de los tipos de datos.
+* **Socket.io**: WebSockets para comunicación bidireccional en tiempo real.
+* **Zod**: Validación declarativa de esquemas y payloads.
 
 **Infraestructura & Base de Datos:**
-* **MySQL 2**: Sistema de gestión de base de datos relacional. Emplea `UUID_TO_BIN` para optimizar la indexación y mantener la integridad referencial (`Foreign Keys`) con alto rendimiento.
+* **MySQL 2**: Sistema de gestión de base de datos relacional. Utiliza `UUID_TO_BIN` para la indexación y claves foráneas para la integridad referencial.
 
 **Frontend & Interfaz de Usuario:**
 * **EJS (Embedded JavaScript)**: Motor de plantillas para *Server-Side Rendering* (SSR).
-* **Vanilla JS y CSS Modular**: Arquitectura frontend *Zero-Dependencies* diseñada para minimizar los tiempos de carga y asegurar el rendimiento en dispositivos con recursos limitados. Soporte nativo para *Dark/Light Mode* mediante variables CSS.
-* **Chart.js**: Biblioteca para la visualización de métricas e indicadores de gestión.
+* **Vanilla JS y CSS Modular**: Arquitectura frontend *Zero-Dependencies* con soporte nativo para *Dark/Light Mode*.
+* **Chart.js**: Biblioteca gráfica para la visualización de datos estadísticos.
 
 ---
 
 ## Seguridad y Rendimiento
 
-El backend está diseñado siguiendo altos estándares de seguridad web para mitigar vulnerabilidades comunes:
+El backend de Sol de Mayo incluye las siguientes medidas de seguridad y rendimiento:
 
-* **Rate Limiting y Prevención de DDoS:** Middlewares configurados vía `express-rate-limit` que controlan el volumen de peticiones por IP (validando la IP real detrás del proxy inverso de producción). Se aplican políticas estrictas, como el bloqueo temporal del endpoint de autenticación tras 10 intentos fallidos.
-* **Gestión Segura de Sesiones (JWT + Cookies):** Implementación de JSON Web Tokens encapsulados en cookies `HttpOnly` para mitigar ataques XSS. Incluye un sistema de invalidación en base de datos que permite revocar sesiones concurrentes en tiempo real.
-* **Cabeceras HTTP Seguras (Helmet):** Configuración estricta de Content-Security-Policy (CSP) para prevenir la inyección de scripts (Cross-Site Scripting) y restringir la carga de recursos de dominios no autorizados.
-* **Almacenamiento Criptográfico (Bcrypt):** Las credenciales son procesadas mediante funciones de derivación de claves con *salting* automático, asegurando que ninguna contraseña se almacene en texto plano.
-* **Prevención de Mass-Assignment:** Filtrado explícito de los payloads (cuerpos de petición) en la capa de Controladores/Servicios antes de interactuar con la Base de Datos, previniendo vulnerabilidades de escalado de privilegios.
+* **Rate Limiting:** Middlewares configurados vía `express-rate-limit` que controlan el volumen de peticiones por IP (validando la IP mediante `trust proxy`).
+* **Gestión de Sesiones (JWT + Cookies):** Autenticación mediante JSON Web Tokens encapsulados en cookies `HttpOnly` para evitar accesos XSS, con invalidación en base de datos para revocar sesiones.
+* **Cabeceras HTTP Seguras (Helmet):** Integración de Content-Security-Policy (CSP) para prevenir la inyección de scripts cruzados (XSS).
+* **Almacenamiento Criptográfico (Bcrypt):** Hashing de contraseñas con *salting* automático.
+* **Prevención de Mass-Assignment:** Mapeadores que filtran explícitamente los payloads recibidos antes de interactuar con la base de datos para prevenir inyección de propiedades.
 
 ---
 
@@ -94,7 +99,6 @@ El backend está diseñado siguiendo altos estándares de seguridad web para mit
    ```bash
    git clone https://github.com/Agustinlez26/SDM-proyect
    cd sol-de-mayo
-   ```
 
 2. **Instalar Dependencias:**
    ```bash
