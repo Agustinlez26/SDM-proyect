@@ -4,8 +4,23 @@ import sharp from 'sharp'
 import path from 'node:path'
 import { slugify } from './string-utils.js'
 import { UPLOAD_DIR, PUBLIC_URL_BASE } from '../config/constants.js'
+import { ValidationError } from './errors.js'
+
+const ALLOWED_IMAGE_FORMATS = new Set(['jpeg', 'png', 'webp'])
 
 export const processProductImage = async (fileBuffer, productName) => {
+    let metadata
+
+    try {
+        metadata = await sharp(fileBuffer).metadata()
+    } catch {
+        throw new ValidationError('El archivo subido no es una imagen valida')
+    }
+
+    if (!ALLOWED_IMAGE_FORMATS.has(metadata.format)) {
+        throw new ValidationError('Formato de imagen no permitido. Usa JPG, PNG o WebP')
+    }
+
     const rename = slugify(productName)
     const uniqueSuffix = uuidv4().split('-')[0]
     const fileName = `${rename}-${uniqueSuffix}`
