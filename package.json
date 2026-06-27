@@ -32,5 +32,9 @@
   "devDependencies": {
     "@types/jest": "^30.0.0",
     "jest": "^30.2.0"
+  },
+  "allowScripts": {
+    "sharp@0.34.5": true,
+    "unrs-resolver@1.11.1": true
   }
 }
