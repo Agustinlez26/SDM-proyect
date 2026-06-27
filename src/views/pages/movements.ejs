@@ -9,7 +9,7 @@
                 <main class="layout__content">
                     <%- include('../partials/navbar', { title: 'Movimientos' }) %>
                         <script src="/js/movements.js" defer></script>
-                        <script>
+                        <script nonce="<%= cspNonce %>">
                             window.USER_ROLE = '<%= user ? user.role : "" %>';
                         </script>
 

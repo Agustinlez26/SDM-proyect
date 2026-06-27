@@ -13,7 +13,7 @@
     
     <% if (!locals.excludeBaseJs) { %>
         <!-- Render-blocking theme check to prevent FOUC (Flash of unstyled content) -->
-        <script>
+        <script nonce="<%= cspNonce %>">
             (function() {
                 try {
                     if (localStorage.getItem('theme') === 'dark') {

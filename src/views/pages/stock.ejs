@@ -141,7 +141,7 @@
                                                 </div>
                                             </div>
 
-                                            <script>
+                                            <script nonce="<%= cspNonce %>">
                                                 // Lógica para enviar el formulario (Solo se carga si es admin)
                                                 document.getElementById('form-edit-stock').addEventListener('submit', async (e) => {
                                                     e.preventDefault();
@@ -154,7 +154,7 @@
                                                     try {
                                                         // Ajustá la ruta según como la tengas en tu router (ej: PUT /api/stocks/:id)
                                                         const res = await fetch(`/api/stocks/${stockId}`, {
-                                                            method: 'PUT',
+                                                            method: 'PATCH',
                                                             headers: { 'Content-Type': 'application/json' },
                                                             body: JSON.stringify(payload)
                                                         });

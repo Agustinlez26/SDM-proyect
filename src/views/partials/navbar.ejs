@@ -1,4 +1,4 @@
-<script>
+<script nonce="<%= cspNonce %>">
     window.CURRENT_USER_ROLE = '<%= user && user.role === "admin" ? "admin" : "empleado" %>';
 </script>
 <script src="/js/navbar.js" defer></script>

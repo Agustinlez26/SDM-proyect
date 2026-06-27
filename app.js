@@ -4,9 +4,11 @@ import routes from './routes/index.js'
 import path from 'path'
 import cookieParser from 'cookie-parser'
 import { createServer } from 'node:http'
+import crypto from 'node:crypto'
 import { Server } from 'socket.io'
 import { checkAuth, requirePasswordChange } from './src/middlewares/auth-middleware.js'
 import { apiLimiter, viewsLimiter } from './src/middlewares/rate-limit-middleware.js';
+import { verifySameOriginApiRequest } from './src/middlewares/origin-middleware.js';
 import helmet from 'helmet'
 
 const PORT = process.env.PORT ?? 1234
@@ -14,12 +16,20 @@ const app = express()
 
 const httpServer = createServer(app)
 
-const allowedOrigin = process.env.NODE_ENV === 'production' ? 'https://soldemayoadmin.com' : '*';
+const configuredOrigin = process.env.APP_ORIGIN
+const allowedOrigin = process.env.NODE_ENV === 'production'
+    ? (configuredOrigin ?? 'https://soldemayoadmin.com')
+    : (configuredOrigin ?? `http://localhost:${PORT}`);
 const io = new Server(httpServer, {
     cors: { origin: allowedOrigin }
 })
 
 app.set('io', io)
+
+app.use((req, res, next) => {
+    res.locals.cspNonce = crypto.randomBytes(16).toString('base64')
+    next()
+})
 
 app.use(helmet({
 
@@ -31,7 +41,7 @@ app.use(helmet({
 
             scriptSrc: [
                 "'self'",
-                "'unsafe-inline'",
+                (req, res) => `'nonce-${res.locals.cspNonce}'`,
                 "https://cdn.jsdelivr.net"
             ],
 
@@ -76,9 +86,14 @@ app.use((req, res, next) => {
     next();
 });
 
-app.set('trust proxy', 1);
+app.set('trust proxy', process.env.TRUST_PROXY === 'true' ? 1 : false);
 
-app.use(express.static(path.join(process.cwd(), 'src', 'public')));
+const publicDir = path.join(process.cwd(), 'src', 'public')
+app.use('/css', express.static(path.join(publicDir, 'css')))
+app.use('/js', express.static(path.join(publicDir, 'js')))
+app.use('/imgs', express.static(path.join(publicDir, 'imgs')))
+app.use('/img', express.static(path.join(publicDir, 'imgs')))
+app.use('/uploads', express.static(path.join(publicDir, 'uploads')))
 app.use('/api', apiLimiter);
 
 app.use((req, res, next) => {
@@ -93,14 +108,15 @@ app.use((req, res, next) => {
     return viewsLimiter(req, res, next);
 });
 
+app.use(verifySameOriginApiRequest)
 app.use(express.json({ limit: '1mb' }))
 app.use(express.urlencoded({ extended: true, limit: '1mb' }))
 app.use(cookieParser())
+app.use('/views', (req, res) => res.sendStatus(404))
 app.use('/', routes)
 
 app.set('view engine', 'ejs')
-app.set('views', path.join(process.cwd(), 'src', 'public', 'views'))
-app.use(express.static('src/public'))
+app.set('views', path.join(process.cwd(), 'src', 'views'))
 
 app.use(checkAuth, requirePasswordChange, (req, res) => {
     res.redirect('/')
