@@ -156,12 +156,22 @@ export class MovementService {
      * * @param {number} movementId 
      * @returns {Promise<Object>} Mensaje de éxito.
      */
-    async changeStatusShipment(movementId) {
+    async changeStatusShipment(movementId, actor) {
         const movement = await this.movementModel.findById(movementId)
         if (!movement) throw new NotFoundError('Movimiento no encontrado')
 
         if (movement.type !== 'envio') throw new ValidationError('Solo los envíos se pueden cambiar el estado')
         if (movement.status === 'entregado') throw new ValidationError('Este envío ya está concluido')
+
+        if (!actor?.is_admin) {
+            if (movement.status === 'pendiente' && actor?.branch_id !== movement.origin_branch_id) {
+                throw new ValidationError('No tienes permiso para despachar este envio')
+            }
+
+            if (movement.status === 'en_proceso' && actor?.branch_id !== movement.destination_branch_id) {
+                throw new ValidationError('No tienes permiso para recibir este envio')
+            }
+        }
 
         const details = await this.movementModel.findDetails(movementId)
         let message = ''

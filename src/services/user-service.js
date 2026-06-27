@@ -107,7 +107,14 @@ export class UserService {
             ...data
         }
 
-        return await this.userModel.update(id, updateData)
+        const updated = await this.userModel.update(id, updateData)
+        const shouldInvalidateSession = ['is_admin', 'branch_id', 'is_active'].some(field => field in updateData)
+
+        if (updated && shouldInvalidateSession) {
+            await this.userModel.logout(id)
+        }
+
+        return updated
     }
 
     /**
@@ -127,7 +134,9 @@ export class UserService {
         if (!validation) throw new NotFoundError('No existe un usuario con ese Identificador')
 
         const hashedPassword = await bcrypt.hash(newPassword, 10);
-        return await this.userModel.changePassword(id, hashedPassword, 0)
+        const updated = await this.userModel.changePassword(id, hashedPassword, 0)
+        if (updated) await this.userModel.logout(id)
+        return updated
     }
 
     /**
@@ -147,7 +156,9 @@ export class UserService {
         if (!validation) throw new NotFoundError('No existe un usuario con ese Identificador')
 
         const hashedPassword = await bcrypt.hash(newPassword, 10);
-        return await this.userModel.changePassword(id, hashedPassword, 1)
+        const updated = await this.userModel.changePassword(id, hashedPassword, 1)
+        if (updated) await this.userModel.logout(id)
+        return updated
     }
 
     /**
@@ -171,7 +182,9 @@ export class UserService {
         if (!passValid) throw new ValidationError('La contraseña vieja no es igual a la del usuario')
 
         const hashedPassword = await bcrypt.hash(newPassword, 10);
-        return await this.userModel.changePassword(id, hashedPassword, 0)
+        const updated = await this.userModel.changePassword(id, hashedPassword, 0)
+        if (updated) await this.userModel.logout(id)
+        return updated
     }
 
     /**
@@ -181,7 +194,9 @@ export class UserService {
     async activate(id) {
         const validation = await this.userModel.exists(id)
         if (!validation) throw new NotFoundError('No existe un usuario con ese Identificador')
-        return await this.userModel.updateStatus(id, true)
+        const updated = await this.userModel.updateStatus(id, true)
+        if (updated) await this.userModel.logout(id)
+        return updated
     }
 
     /**
@@ -191,6 +206,8 @@ export class UserService {
     async deactivate(id) {
         const validation = await this.userModel.exists(id)
         if (!validation) throw new NotFoundError('No existe un usuario con ese Identificador')
-        return await this.userModel.updateStatus(id, false)
+        const updated = await this.userModel.updateStatus(id, false)
+        if (updated) await this.userModel.logout(id)
+        return updated
     }
 }

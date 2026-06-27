@@ -282,9 +282,15 @@ export class MovementController {
      * @param {Object} res - Response.
      */
     changeStatus = async (req, res) => {
-        const movementId = req.params.id
+        const resultId = validateId(req.params.id)
+        if (!resultId.success) return res.status(400).json({
+            status: 'error',
+            message: 'El id ingresado es invalido',
+            error: resultId.error.errors
+        })
+
         try {
-            const result = await this.movementService.changeStatusShipment(movementId)
+            const result = await this.movementService.changeStatusShipment(resultId.data, req.user)
 
             const io = req.app.get('io')
             io.emit('movements_updated')

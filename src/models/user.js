@@ -113,7 +113,20 @@ export class UserModel {
     }
 
     async checkSession(id) {
-        const sql = `SELECT current_session_id FROM users WHERE id = UUID_TO_BIN(?)`;
+        const sql = `
+            SELECT
+                BIN_TO_UUID(id) as id,
+                full_name,
+                email,
+                is_admin,
+                branch_id,
+                is_active,
+                requires_password_change,
+                current_session_id
+            FROM users
+            WHERE id = UUID_TO_BIN(?)
+            LIMIT 1
+        `;
         const [rows] = await this.#db.query(sql, [id]);
         return rows[0];
     }

@@ -247,7 +247,7 @@ export class UserController {
             res.json({ message: 'Contraseña reseteada. El usuario deberá cambiarla al ingresar.' });
 
         } catch (error) {
-            this.handleError(res, error);
+            handleError(res, error);
         }
     }
 
@@ -290,7 +290,6 @@ export class UserController {
                 }
 
                 updated = await this.userService.firstChangePass(idValidation.data, result.data.password);
-                res.clearCookie('access_token', { path: '/' });
             } else {
 
                 const result = validateChangePassword(req.body)
@@ -306,6 +305,12 @@ export class UserController {
             }
 
             if (!updated) return res.status(404).json({ message: 'No se pudo actualizar' })
+            res.clearCookie('access_token', {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'strict',
+                path: '/'
+            });
             const message = isFirstLogin
                 ? 'Cuenta activada y contraseña establecida correctamente'
                 : 'Contraseña actualizada correctamente';

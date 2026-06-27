@@ -37,27 +37,10 @@ export class AuthService {
 
         if (!resultSession) throw new AuthenticationError('Ocurrio un error en asignacion de sesion');
 
-        let tokenPayload;
-
-        if (user.requires_password_change) {
-            tokenPayload = {
-                id: user.id,
-                session_id: sessionId,
-                requires_password_change: true,
-                name: user.full_name,
-                email: user.email
-            };
-        } else {
-            tokenPayload = {
-                id: user.id,
-                session_id: sessionId,
-                name: user.full_name,
-                email: user.email,
-                is_admin: user.is_admin,
-                branch_id: user.branch_id,
-                role: user.is_admin ? 'admin' : 'empleado'
-            };
-        }
+        const tokenPayload = {
+            id: user.id,
+            session_id: sessionId
+        };
 
         const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, {
             expiresIn: '4h'

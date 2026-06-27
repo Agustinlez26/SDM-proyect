@@ -1,6 +1,23 @@
 import jwt from 'jsonwebtoken';
 import { userModel } from '../config/dependencies.js';
 
+const clearAuthCookie = (res) => {
+    res.clearCookie('access_token', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        path: '/'
+    });
+};
+
+const canAccessWhileChangingPassword = (req) => {
+    const path = req.originalUrl.split('?')[0];
+    return [
+        '/api/users/change-password',
+        '/api/auth/logout'
+    ].includes(path);
+};
+
 /**
  * Middleware de Autenticación.
  * Verifica la existencia y validez del JWT en la cookie 'access_token'.
@@ -11,6 +28,9 @@ export const checkAuth = async (req, res, next) => {
         const token = req.cookies.access_token;
 
         if (!token) {
+            if (req.originalUrl.startsWith('/api')) {
+                return res.status(401).json({ status: 'error', message: 'No autenticado' });
+            }
             return res.redirect('/login');
         }
 
@@ -18,9 +38,9 @@ export const checkAuth = async (req, res, next) => {
 
         const userInDb = await userModel.checkSession(payload.id);
 
-        if (!userInDb || userInDb.current_session_id !== payload.session_id) {
+        if (!userInDb || !userInDb.is_active || userInDb.current_session_id !== payload.session_id) {
 
-            res.clearCookie('access_token', { path: '/' })
+            clearAuthCookie(res)
 
             if (req.originalUrl.startsWith('/api')) {
                 return res.status(401).json({
@@ -33,12 +53,33 @@ export const checkAuth = async (req, res, next) => {
             return res.redirect('/login?error=sesion_concurrente');
         }
 
-        req.user = payload;
+        req.user = {
+            id: userInDb.id,
+            session_id: payload.session_id,
+            name: userInDb.full_name,
+            email: userInDb.email,
+            is_admin: Boolean(userInDb.is_admin),
+            branch_id: userInDb.branch_id,
+            requires_password_change: Boolean(userInDb.requires_password_change),
+            role: userInDb.is_admin ? 'admin' : 'empleado'
+        };
+
+        if (
+            req.user.requires_password_change &&
+            req.originalUrl.startsWith('/api') &&
+            !canAccessWhileChangingPassword(req)
+        ) {
+            return res.status(403).json({
+                status: 'error',
+                message: 'Debes cambiar tu password antes de continuar.'
+            });
+        }
+
         next();
 
     } catch (error) {
         if (error.name === 'TokenExpiredError' || error.name === 'JsonWebTokenError') {
-            res.clearCookie('access_token', { path: '/' });
+            clearAuthCookie(res);
 
             if (req.originalUrl.startsWith('/api')) {
                 return res.status(401).json({ status: 'error', message: 'Token inválido o expirado' });

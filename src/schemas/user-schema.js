@@ -3,11 +3,15 @@ import z from 'zod';
 const userIdRule = z.string().uuid({ message: "ID inválido (Debe ser formato UUID)" });
 
 const passwordRule = z.string()
-    .min(6, { message: "La contraseña debe tener al menos 6 caracteres" })
-    .max(100, { message: "La contraseña es muy larga" });
+    .min(10, { message: "La contrasena debe tener al menos 10 caracteres" })
+    .max(100, { message: "La contrasena es muy larga" })
+    .regex(/[a-z]/, { message: "La contrasena debe incluir una minuscula" })
+    .regex(/[A-Z]/, { message: "La contrasena debe incluir una mayuscula" })
+    .regex(/[0-9]/, { message: "La contrasena debe incluir un numero" })
+    .regex(/[^A-Za-z0-9]/, { message: "La contrasena debe incluir un simbolo" });
 
 const confirmPasswordRule = z.string()
-    .min(6, { message: "La confirmación debe tener al menos 6 caracteres" });
+    .min(10, { message: "La confirmacion debe tener al menos 10 caracteres" });
 
 const baseUserSchema = z.object({
     full_name: z.string()
