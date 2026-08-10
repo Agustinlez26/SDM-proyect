@@ -27,6 +27,8 @@ import { StatisticModel } from '../models/statistics.js'
 import { StatisticService } from '../services/statistic-service.js'
 import { StatisticController } from '../controllers/statistic-controller.js'
 import { NotificationController } from '../controllers/notification-controller.js'
+import { OperationsModel } from '../models/operations.js'
+import { OperationsController } from '../controllers/operations-controller.js'
 
 const db = Database.getInstance()
 
@@ -36,6 +38,7 @@ const userModel = new UserModel({ db })
 const branchModel = new BranchModel({ db })
 const movementModel = new MovementModel({ db })
 const statisticsModel = new StatisticModel({ db })
+const operationsModel = new OperationsModel({ db })
 
 const productService = new ProductService({ productModel })
 const stockService = new StockService({ stockModel, branchModel })
@@ -53,6 +56,7 @@ const statisticController = new StatisticController({ statisticService })
 const notificationController = new NotificationController({ statisticService })
 const branchController = new BranchController({ branchService })
 const movementController = new MovementController({ movementService })
+const operationsController = new OperationsController({ operationsModel })
 
 export {
     productController,
@@ -63,5 +67,6 @@ export {
     movementController,
     statisticController,
     notificationController,
-    userModel
+    userModel,
+    operationsController
 }

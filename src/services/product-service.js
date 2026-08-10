@@ -1,5 +1,6 @@
 import { processProductImage, deleteProductImage } from '../utils/image-processor.js'
 import { ValidationError, NotFoundError } from '../utils/errors.js'
+import { buildSkuBase, normalizeSku, withSkuSuffix } from '../utils/sku-utils.js'
 
 export class ProductService {
     #PAGE_SIZE = 20
@@ -19,13 +20,19 @@ export class ProductService {
     async create(file, data) {
         const validateName = await this.productModel.findByName(data.name)
         if (validateName) throw new ValidationError('Un producto ya existe con este nombre')
-        const validateCodBar = await this.productModel.findByCodBar(data.cod_bar)
-        if (validateCodBar) throw new ValidationError('Un producto ya existe con este codigo de barra')
+
+        let sku
+        try {
+            sku = await this.#generateUniqueSku(data.name)
+        } catch (error) {
+            throw new ValidationError(error.message)
+        }
 
         let imagesPaths = await processProductImage(file.buffer, data.name)
 
         const producToSave = {
             ...data,
+            cod_bar: sku,
             ...imagesPaths,
             is_active: true
         }
@@ -49,9 +56,18 @@ export class ProductService {
             if (existsName) throw new ValidationError('Un producto ya existe con este nombre')
         }
 
-        if (data.cod_bar && data.cod_bar !== currentProduct.cod_bar) {
-            const existsCodBar = await this.productModel.findByCodBar(data.cod_bar, id)
-            if (existsCodBar) throw new ValidationError('Un producto ya existe con este codigo de barra')
+        let skuToUpdate
+        if (data.sku) {
+            try {
+                skuToUpdate = normalizeSku(data.sku)
+            } catch (error) {
+                throw new ValidationError(error.message)
+            }
+
+            if (skuToUpdate !== currentProduct.sku) {
+                const existsSku = await this.productModel.findBySku(skuToUpdate, id)
+                if (existsSku) throw new ValidationError('Ya existe un producto con este SKU')
+            }
         }
 
         let imgPaths = {
@@ -70,12 +86,28 @@ export class ProductService {
             ...imgPaths
         }
 
+        delete productToUpdate.sku
+        if (skuToUpdate) productToUpdate.cod_bar = skuToUpdate
+
         // Preservar is_active si no se envía explícitamente
         if (productToUpdate.is_active === undefined) {
             productToUpdate.is_active = currentProduct.is_active
         }
 
         return await this.productModel.update(id, productToUpdate)
+    }
+
+    async #generateUniqueSku(productName) {
+        const baseSku = buildSkuBase(productName)
+        let candidate = baseSku
+        let sequence = 2
+
+        while (await this.productModel.findBySku(candidate)) {
+            candidate = withSkuSuffix(baseSku, sequence)
+            sequence += 1
+        }
+
+        return candidate
     }
 
     /**

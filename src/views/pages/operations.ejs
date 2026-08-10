@@ -55,6 +55,14 @@
                                                 <p>Mover stock hacia otro local o depósito.</p>
                                             </div>
                                         </button>
+                                        <button class="action-card card-out" onclick="openOperationModal('out')">
+                                            <div class="card-icon"><span
+                                                    class="material-symbols-outlined">upload</span></div>
+                                            <div class="card-text">
+                                                <h3>Egreso / Salida</h3>
+                                                <p>Registrar ventas, mermas o productos dañados.</p>
+                                            </div>
+                                        </button>
                                         <% } else { %>
                                             <button class="action-card card-out" onclick="openOperationModal('out')">
                                                 <div class="card-icon"><span
@@ -106,7 +114,7 @@
                                                             <table class="detail-products-table">
                                                                 <thead>
                                                                     <tr>
-                                                                        <th>Código</th>
+                                                                        <th>SKU</th>
                                                                         <th>Producto</th>
                                                                         <th class="text-center" width="150">Cantidad a Mover</th>
                                                                     </tr>

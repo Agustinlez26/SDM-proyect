@@ -363,7 +363,7 @@ function openDetailModal(mov, details) {
 
             // CORRECCIÓN DE RUTAS DE PRODUCTO SEGÚN EL DTO
             row.innerHTML = `
-                <td class="font-mono text-muted">${prod.product?.barcode || 'S/C'}</td>
+                <td class="font-mono text-muted">${prod.product?.sku || prod.product?.barcode || 'S/SKU'}</td>
                 <td class="font-bold">${prod.product?.name || 'Producto sin nombre'}</td>
                 <td class="text-right"><span class="qty-badge-modal">${prod.quantity}</span></td>
             `;

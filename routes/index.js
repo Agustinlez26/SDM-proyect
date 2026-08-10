@@ -9,6 +9,7 @@ import location_routes from './location-routes.js'
 import movements_routes from './movement-routes.js'
 import statistic_routes from './statistic-routes.js'
 import notification_routes from './notification-routes.js'
+import operations_management_routes from './operations-management-routes.js'
 
 const router = Router()
 
@@ -21,6 +22,7 @@ router.use('/api/locations', location_routes)
 router.use('/api/movements', movements_routes)
 router.use('/api/statistics', statistic_routes)
 router.use('/api/notifications', notification_routes)
+router.use('/api/operations-management', operations_management_routes)
 
 router.use('/', view_routes)
 

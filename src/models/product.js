@@ -22,7 +22,7 @@ export class ProductModel {
     /**
      * Busca productos con soporte para filtros, búsqueda y paginación.
      * * @param {object} params - Objeto de parámetros.
-     * @param {string|null} [params.search] - Texto para buscar por nombre o código de barras.
+     * @param {string|null} [params.search] - Texto para buscar por nombre o SKU.
      * @param {object} [params.filters] - Filtros específicos (category, state).
      * @param {number|null} [params.offset] - Desplazamiento para paginación (SQL OFFSET).
      * @returns {Promise<ProductListDTO[]>} Retorna una lista de DTOs de productos.
@@ -32,7 +32,7 @@ export class ProductModel {
         SELECT 
         p.id,
         p.name,
-        p.cod_bar,
+        p.cod_bar AS sku,
         p.description,
         c.name as category,
         p.url_img_small
@@ -80,8 +80,9 @@ export class ProductModel {
         SELECT 
         p.id,
         p.name,
-        p.cod_bar,
+        p.cod_bar AS sku,
         p.description,
+        p.category_id,
         c.name as category,
         p.url_img_original,
         p.is_active
@@ -97,9 +98,9 @@ export class ProductModel {
         return new ProductDTO(row[0])
     }
 
-    async findByCodBar(cod, excludeId = null) {
+    async findBySku(sku, excludeId = null) {
         let sql = `SELECT 1 FROM ${this.#table} WHERE cod_bar = ?`
-        const params = [cod]
+        const params = [sku]
         if (excludeId) {
             sql += ' AND id != ?'
             params.push(excludeId)
@@ -198,7 +199,7 @@ export class ProductModel {
     /**
      * Realiza una búsqueda ligera optimizada para la vista de catálogo público.
      * Solo retorna los campos esenciales para mostrar tarjetas (Cards) de productos.
-     * * @param {string|null} [search=null] - Término opcional para buscar por Nombre o Código de Barras.
+     * * @param {string|null} [search=null] - Término opcional para buscar por nombre o SKU.
      * @returns {Promise<ProductCatalogDTO[]>} Retorna una lista de DTOs optimizados para el catálogo.
      * @throws {Error} Si ocurre un fallo en la base de datos.
      */
@@ -206,7 +207,7 @@ export class ProductModel {
         let sql = `SELECT 
             p.id, 
             p.name,
-            p.cod_bar, 
+            p.cod_bar AS sku,
             p.url_img_small,
             IF(s.product_id IS NULL, 0, 1) AS is_registered
         FROM ${this.#table} p
@@ -217,16 +218,8 @@ export class ProductModel {
         const params = []
         if (search) {
             sql += ' AND ('
-            const isNumeric = /^\d+$/.test(search)
-
-            if (isNumeric) {
-                sql += 'p.cod_bar LIKE ?'
-            } else {
-                sql += 'p.name LIKE ?'
-            }
-
-            params.push(`%${search}%`)
-            sql += ')'
+            sql += 'p.name LIKE ? OR p.cod_bar LIKE ?)'
+            params.push(`%${search}%`, `%${search}%`)
         }
 
         const [rows] = await this.#db.query(sql, params)

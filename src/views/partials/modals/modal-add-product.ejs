@@ -19,9 +19,9 @@
                     </div>
 
                     <div class="form-row">
-                        <div class="form-group">
-                            <label>Código de Barras</label>
-                            <input type="text" id="prod-code" placeholder="Ej: 779123456789" required>
+                        <div class="form-group" id="prod-sku-group">
+                            <label>SKU</label>
+                            <input type="text" id="prod-code" placeholder="Ej: MAT-SP" maxlength="50">
                         </div>
                         <div class="form-group">
                             <label>Categoría</label>
@@ -38,17 +38,28 @@
                 </div>
 
                 <div class="modal-image-col">
-                    <div>
-                        <label>Imagen Actual / Vista Previa</label>
-                        <div class="preview-img-container" id="preview-img-container">
-                            <span id="prod-img-text" style="color: var(--text-muted); font-weight: 500;">Imagen</span>
-                            <img id="prod-img-preview" src="" alt="" style="display: none;">
+                    <div class="product-image-field">
+                        <label id="prod-img-label" for="prod-img">Imagen del producto</label>
+                        <div class="product-image-drop-zone" id="product-image-drop-zone" role="button" tabindex="0"
+                            aria-label="Arrastrar una imagen o abrir el selector de archivos"
+                            aria-describedby="prod-img-help prod-img-filename">
+                            <div class="preview-img-container" id="preview-img-container">
+                                <div class="product-image-placeholder" id="prod-img-placeholder">
+                                    <span class="material-symbols-outlined" aria-hidden="true">add_photo_alternate</span>
+                                    <strong id="prod-img-text">Arrastrá y soltá la imagen acá</strong>
+                                    <span>o hacé clic para buscarla</span>
+                                </div>
+                                <img id="prod-img-preview" src="" alt="Vista previa del producto" hidden>
+                            </div>
                         </div>
-                    </div>
-
-                    <div>
-                        <label id="prod-img-label">Ingresar Imagen</label>
-                        <input type="file" id="prod-img" name="image" accept="image/*">
+                        <input class="product-image-input" type="file" id="prod-img" name="image" accept="image/*">
+                        <div class="product-image-meta">
+                            <button type="button" class="btn-select-image" id="btn-select-product-image">
+                                Seleccionar imagen
+                            </button>
+                            <span id="prod-img-filename" aria-live="polite">Ningún archivo seleccionado</span>
+                        </div>
+                        <small id="prod-img-help">JPG, PNG, WEBP u otra imagen, hasta 20 MB.</small>
                     </div>
                 </div>
             </div>

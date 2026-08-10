@@ -1,5 +1,7 @@
 node_modules/
 .env
 src/public/uploads/productos/
+src/public/uploads/products/
+dev-server*.log
 .env copyy
 src/scripts/SDM_database-production.sql

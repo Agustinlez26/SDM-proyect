@@ -18,6 +18,7 @@ router.get('/operations', checkAuth, requirePasswordChange, viewsController.rend
 router.get('/stats', checkAuth, requirePasswordChange, viewsController.renderStats)
 router.get('/branches', checkAuth, requirePasswordChange, viewsController.renderBranches)
 router.get('/users', checkAuth, requirePasswordChange, viewsController.renderUsers)
+router.get('/production', checkAuth, requirePasswordChange, viewsController.renderProduction)
 router.get('/profile', checkAuth, requirePasswordChange, viewsController.renderProfile)
 
 export default router

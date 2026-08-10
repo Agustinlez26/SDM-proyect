@@ -35,10 +35,12 @@ export class StockModel {
         let sql = `SELECT
         s.id,
         p.name,
-        p.cod_bar,
+        p.cod_bar AS sku,
         b.name as branch,
         p.url_img_original as img,
-        s.quantity,
+        s.quantity AS physical_quantity,
+        COALESCE(r.reserved_quantity, 0) AS reserved_quantity,
+        GREATEST(s.quantity - COALESCE(r.reserved_quantity, 0), 0) AS quantity,
         s.min_quantity
         FROM
         ${this.#table} s
@@ -46,6 +48,11 @@ export class StockModel {
         ON s.product_id = p.id
         JOIN ${this.#table3} b
         ON s.branch_id = b.id
+        LEFT JOIN (
+            SELECT product_id, branch_id, SUM(quantity) AS reserved_quantity
+            FROM stock_reservations WHERE status = 'active'
+            GROUP BY product_id, branch_id
+        ) r ON r.product_id = s.product_id AND r.branch_id = s.branch_id
         WHERE 1=1`
 
         const params = []
@@ -88,13 +95,20 @@ export class StockModel {
         s.id AS stock_id,
         s.product_id,
         p.name,
-        p.cod_bar,
+        p.cod_bar AS sku,
         p.url_img_small as img,
-        s.quantity
+        s.quantity AS physical_quantity,
+        COALESCE(r.reserved_quantity, 0) AS reserved_quantity,
+        GREATEST(s.quantity - COALESCE(r.reserved_quantity, 0), 0) AS quantity
         FROM
         ${this.#table} s
         JOIN ${this.#table2} p
         ON s.product_id = p.id
+        LEFT JOIN (
+            SELECT product_id, branch_id, SUM(quantity) AS reserved_quantity
+            FROM stock_reservations WHERE status = 'active'
+            GROUP BY product_id, branch_id
+        ) r ON r.product_id = s.product_id AND r.branch_id = s.branch_id
         WHERE 1=1`
 
         const params = []
@@ -142,7 +156,7 @@ export class StockModel {
         SELECT
         s.id,
         p.name,
-        p.cod_bar,
+        p.cod_bar AS sku,
         b.name as branch,
         p.url_img_original as img,
         s.quantity,

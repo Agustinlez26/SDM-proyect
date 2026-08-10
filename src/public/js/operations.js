@@ -206,7 +206,7 @@ function renderShipmentProducts(products) {
     products.forEach(p => {
         prodList.innerHTML += `
             <tr style="border-bottom: 1px solid var(--border-color);">
-                <td class="font-mono text-muted" style="padding: 1rem;">${p.product.barcode || 'S/C'}</td>
+                <td class="font-mono text-muted" style="padding: 1rem;">${p.product.sku || p.product.barcode || 'S/SKU'}</td>
                 <td class="font-bold" style="padding: 1rem; color: var(--text-primary); font-size: 0.95rem;">${p.product.name}</td>
                 <td class="text-center" style="padding: 1rem;">
                     <span style="background: var(--primary-light); color: var(--primary); padding: 6px 16px; border-radius: 20px; font-weight: 800; font-size: 1rem;">${p.quantity}</span>

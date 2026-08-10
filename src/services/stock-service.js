@@ -39,7 +39,7 @@ export class StockService {
      * 
      * Busca productos con soporte para filtros, búsqueda y paginación.
      * * @param {object} params - Objeto de parámetros.
-     * @param {string|null} [params.search] - Texto para buscar por nombre o código de barras.
+     * @param {string|null} [params.search] - Texto para buscar por nombre o SKU.
      * @param {object} [params.filters] - Filtros específicos (category, branch, lowStock, outStock).
      * @param {number|null} [params.offset] - Desplazamiento para paginación (SQL OFFSET).
      * @returns {Promise<ProductCatalogDTO[]>} Retorna una lista de DTOs de productos.

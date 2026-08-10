@@ -17,7 +17,7 @@
                     <label>Buscar Producto a egresar</label>
                     <div class="search-bar" style="position: relative;">
                         <span class="material-symbols-outlined search-icon">search</span>
-                        <input type="text" id="op-search-prod" placeholder="Escanear código o escribir nombre..."
+                        <input type="text" id="op-search-prod" placeholder="Escanear SKU o escribir nombre..."
                             onkeypress="if(event.key === 'Enter') searchProductsForOperation()">
                         <button class="btn-mini-add" type="button" id="btn-search-prod"
                             onclick="searchProductsForOperation()">
@@ -35,7 +35,7 @@
                 <table class="detail-products-table">
                     <thead>
                         <tr>
-                            <th>Código</th>
+                            <th>SKU</th>
                             <th>Producto</th>
                             <th class="text-center" width="100">Stock Disp.</th>
                             <th class="text-center" width="140">Cant. a Egresar</th>

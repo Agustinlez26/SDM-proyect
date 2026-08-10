@@ -6,7 +6,7 @@ export class MovementDetailsDTO {
         this.product = {
             id: data.product_id,
             name: data.product_name,
-            barcode: data.cod_bar,
+            sku: data.sku,
             image: data.product_img
         }
     }

@@ -98,4 +98,13 @@ export class ViewsController {
             user: req.user
         })
     }
+
+    renderProduction(req, res) {
+        res.render('pages/production', {
+            title: 'Produccion y mayorista',
+            activePage: 'production',
+            cssFile: 'production.css',
+            user: req.user
+        })
+    }
 }

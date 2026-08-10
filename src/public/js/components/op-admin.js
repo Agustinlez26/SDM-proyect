@@ -82,7 +82,7 @@ function setupAdminModalListeners() {
 }
 
 window.openOperationModal = function (type) {
-    if (type !== 'in' && type !== 'transfer') return;
+    if (type !== 'in' && type !== 'transfer' && type !== 'out') return;
 
     currentOperationType = type;
     selectedProductsForOp = [];
@@ -110,14 +110,20 @@ window.openOperationModal = function (type) {
         subtitleOp.textContent = 'Busca productos para ingresar a la central.';
         btnConfirmIcon.textContent = 'save';
         btnConfirmText.textContent = 'Guardar Ingreso';
-        thead.innerHTML = `<th>Código</th><th>Producto</th><th class="text-center" width="160">Cant. a Ingresar</th><th class="text-center" width="60"></th>`;
+        thead.innerHTML = `<th>SKU</th><th>Producto</th><th class="text-center" width="160">Cant. a Ingresar</th><th class="text-center" width="60"></th>`;
     } else if (type === 'transfer') {
         titleOp.textContent = 'Enviar a Sucursal';
         subtitleOp.textContent = 'Selecciona destino y busca los productos de tu stock.';
         groupDest.style.display = 'block';
         btnConfirmIcon.textContent = 'send';
         btnConfirmText.textContent = 'Confirmar Envío';
-        thead.innerHTML = `<th>Código</th><th>Producto</th><th class="text-center" width="100">Stock Disp.</th><th class="text-center" width="140">Cant. a Enviar</th><th class="text-center" width="60"></th>`;
+        thead.innerHTML = `<th>SKU</th><th>Producto</th><th class="text-center" width="100">Stock Disp.</th><th class="text-center" width="140">Cant. a Enviar</th><th class="text-center" width="60"></th>`;
+    } else if (type === 'out') {
+        titleOp.textContent = 'Egreso / Salida';
+        subtitleOp.textContent = 'Registra ventas, mermas o productos dañados desde tu sucursal.';
+        btnConfirmIcon.textContent = 'upload';
+        btnConfirmText.textContent = 'Registrar Egreso';
+        thead.innerHTML = `<th>SKU</th><th>Producto</th><th class="text-center" width="100">Stock Disp.</th><th class="text-center" width="140">Cant. a Egresar</th><th class="text-center" width="60"></th>`;
     }
 
     renderEmptyEditableRow();
@@ -150,7 +156,7 @@ window.searchProductsForOperation = async function () {
         if (json.status === 'success' && json.data.length > 0) {
             json.data.forEach(product => {
                 const pId = product.product_id || product.id;
-                const pCode = product.cod_bar || product.code || 'S/C';
+                const pCode = product.sku || product.cod_bar || product.code || 'S/SKU';
                 const pName = product.name || product.product_name;
                 const pImg = product.img || product.url_img_small || '/img/no-image.png';
                 const pIsRegistered = product.is_registered !== undefined ? product.is_registered : true;
@@ -245,7 +251,11 @@ window.removeProductFromOp = function (index) {
 
 document.getElementById('btn-confirm-op').addEventListener('click', async () => {
     if (selectedProductsForOp.length === 0) return alert('Agrega productos.');
-    let dbType = currentOperationType === 'in' ? 'ingreso' : 'envio';
+    let dbType = currentOperationType === 'in'
+        ? 'ingreso'
+        : currentOperationType === 'out'
+            ? 'egreso'
+            : 'envio';
     const payload = {
         type: dbType,
         details: selectedProductsForOp.map(p => {

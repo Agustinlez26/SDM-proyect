@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<%- include('../partials/head', { title: 'Produccion y mayorista', cssFile: 'production.css' }) %>
+<body>
+    <div class="layout">
+        <%- include('../partials/sidebar', { activePage: 'production' }) %>
+        <main class="layout__content">
+            <%- include('../partials/navbar', { title: 'Produccion y mayorista' }) %>
+            <div class="production-container">
+                <div id="production-message" class="message hidden"></div>
+                <section class="summary-grid" id="summary-grid"></section>
+
+                <div class="tabs" role="tablist">
+                    <button class="tab active" data-tab="work">Ordenes de trabajo</button>
+                    <button class="tab" data-tab="artisans">Artesanos</button>
+                    <button class="tab" data-tab="wholesale">Pedidos mayoristas</button>
+                    <button class="tab" data-tab="packages">Bultos</button>
+                    <button class="tab" data-tab="catalog">Configuracion de productos</button>
+                </div>
+
+                <section class="panel active" data-panel="work">
+                    <div class="split">
+                        <form id="work-form" class="card form-card">
+                            <h3>Nueva orden de trabajo</h3>
+                            <label>Tipo<select id="work-type" required>
+                                <option value="manufacturing">Fabricacion con materiales propios</option>
+                                <option value="customization">Personalizacion de producto existente</option>
+                                <option value="external_commission">Encargo sin materiales propios</option>
+                            </select></label>
+                            <label>Centro de origen<select id="work-branch" required></select></label>
+                            <label>Artesano<select id="work-artisan" required></select></label>
+                            <div class="line-title">Material enviado (opcional)</div>
+                            <div class="line-fields"><select id="work-material"></select><input id="work-material-qty" type="number" min="1" placeholder="Cantidad"></div>
+                            <div class="line-title">Producto que debe volver</div>
+                            <div class="line-fields"><select id="work-output" required></select><input id="work-output-qty" type="number" min="1" required placeholder="Cantidad"></div>
+                            <label>Costo acordado del artesano (opcional)<input id="work-cost" type="number" min="0" step="0.01"></label>
+                            <label>Notas<textarea id="work-notes" rows="2"></textarea></label>
+                            <button class="primary" type="submit">Crear borrador</button>
+                        </form>
+                        <div class="card table-card"><h3>Seguimiento y stock en poder de artesanos</h3><div class="table-wrap"><table><thead><tr><th>Orden</th><th>Artesano</th><th>Origen</th><th>En custodia</th><th>Resultado</th><th>Estado</th><th></th></tr></thead><tbody id="work-list"></tbody></table></div></div>
+                    </div>
+                </section>
+
+                <section class="panel" data-panel="artisans">
+                    <div class="split">
+                        <form id="artisan-form" class="card form-card"><h3>Nuevo artesano</h3>
+                            <label>Nombre<input id="artisan-name" required></label>
+                            <label>Centro asociado<select id="artisan-branch" required></select></label>
+                            <label>Telefono<input id="artisan-phone"></label>
+                            <label>Especialidad<input id="artisan-specialty" placeholder="Plateria, marroquineria..."></label>
+                            <label>Notas<textarea id="artisan-notes" rows="3"></textarea></label>
+                            <button class="primary" type="submit">Guardar artesano</button>
+                        </form>
+                        <div class="card table-card"><h3>Artesanos</h3><div class="table-wrap"><table><thead><tr><th>Nombre</th><th>Centro</th><th>Especialidad</th><th>Telefono</th></tr></thead><tbody id="artisan-list"></tbody></table></div></div>
+                    </div>
+                </section>
+
+                <section class="panel" data-panel="wholesale">
+                    <div class="split">
+                        <form id="wholesale-form" class="card form-card"><h3>Nuevo pedido mayorista</h3>
+                            <label>Cliente / referencia<input id="wholesale-customer" required></label>
+                            <label>Punto de retiro<select id="wholesale-branch" required></select></label>
+                            <label>Producto<select id="wholesale-product" required></select></label>
+                            <label>Cantidad<input id="wholesale-qty" type="number" min="1" required></label>
+                            <label>Notas<textarea id="wholesale-notes" rows="2"></textarea></label>
+                            <p class="hint">El sistema reserva primero el stock disponible del punto de retiro, sin mezclarlo con minorista.</p>
+                            <button class="primary" type="submit">Crear y reservar</button>
+                        </form>
+                        <div class="card table-card"><h3>Pedidos</h3><div class="table-wrap"><table><thead><tr><th>Pedido</th><th>Cliente</th><th>Retiro</th><th>Reserva</th><th>Estado</th><th></th></tr></thead><tbody id="wholesale-list"></tbody></table></div></div>
+                    </div>
+                </section>
+
+                <section class="panel" data-panel="packages">
+                    <div class="split">
+                        <form id="package-form" class="card form-card"><h3>Preparar bulto</h3>
+                            <label>Tipo<select id="package-type"><option value="wholesale_order">Pedido mayorista</option><option value="replenishment">Reposicion</option><option value="work_order">Orden de trabajo</option><option value="other">Otro</option></select></label>
+                            <label>Pedido vinculado<select id="package-order"><option value="">Sin pedido</option></select></label>
+                            <label>Producto<select id="package-product" required></select></label>
+                            <label>Cantidad<input id="package-qty" type="number" min="1" required></label>
+                            <label>Notas<textarea id="package-notes" rows="2"></textarea></label>
+                            <p class="hint">Luego el bulto puede asociarse al envio Mercedes-Juncal existente mediante su movement_id.</p>
+                            <button class="primary" type="submit">Crear bulto</button>
+                        </form>
+                        <div class="card table-card"><h3>Bultos preparados</h3><div class="table-wrap"><table><thead><tr><th>Codigo</th><th>Tipo</th><th>Pedido</th><th>Contenido</th><th>Estado</th></tr></thead><tbody id="package-list"></tbody></table></div></div>
+                    </div>
+                </section>
+
+                <section class="panel" data-panel="catalog">
+                    <form id="catalog-form" class="card catalog-card"><h3>Reglas operativas por producto</h3>
+                        <label>Producto<select id="catalog-product" required></select></label>
+                        <label>Tipo<select id="catalog-type"><option value="finished">Producto terminado</option><option value="raw_material">Materia prima</option><option value="component">Componente</option></select></label>
+                        <div class="checks"><label><input id="catalog-sellable" type="checkbox"> Se vende</label><label><input id="catalog-manufacturable" type="checkbox"> Se fabrica</label><label><input id="catalog-customizable" type="checkbox"> Se personaliza</label></div>
+                        <label>Centro de produccion<select id="catalog-branch"><option value="">Sin centro fijo</option></select></label>
+                        <fieldset><legend>Canales habilitados (sin precios)</legend><div id="channel-checks" class="checks"></div></fieldset>
+                        <button class="primary" type="submit">Guardar configuracion</button>
+                    </form>
+                </section>
+            </div>
+            <script src="/js/production.js"></script>
+        </main>
+    </div>
+</body>
+</html>

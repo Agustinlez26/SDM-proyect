@@ -121,3 +121,20 @@ El backend de Sol de Mayo incluye las siguientes medidas de seguridad y rendimie
 
 5. **Apertura:**
    Visitar http://localhost:1234 en el navegador para acceder a la interfaz del sistema.
+
+## Producción, artesanos y mayorista
+
+Para una base existente, ejecutar una vez con un usuario de MySQL que pueda crear y alterar tablas:
+
+```bash
+npm run migrate:operations
+```
+
+La migración es idempotente. Crea las materias primas iniciales (calabazas y base de cuero),
+los canales sin precios, artesanos, órdenes de trabajo, reservas mayoristas y bultos. La pantalla
+de administración queda disponible en `/production` para usuarios administradores.
+
+- Al enviar una orden, los materiales salen del stock disponible y quedan en custodia del artesano.
+- Al rendirla, vuelven los productos terminados y los materiales devueltos; también se registran descartes.
+- Un pedido mayorista reserva stock del punto de retiro. Los egresos comunes no pueden consumir esa reserva.
+- Un bulto puede vincularse al pedido mayorista y, opcionalmente, al movimiento de envío ya existente.

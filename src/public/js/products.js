@@ -140,7 +140,7 @@ function renderProductGrid(isActiveView) {
             <div class="card-body">
                 <span class="card-category">${prod.category || 'Sin Categoría'}</span>
                 <h4 class="card-title">${prod.name}</h4>
-                <p class="card-code"><span class="material-symbols-outlined icon-tiny">barcode</span> ${prod.cod_bar || 'N/A'}</p>
+                <p class="card-code"><span class="material-symbols-outlined icon-tiny">inventory_2</span> SKU: ${prod.sku || prod.cod_bar || 'N/A'}</p>
                 <p class="card-desc" title="${prod.description}">${prod.description || 'Sin descripción'}</p>
             </div>
             <div class="card-footer">

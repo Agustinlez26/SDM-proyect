@@ -101,7 +101,7 @@ window.searchProductsForOperation = async function () {
         if (json.status === 'success' && json.data.length > 0) {
             json.data.forEach(product => {
                 const pId = product.product_id || product.id;
-                const pCode = product.cod_bar || product.code || 'S/C';
+                const pCode = product.sku || product.cod_bar || product.code || 'S/SKU';
                 const pName = product.name || product.product_name;
                 const pImg = product.img || product.url_img_small || '/img/no-image.png';
                 const pStock = product.quantity || 0;

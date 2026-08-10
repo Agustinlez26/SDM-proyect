@@ -190,7 +190,7 @@ function renderStockTable(items) {
 
         let html = `
             <td class="col-id font-mono">#${item.id || item.product_id}</td>
-            <td class="col-code font-mono">${item.cod_bar || 'S/C'}</td>
+            <td class="col-code font-mono">${item.sku || item.cod_bar || 'S/SKU'}</td>
             <td>
                 <div class="product-cell" style="display: flex; align-items: center; gap: 10px;">
                     <img src="${imgSrc}" alt="${item.name}" class="product-thumb" style="width: 40px; height: 40px; object-fit: cover; border-radius: 6px;">

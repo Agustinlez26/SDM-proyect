@@ -173,7 +173,7 @@ export class MovementModel {
                 md.id,
                 p.name as product_name,
                 p.id as product_id,
-                p.cod_bar,
+                p.cod_bar AS sku,
                 p.url_img_small as product_img,
                 md.quantity
             FROM ${this.#tableDetails} md
@@ -284,9 +284,16 @@ export class MovementModel {
                     const sqlUpdate = `
                         UPDATE ${this.#tableStock} 
                         SET quantity = quantity - ? 
-                        WHERE branch_id = ? AND product_id = ? AND quantity >= ?
+                        WHERE branch_id = ? AND product_id = ?
+                        AND quantity - COALESCE((
+                            SELECT SUM(r.quantity) FROM stock_reservations r
+                            WHERE r.branch_id = ? AND r.product_id = ? AND r.status = 'active'
+                        ), 0) >= ?
                     `
-                    const [res] = await connection.query(sqlUpdate, [item.quantity, targetBranchId, item.product_id, item.quantity])
+                    const [res] = await connection.query(sqlUpdate, [
+                        item.quantity, targetBranchId, item.product_id,
+                        targetBranchId, item.product_id, item.quantity
+                    ])
 
                     if (res.affectedRows === 0) {
                         throw new Error(`Stock insuficiente para el producto ID: ${item.product_id}`)

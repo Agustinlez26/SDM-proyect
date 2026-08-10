@@ -7,6 +7,9 @@
   "scripts": {
     "start": "node app.js",
     "dev": "node --watch app.js",
+    "migrate:product-skus": "node src/scripts/migrate_product_skus.js --apply",
+    "migrate:operations": "node src/scripts/migrate_operations.js",
+    "seed:juncal-products": "node src/scripts/seed_juncal_2026_products.js",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
   },
   "keywords": [],
