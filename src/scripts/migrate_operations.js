@@ -238,13 +238,16 @@ try {
         WHERE cod_bar = 'CAL-CLA';
 
         UPDATE products
+        SET is_manufacturable = FALSE,
+            production_method = 'purchased',
+            production_branch_id = NULL
+        WHERE category_id = (SELECT id FROM product_categories WHERE name = 'Mates' LIMIT 1);
+
+        UPDATE products
         SET is_manufacturable = TRUE,
             production_method = 'artisan',
             production_branch_id = (SELECT id FROM branches WHERE name LIKE '%Mercedes%' LIMIT 1)
-        WHERE (
-            category_id = (SELECT id FROM product_categories WHERE name = 'Mates' LIMIT 1)
-            OR cod_bar IN ('MAT-SDM', 'MAT-URU-CC', 'CIN', 'TER-CC')
-        ) AND cod_bar <> 'IMP-ALG';
+        WHERE cod_bar IN ('MAT-SDM', 'MAT-URU-CC', 'CIN', 'TER-CC');
 
         UPDATE products
         SET is_manufacturable = FALSE, production_method = 'purchased'
@@ -302,6 +305,18 @@ try {
         JOIN products output ON output.cod_bar = recipe.output_sku
         JOIN products material ON material.cod_bar = recipe.material_sku
         ON DUPLICATE KEY UPDATE quantity_per_unit = VALUES(quantity_per_unit), is_active = TRUE;
+
+        UPDATE products
+        SET is_manufacturable = TRUE,
+            production_method = 'internal_workshop',
+            production_branch_id = (SELECT id FROM branches WHERE name LIKE '%Mercedes%' LIMIT 1)
+        WHERE cod_bar IN ('MAT-SP', 'MAT-COQ', 'SP-COQ', 'SP-CRI', 'MAT-GAL');
+
+        UPDATE products
+        SET is_manufacturable = TRUE,
+            production_method = 'artisan',
+            production_branch_id = (SELECT id FROM branches WHERE name LIKE '%Mercedes%' LIMIT 1)
+        WHERE cod_bar IN ('MAT-SP-PRI', 'SP-PRI-ALP-BOR', 'SP-PRI-ALP-MAR', 'SP-VIR-ALU');
 
         UPDATE product_sales_channels psc
         JOIN products p ON p.id = psc.product_id
