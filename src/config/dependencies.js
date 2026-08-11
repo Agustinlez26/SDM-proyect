@@ -22,6 +22,8 @@ import { BranchController } from '../controllers/branch-controller.js'
 import { MovementModel } from '../models/movements.js'
 import { MovementService } from '../services/movement-service.js'
 import { MovementController } from '../controllers/movement-controller.js'
+import { OrderModel } from '../models/orders.js'
+import { OrderController } from '../controllers/order-controller.js'
 
 import { StatisticModel } from '../models/statistics.js'
 import { StatisticService } from '../services/statistic-service.js'
@@ -35,6 +37,7 @@ const stockModel = new StockModel({ db })
 const userModel = new UserModel({ db })
 const branchModel = new BranchModel({ db })
 const movementModel = new MovementModel({ db })
+const orderModel = new OrderModel({ db })
 const statisticsModel = new StatisticModel({ db })
 
 const productService = new ProductService({ productModel })
@@ -53,6 +56,7 @@ const statisticController = new StatisticController({ statisticService })
 const notificationController = new NotificationController({ statisticService })
 const branchController = new BranchController({ branchService })
 const movementController = new MovementController({ movementService })
+const orderController = new OrderController({ orderModel })
 
 export {
     productController,
@@ -61,6 +65,7 @@ export {
     authController,
     branchController,
     movementController,
+    orderController,
     statisticController,
     notificationController,
     userModel

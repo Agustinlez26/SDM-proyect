@@ -3,6 +3,7 @@ export class MovementDTO {
         this.id = data.id
         this.receipt_number = data.receipt_number
         this.type = data.type
+        this.egress_reason = data.egress_reason
         this.status = data.status
         this.date = data.effective_date || data.date
         this.created_at = data.date

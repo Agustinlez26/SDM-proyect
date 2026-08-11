@@ -55,6 +55,10 @@
                                                 <p>Mover stock hacia otro local o depósito.</p>
                                             </div>
                                         </button>
+                                        <button class="action-card card-out" onclick="openOperationModal('out')">
+                                            <div class="card-icon"><span class="material-symbols-outlined">upload</span></div>
+                                            <div class="card-text"><h3>Egreso / Salida</h3><p>Registrar venta, devolución o cambio.</p></div>
+                                        </button>
                                         <% } else { %>
                                             <button class="action-card card-out" onclick="openOperationModal('out')">
                                                 <div class="card-icon"><span
@@ -63,6 +67,10 @@
                                                     <h3>Egreso / Salida</h3>
                                                     <p>Registrar ventas, mermas o productos dañados.</p>
                                                 </div>
+                                            </button>
+                                            <button class="action-card card-transfer" onclick="openOperationModal('transfer')">
+                                                <div class="card-icon"><span class="material-symbols-outlined">local_shipping</span></div>
+                                                <div class="card-text"><h3>Enviar a Sucursal</h3><p>Mover stock desde este punto de venta.</p></div>
                                             </button>
                                             <% } %>
                                 </div>

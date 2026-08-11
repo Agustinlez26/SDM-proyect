@@ -12,10 +12,22 @@
 
         <div class="modal-body">
             <div class="op-controls-grid" id="op-controls">
+                <div class="form-group" id="group-origin" style="display: none;">
+                    <label>Sucursal Origen</label>
+                    <select id="op-origin"><option value="" disabled selected>Seleccionar sucursal...</option></select>
+                </div>
                 <div class="form-group" id="group-dest" style="display: none;">
                     <label>Sucursal Destino</label>
                     <select id="op-dest">
                         <option value="" disabled selected>Seleccionar sucursal...</option>
+                    </select>
+                </div>
+                <div class="form-group" id="group-egress-reason" style="display: none;">
+                    <label>Motivo del egreso</label>
+                    <select id="op-egress-reason">
+                        <option value="sale">Venta</option>
+                        <option value="return">Devolución</option>
+                        <option value="exchange">Cambio de producto</option>
                     </select>
                 </div>
 

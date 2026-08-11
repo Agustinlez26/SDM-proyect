@@ -4,11 +4,22 @@
 
 let searchTimeout = null;
 let selectedProductsForOp = [];
+let currentOperationType = 'out';
 
 document.addEventListener('DOMContentLoaded', () => {
     initOpEmployeeSocket();
+    fetchEmployeeBranches();
     setupEmployeeModalListeners();
 });
+
+async function fetchEmployeeBranches() {
+    try {
+        const response = await fetch('/api/branches/catalog');
+        const body = await response.json();
+        const select = document.getElementById('op-dest');
+        if (body.status === 'success' && select) body.data.forEach(branch => select.innerHTML += `<option value="${branch.id}">${branch.name}</option>`);
+    } catch (error) { console.error('No se pudieron cargar las sucursales', error); }
+}
 
 // --- WEBSOCKETS (Tiempo Real) ---
 function initOpEmployeeSocket() {
@@ -65,11 +76,19 @@ function setupEmployeeModalListeners() {
 
 // --- APERTURA DEL MODAL ---
 window.openOperationModal = function (type) {
-    if (type !== 'out') return; // Seguridad: El empleado solo puede abrir 'out'
+    if (!['out', 'transfer'].includes(type)) return;
+    currentOperationType = type;
 
     selectedProductsForOp = [];
     document.getElementById('op-search-prod').value = '';
     renderEmptyEditableRow();
+
+    const isTransfer = type === 'transfer';
+    document.getElementById('group-dest').style.display = isTransfer ? 'block' : 'none';
+    document.getElementById('group-egress-reason').style.display = isTransfer ? 'none' : 'block';
+    document.getElementById('modal-op-title').textContent = isTransfer ? 'Enviar a Sucursal' : 'Egreso / Salida';
+    document.getElementById('modal-op-subtitle').textContent = isTransfer ? 'Selecciona destino y productos para trasladar.' : 'Selecciona el motivo y los productos a descontar.';
+    document.getElementById('btn-confirm-text').textContent = isTransfer ? 'Confirmar Envío' : 'Registrar Egreso';
 
     searchProductsForOperation(''); // Cargamos todo el stock de entrada
 
@@ -197,12 +216,20 @@ if (btnConfirmOp) {
         if (selectedProductsForOp.length === 0) return alert('Debes agregar al menos un producto a la operación.');
 
         const payload = {
-            type: 'egreso',
+            type: currentOperationType === 'transfer' ? 'envio' : 'egreso',
             details: selectedProductsForOp.map(p => ({
                 product_id: p.id,
                 quantity: p.quantity
             }))
         };
+
+        if (payload.type === 'envio') {
+            const destination = document.getElementById('op-dest').value;
+            if (!destination) return alert('Selecciona una sucursal de destino.');
+            payload.destination_branch_id = Number(destination);
+        } else {
+            payload.egress_reason = document.getElementById('op-egress-reason').value;
+        }
 
         if (!confirm('¿Estás seguro de registrar este egreso?')) return;
 

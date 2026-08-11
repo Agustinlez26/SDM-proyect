@@ -42,9 +42,15 @@ async function fetchAdminBranches() {
         if (json.status === 'success') {
             adminBranches = json.data;
             const select = document.getElementById('op-dest');
+            const originSelect = document.getElementById('op-origin');
             if (select) {
                 select.innerHTML = '<option value="" disabled selected>Seleccionar sucursal...</option>';
                 adminBranches.forEach(branch => select.innerHTML += `<option value="${branch.id}">${branch.name}</option>`);
+            }
+            if (originSelect) {
+                originSelect.innerHTML = '<option value="" disabled selected>Seleccionar sucursal...</option>';
+                adminBranches.forEach(branch => originSelect.innerHTML += `<option value="${branch.id}">${branch.name}</option>`);
+                originSelect.addEventListener('change', () => searchProductsForOperation(''));
             }
         }
     } catch (error) { console.error("Error cargando sucursales:", error); }
@@ -56,6 +62,8 @@ function closeAndCleanOperationModal() {
     document.getElementById('op-search-prod').value = '';
     const destSelect = document.getElementById('op-dest');
     if (destSelect) destSelect.value = '';
+    const originSelect = document.getElementById('op-origin');
+    if (originSelect) originSelect.value = '';
 
     document.getElementById('catalog-grid').innerHTML = ''; // Limpiamos grilla
     renderEmptyEditableRow();
@@ -82,7 +90,7 @@ function setupAdminModalListeners() {
 }
 
 window.openOperationModal = function (type) {
-    if (type !== 'in' && type !== 'transfer') return;
+    if (!['in', 'transfer', 'out'].includes(type)) return;
 
     currentOperationType = type;
     selectedProductsForOp = [];
@@ -92,6 +100,8 @@ window.openOperationModal = function (type) {
     const subtitleOp = document.getElementById('modal-op-subtitle');
     const controlsDiv = document.getElementById('op-controls');
     const groupDest = document.getElementById('group-dest');
+    const groupOrigin = document.getElementById('group-origin');
+    const groupReason = document.getElementById('group-egress-reason');
     const groupSearch = document.getElementById('group-search');
     const thead = document.querySelector('.detail-products-table thead tr');
     const btnConfirmText = document.getElementById('btn-confirm-text');
@@ -103,6 +113,8 @@ window.openOperationModal = function (type) {
     controlsDiv.style.display = 'grid';
     groupSearch.style.display = 'block';
     groupDest.style.display = 'none';
+    groupOrigin.style.display = type === 'in' ? 'none' : 'block';
+    groupReason.style.display = type === 'out' ? 'block' : 'none';
     btnConfirmOp.className = 'btn-primary';
 
     if (type === 'in') {
@@ -118,6 +130,13 @@ window.openOperationModal = function (type) {
         btnConfirmIcon.textContent = 'send';
         btnConfirmText.textContent = 'Confirmar Envío';
         thead.innerHTML = `<th>Código</th><th>Producto</th><th class="text-center" width="100">Stock Disp.</th><th class="text-center" width="140">Cant. a Enviar</th><th class="text-center" width="60"></th>`;
+    } else if (type === 'out') {
+        titleOp.textContent = 'Egreso / Salida';
+        subtitleOp.textContent = 'Selecciona sucursal, motivo y productos.';
+        btnConfirmIcon.textContent = 'logout';
+        btnConfirmText.textContent = 'Registrar Egreso';
+        btnConfirmOp.className = 'btn-danger';
+        thead.innerHTML = `<th>Código</th><th>Producto</th><th class="text-center" width="100">Stock Disp.</th><th class="text-center" width="140">Cant. a Egresar</th><th class="text-center" width="60"></th>`;
     }
 
     renderEmptyEditableRow();
@@ -138,9 +157,10 @@ window.searchProductsForOperation = async function () {
 
     grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: var(--text-muted);"><span class="material-symbols-outlined spin" style="vertical-align: middle;">refresh</span> Cargando...</div>';
 
+    const originBranch = document.getElementById('op-origin')?.value;
     let apiUrl = currentOperationType === 'in'
         ? `/api/products/catalog?search=${encodeURIComponent(searchTerm)}`
-        : `/api/stocks/catalog?search=${encodeURIComponent(searchTerm)}`;
+        : `/api/stocks/catalog?search=${encodeURIComponent(searchTerm)}${originBranch ? `&branch=${originBranch}` : ''}`;
 
     try {
         const res = await fetch(apiUrl);
@@ -245,7 +265,7 @@ window.removeProductFromOp = function (index) {
 
 document.getElementById('btn-confirm-op').addEventListener('click', async () => {
     if (selectedProductsForOp.length === 0) return alert('Agrega productos.');
-    let dbType = currentOperationType === 'in' ? 'ingreso' : 'envio';
+    let dbType = currentOperationType === 'in' ? 'ingreso' : (currentOperationType === 'transfer' ? 'envio' : 'egreso');
     const payload = {
         type: dbType,
         details: selectedProductsForOp.map(p => {
@@ -260,6 +280,13 @@ document.getElementById('btn-confirm-op').addEventListener('click', async () => 
         if (!destSelect || !destSelect.value) return alert('Selecciona destino.');
         payload.destination_branch_id = parseInt(destSelect.value);
     }
+
+    if (dbType !== 'ingreso') {
+        const originSelect = document.getElementById('op-origin');
+        if (!originSelect?.value) return alert('Selecciona la sucursal de origen.');
+        payload.origin_branch_id = parseInt(originSelect.value);
+    }
+    if (dbType === 'egreso') payload.egress_reason = document.getElementById('op-egress-reason').value;
 
     if (!confirm(`¿Estás seguro de registrar este ${dbType}?`)) return;
 

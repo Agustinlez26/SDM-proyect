@@ -38,7 +38,9 @@ export class StockModel {
         p.cod_bar,
         b.name as branch,
         p.url_img_original as img,
-        s.quantity,
+        s.quantity AS physical_quantity,
+        COALESCE(r.reserved_quantity, 0) AS reserved_quantity,
+        GREATEST(s.quantity - COALESCE(r.reserved_quantity, 0), 0) AS quantity,
         s.min_quantity
         FROM
         ${this.#table} s
@@ -46,6 +48,8 @@ export class StockModel {
         ON s.product_id = p.id
         JOIN ${this.#table3} b
         ON s.branch_id = b.id
+        LEFT JOIN (SELECT product_id, branch_id, SUM(quantity) reserved_quantity FROM stock_reservations WHERE status='active' GROUP BY product_id, branch_id) r
+        ON r.product_id=s.product_id AND r.branch_id=s.branch_id
         WHERE 1=1`
 
         const params = []
@@ -90,11 +94,15 @@ export class StockModel {
         p.name,
         p.cod_bar,
         p.url_img_small as img,
-        s.quantity
+        s.quantity AS physical_quantity,
+        COALESCE(r.reserved_quantity, 0) AS reserved_quantity,
+        GREATEST(s.quantity - COALESCE(r.reserved_quantity, 0), 0) AS quantity
         FROM
         ${this.#table} s
         JOIN ${this.#table2} p
         ON s.product_id = p.id
+        LEFT JOIN (SELECT product_id, branch_id, SUM(quantity) reserved_quantity FROM stock_reservations WHERE status='active' GROUP BY product_id, branch_id) r
+        ON r.product_id=s.product_id AND r.branch_id=s.branch_id
         WHERE 1=1`
 
         const params = []
@@ -201,7 +209,7 @@ export class StockModel {
          */
     async findByProductAndBranch(productId, branchId) {
         const sql = `SELECT 
-            s.quantity, 
+            GREATEST(s.quantity - COALESCE((SELECT SUM(r.quantity) FROM stock_reservations r WHERE r.product_id=s.product_id AND r.branch_id=s.branch_id AND r.status='active'),0),0) AS quantity,
             p.name as product_name
             FROM ${this.#table} s
             JOIN products p ON s.product_id = p.id

@@ -122,20 +122,21 @@ export class MovementService {
             targetBranchForStock = data.origin_branch_id
 
         } else if (data.type === 'envio') {
-            data.origin_branch_id = this.#MAIN_BRANCH_ID
-
+            if (!data.origin_branch_id) throw new ValidationError('Falta sucursal origen')
             if (!data.destination_branch_id) throw new ValidationError('Falta sucursal destino')
-            if (data.destination_branch_id === this.#MAIN_BRANCH_ID) throw new ValidationError('No puedes enviarte a ti mismo')
+            if (data.destination_branch_id === data.origin_branch_id) throw new ValidationError('La sucursal de origen y destino no pueden ser la misma')
 
+            const originExists = await this.branchModel.exists(data.origin_branch_id)
             const destExists = await this.branchModel.exists(data.destination_branch_id)
+            if (!originExists) throw new NotFoundError('Sucursal origen no existe')
             if (!destExists) throw new NotFoundError('Sucursal destino no existe')
 
-            await this.#validateStockAvailability(this.#MAIN_BRANCH_ID, details)
+            await this.#validateStockAvailability(data.origin_branch_id, details)
 
             data.status = 'pendiente'
 
             stockAction = 'SUBTRACT'
-            targetBranchForStock = this.#MAIN_BRANCH_ID
+            targetBranchForStock = data.origin_branch_id
         }
 
         const id = await this.movementModel.createTransaction(

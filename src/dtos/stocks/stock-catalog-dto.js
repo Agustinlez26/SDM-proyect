@@ -6,5 +6,7 @@ export class StockCatalogDTO {
         this.cod_bar = stock.cod_bar;
         this.img = stock.img;
         this.quantity = stock.quantity
+        this.physical_quantity = stock.physical_quantity
+        this.reserved_quantity = stock.reserved_quantity || 0
     }
 }

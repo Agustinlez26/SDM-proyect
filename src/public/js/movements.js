@@ -226,7 +226,7 @@ function renderMovementsTable(movements) {
         tr.innerHTML = `
             <td class="col-id">#${mov.id}</td>
             <td class="col-receipt font-mono">${escapeHTML(mov.receipt_number || 'S/N')}</td>
-            <td class="col-type">${generateTypeBadge(mov.type)}</td>
+            <td class="col-type">${generateTypeBadge(mov.type)}${mov.type === 'egreso' ? `<small>${escapeHTML(({sale:'Venta',return:'Devolución',exchange:'Cambio'}[mov.egress_reason] || ''))}</small>` : ''}</td>
             <td class="col-status">${generateStatusBadge(mov.status)}</td>
             <td class="col-date">${frontendDate}</td>
             <td class="col-branch" title="${escapeHTML(mov.origin || 'Externo')}">${escapeHTML(mov.origin || '-')}</td>
@@ -335,6 +335,7 @@ function openDetailModal(mov, details) {
     document.getElementById('detail-id').textContent = '#' + mov.id;
     document.getElementById('detail-receipt').textContent = mov.receipt_number || '-';
     document.getElementById('detail-type').innerHTML = generateTypeBadge(mov.type);
+    if (mov.type === 'egreso' && mov.egress_reason) document.getElementById('detail-type').innerHTML += ` <small>${escapeHTML(({sale:'Venta',return:'Devolución',exchange:'Cambio de producto'}[mov.egress_reason] || mov.egress_reason))}</small>`;
     document.getElementById('detail-status').innerHTML = generateStatusBadge(mov.status);
     document.getElementById('detail-date').textContent = mov.date ? new Date(mov.date).toLocaleDateString('es-AR') : '-';
     

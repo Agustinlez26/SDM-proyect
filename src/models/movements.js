@@ -39,6 +39,7 @@ export class MovementModel {
                 m.id,
                 m.receipt_number,
                 m.type,
+                m.egress_reason,
                 m.date,
                 COALESCE(m.arrival_date, m.date) as effective_date,
                 m.status,
@@ -87,10 +88,7 @@ export class MovementModel {
         }
 
         if (filters.employee_branch_id) {
-            sql += ` AND m.type != 'ingreso' AND (
-                m.origin_branch_id = ? OR 
-                (m.destination_branch_id = ? AND m.status != 'pendiente')
-            )`;
+            sql += ` AND m.type != 'ingreso' AND (m.origin_branch_id = ? OR m.destination_branch_id = ?)`;
             params.push(filters.employee_branch_id, filters.employee_branch_id);
         }
 
@@ -131,6 +129,7 @@ export class MovementModel {
                 m.id,
                 m.receipt_number,
                 m.type, 
+                m.egress_reason,
                 m.date,
                 COALESCE(m.arrival_date, m.date) as effective_date,
                 m.status,
@@ -200,8 +199,8 @@ export class MovementModel {
         const params = []
 
         if (branch_id) {
-            sql += " AND m.destination_branch_id = ? AND m.status = 'en_proceso'"
-            params.push(branch_id)
+            sql += " AND ((m.origin_branch_id = ? AND m.status = 'pendiente') OR (m.destination_branch_id = ? AND m.status = 'en_proceso'))"
+            params.push(branch_id, branch_id)
         }
         const [rows] = await this.#db.query(sql, params)
         return rows.map(row => new ShipmentsDTO(row))
@@ -218,6 +217,7 @@ export class MovementModel {
             SELECT
             m.id,
             m.type, 
+            m.egress_reason,
             m.date, 
             m.status, 
             m.receipt_number
@@ -250,11 +250,11 @@ export class MovementModel {
 
             const sqlHeader = `
                 INSERT INTO ${this.#table} 
-                (receipt_number, type, date, user_id, origin_branch_id, destination_branch_id, status) 
-                VALUES (?, ?, NOW(), UUID_TO_BIN(?), ?, ?, ?)
+                (receipt_number, type, egress_reason, date, user_id, origin_branch_id, destination_branch_id, status)
+                VALUES (?, ?, ?, NOW(), UUID_TO_BIN(?), ?, ?, ?)
             `
             const [resultHeader] = await connection.query(sqlHeader, [
-                data.receipt_number, data.type, data.user_id,
+                data.receipt_number, data.type, data.egress_reason || null, data.user_id,
                 data.origin_branch_id, data.destination_branch_id, data.status
             ])
             const movementId = resultHeader.insertId
@@ -284,9 +284,11 @@ export class MovementModel {
                     const sqlUpdate = `
                         UPDATE ${this.#tableStock} 
                         SET quantity = quantity - ? 
-                        WHERE branch_id = ? AND product_id = ? AND quantity >= ?
+                        WHERE branch_id = ? AND product_id = ?
+                          AND quantity - COALESCE((SELECT SUM(r.quantity) FROM stock_reservations r
+                              WHERE r.branch_id = ? AND r.product_id = ? AND r.status = 'active'), 0) >= ?
                     `
-                    const [res] = await connection.query(sqlUpdate, [item.quantity, targetBranchId, item.product_id, item.quantity])
+                    const [res] = await connection.query(sqlUpdate, [item.quantity, targetBranchId, item.product_id, targetBranchId, item.product_id, item.quantity])
 
                     if (res.affectedRows === 0) {
                         throw new Error(`Stock insuficiente para el producto ID: ${item.product_id}`)
@@ -352,7 +354,7 @@ export class MovementModel {
             await connection.beginTransaction()
 
             const [rows] = await connection.query(
-                `SELECT status, destination_branch_id FROM ${this.#table} WHERE id = ? FOR UPDATE`,
+                `SELECT status, origin_branch_id, destination_branch_id FROM ${this.#table} WHERE id = ? FOR UPDATE`,
                 [movementId]
             )
 
@@ -361,17 +363,18 @@ export class MovementModel {
             }
 
             const destinationBranchId = rows[0].destination_branch_id
+            const originBranchId = rows[0].origin_branch_id
 
             for (const item of details) {
 
                 const productId = item.product.id
 
                 const [centralStock] = await connection.query(
-                    `SELECT min_quantity FROM ${this.#tableStock} WHERE branch_id = 1 AND product_id = ? LIMIT 1`,
-                    [productId]
+                    `SELECT min_quantity FROM ${this.#tableStock} WHERE branch_id = ? AND product_id = ? LIMIT 1`,
+                    [originBranchId, productId]
                 );
 
-                const inheritedMinQty = centralStock[0].min_quantity
+                const inheritedMinQty = centralStock[0]?.min_quantity || 0
 
                 const sqlUpsert = `
                     INSERT INTO ${this.#tableStock} (branch_id, product_id, quantity, min_quantity)

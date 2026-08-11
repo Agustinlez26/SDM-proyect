@@ -52,7 +52,7 @@ export class MovementController {
             }
 
             if (queryData.type === 'envio') {
-                queryData.destination_branch_id = req.user.branch_id;
+                queryData.employee_branch_id = req.user.branch_id;
             }
 
             else if (queryData.type === 'egreso') {
@@ -217,7 +217,7 @@ export class MovementController {
             });
         }
 
-        const { type, destination_branch_id, details } = result.data;
+        const { type, origin_branch_id, destination_branch_id, egress_reason, details } = result.data;
 
         const userId = req.user.id;
         const userBranchId = req.user.branch_id;
@@ -235,26 +235,27 @@ export class MovementController {
             destination = MAIN_BRANCH_ID;
         }
         else if (type === 'egreso') {
-            if (!userBranchId) {
+            origin = req.user.is_admin ? (origin_branch_id || userBranchId) : userBranchId;
+            if (!origin) {
                 return res.status(403).json({
                     status: 'error',
                     message: 'Tu usuario no tiene una sucursal asignada para realizar egresos.'
                 });
             }
-            origin = userBranchId;
             destination = null;
         }
         else if (type === 'envio') {
-            if (userBranchId !== MAIN_BRANCH_ID) {
+            origin = req.user.is_admin ? (origin_branch_id || userBranchId || MAIN_BRANCH_ID) : userBranchId;
+            if (!origin) {
                 return res.status(403).json({ status: 'error', message: 'Los envíos solo pueden realizarse desde la Sucursal Principal.' });
             }
-            origin = MAIN_BRANCH_ID;
             destination = destination_branch_id;
         }
 
         const dbPayload = {
             receipt_number: `MOV-${Date.now()}`,
             type: type,
+            egress_reason: type === 'egreso' ? egress_reason : null,
             user_id: userId,
             origin_branch_id: origin,
             destination_branch_id: destination,

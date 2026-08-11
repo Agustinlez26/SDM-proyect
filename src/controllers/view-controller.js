@@ -54,6 +54,10 @@ export class ViewsController {
         })
     }
 
+    renderOrders(req, res) {
+        res.render('pages/orders', { title: 'Pedidos', activePage: 'orders', cssFile: 'orders.css', user: req.user })
+    }
+
     renderOperations(req, res) {
         res.render('pages/operations', {
             title: 'Operaciones',

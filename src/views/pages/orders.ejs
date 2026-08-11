@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<%- include('../partials/head', { title: 'Pedidos', cssFile: 'orders.css' }) %>
+<body>
+    <div class="layout">
+        <%- include('../partials/sidebar', { activePage: 'orders' }) %>
+        <main class="layout__content">
+            <%- include('../partials/navbar', { title: 'Pedidos y reservas' }) %>
+            <div class="orders-container">
+                <div id="orders-message" class="orders-message hidden"></div>
+                <section class="orders-summary" id="orders-summary"></section>
+                <div class="orders-layout">
+                    <form id="order-form" class="orders-card order-form">
+                        <h2>Nuevo pedido</h2>
+                        <p>Al guardarlo, las unidades quedan reservadas pero continúan físicamente en la sucursal.</p>
+                        <label>Canal
+                            <select id="order-channel" required>
+                                <option value="mercado_libre">Mercado Libre</option>
+                                <option value="tienda_nube">Tienda Nube</option>
+                                <option value="mayorista">Mayorista</option>
+                                <option value="merchandising">Merchandising</option>
+                            </select>
+                        </label>
+                        <label>Cliente / referencia del pedido<input id="order-reference" required placeholder="Nombre, número de venta o referencia"></label>
+                        <label id="order-branch-group">Reservar desde<select id="order-branch" required></select></label>
+                        <label>Producto<select id="order-product"></select></label>
+                        <div class="order-add-line"><input id="order-quantity" type="number" min="1" value="1"><button type="button" id="order-add-item">Agregar</button></div>
+                        <div id="order-items" class="order-items"></div>
+                        <label>Notas<textarea id="order-notes" rows="2"></textarea></label>
+                        <button class="order-primary" type="submit">Crear y reservar stock</button>
+                    </form>
+                    <section class="orders-card orders-table-card">
+                        <h2>Pedidos</h2>
+                        <div class="orders-table-wrap"><table><thead><tr><th>Pedido</th><th>Canal</th><th>Cliente / referencia</th><th>Sucursal</th><th>Productos</th><th>Estado</th><th></th></tr></thead><tbody id="orders-list"></tbody></table></div>
+                    </section>
+                </div>
+            </div>
+            <script src="/js/orders.js"></script>
+        </main>
+    </div>
+</body>
+</html>

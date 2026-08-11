@@ -14,6 +14,7 @@ router.get('/firstpass', checkAuth, allowPasswordChangeOnly, viewsController.ren
 router.get('/stock', checkAuth, requirePasswordChange, viewsController.renderStock)
 router.get('/products', checkAuth, requirePasswordChange, viewsController.renderProducts)
 router.get('/movements', checkAuth, requirePasswordChange, viewsController.renderMovements)
+router.get('/orders', checkAuth, requirePasswordChange, viewsController.renderOrders)
 router.get('/operations', checkAuth, requirePasswordChange, viewsController.renderOperations)
 router.get('/stats', checkAuth, requirePasswordChange, viewsController.renderStats)
 router.get('/branches', checkAuth, requirePasswordChange, viewsController.renderBranches)
