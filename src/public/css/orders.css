@@ -1,2 +1,90 @@
 .orders-container{padding:1.5rem;display:grid;gap:1.25rem}.orders-layout{display:grid;grid-template-columns:minmax(300px,420px) 1fr;gap:1.25rem}.orders-card,.orders-summary article{background:var(--bg-card,#fff);border:1px solid var(--border-color,#e2e8f0);border-radius:12px;padding:1.25rem}.orders-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem}.orders-summary article{display:flex;flex-direction:column}.orders-summary strong{font-size:1.7rem}.orders-summary span,.order-form p,.order-items small{color:var(--text-muted,#64748b)}.order-form{display:grid;gap:1rem;align-self:start}.order-form label{display:grid;gap:.4rem;font-weight:600}.order-form input,.order-form select,.order-form textarea{padding:.7rem;border:1px solid var(--border-color,#cbd5e1);border-radius:7px;background:var(--bg-input,#fff);color:var(--text-primary,#0f172a)}.order-add-line{display:grid;grid-template-columns:1fr auto;gap:.5rem}.order-add-line button,.order-primary,.orders-table-card button{border:0;border-radius:7px;padding:.65rem .85rem;cursor:pointer}.order-primary,.order-add-line button,.orders-table-card button{background:var(--primary,#2563eb);color:#fff}.order-items{display:grid;gap:.4rem}.order-items div{display:flex;justify-content:space-between;align-items:center;background:var(--bg-body,#f8fafc);padding:.6rem;border-radius:7px}.order-items button,.orders-table-card button.danger{background:#fee2e2;color:#b91c1c}.orders-table-wrap{overflow:auto}.orders-table-card table{width:100%;border-collapse:collapse}.orders-table-card th,.orders-table-card td{text-align:left;padding:.75rem;border-bottom:1px solid var(--border-color,#e2e8f0);vertical-align:top}.orders-table-card td:last-child{white-space:nowrap}.orders-table-card td button+button{margin-left:.4rem}.order-status{padding:.25rem .5rem;border-radius:999px}.order-status.reserved{background:#fef3c7;color:#92400e}.order-status.completed{background:#dcfce7;color:#166534}.order-status.cancelled{background:#fee2e2;color:#991b1b}.orders-message{padding:.8rem 1rem;border-radius:8px}.orders-message.success{background:#dcfce7;color:#166534}.orders-message.error{background:#fee2e2;color:#991b1b}.orders-message.hidden{display:none}@media(max-width:1000px){.orders-layout{grid-template-columns:1fr}.orders-summary{grid-template-columns:repeat(2,1fr)}}
 .branch-availability{display:grid;gap:.35rem;padding:.7rem;border:1px dashed var(--border-color,#cbd5e1);border-radius:8px;color:var(--text-muted,#64748b);font-size:.85rem}.branch-availability div{display:grid;grid-template-columns:1.5fr repeat(3,1fr);gap:.4rem}.order-items span{display:grid}.order-items span small{margin-top:.2rem}
+
+/* Keep wide order tables from stretching the form and the main layout. */
+.orders-container,
+.orders-layout,
+.orders-card,
+.orders-table-wrap,
+.order-form label,
+.order-items span {
+  min-width: 0;
+}
+
+.orders-container {
+  width: 100%;
+}
+
+.orders-layout {
+  grid-template-columns: minmax(280px, 380px) minmax(0, 1fr);
+}
+
+.order-form input,
+.order-form select,
+.order-form textarea {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.orders-table-card {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.orders-table-wrap {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+}
+
+.orders-table-card table {
+  min-width: 760px;
+}
+
+.branch-availability div {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.branch-availability strong {
+  grid-column: 1 / -1;
+}
+
+.branch-availability span,
+.order-items span {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1180px) {
+  .orders-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .order-form {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .orders-container {
+    padding: 1rem;
+  }
+
+  .orders-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .orders-card,
+  .orders-summary article {
+    padding: 1rem;
+  }
+
+  .branch-availability div {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .branch-availability strong {
+    grid-column: auto;
+  }
+}
