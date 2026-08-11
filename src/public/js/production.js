@@ -24,7 +24,12 @@ const selectedProduct = () => state.products.find(product => String(product.id) 
 
 const syncWorkProducts = () => {
     const type = $('work-type').value
-    const eligible = state.products.filter(product => type === 'manufacturing' ? product.is_manufacturable : product.is_customizable)
+    const artisanProductIds = new Set(state.personalizationMethods
+        .filter(item => item.method === 'artisan_metalwork')
+        .map(item => Number(item.product_id)))
+    const eligible = state.products.filter(product => type === 'manufacturing'
+        ? product.is_manufacturable
+        : product.is_customizable && artisanProductIds.has(Number(product.id)))
     const previous = $('work-output').value
     $('work-output').innerHTML = productOptions(eligible)
     if (eligible.some(product => String(product.id) === previous)) $('work-output').value = previous
@@ -35,9 +40,7 @@ const syncWorkDetails = () => {
     const type = $('work-type').value
     const product = selectedProduct()
     const quantity = Math.max(1, Number($('work-output-qty').value || 1))
-    const personalizationGroup = $('work-personalization-group')
     const artisanGroup = $('work-artisan-group')
-    personalizationGroup.hidden = type !== 'customization'
 
     if (!product) {
         artisanGroup.hidden = false
@@ -52,12 +55,8 @@ const syncWorkDetails = () => {
             ? `<strong>Materiales que saldrán del stock:</strong><ul>${recipe.map(item => `<li>${esc(item.material_name)}: ${Number(item.quantity_per_unit) * quantity}</li>`).join('')}</ul>`
             : '<strong>Sin materiales propios:</strong> el artesano aporta los insumos. Solo se registrará el producto terminado que debe volver.'
     } else {
-        const methods = state.personalizationMethods.filter(item => Number(item.product_id) === Number(product.id)).map(item => item.method)
-        const previousMethod = $('work-personalization-method').value
-        $('work-personalization-method').innerHTML = methods.map(method => `<option value="${method}">${method === 'laser_internal' ? 'Láser en taller Mercedes' : 'Plata, alpaca o dijes con artesano'}</option>`).join('')
-        if (methods.includes(previousMethod)) $('work-personalization-method').value = previousMethod
-        artisanGroup.hidden = $('work-personalization-method').value === 'laser_internal'
-        $('work-recipe-preview').innerHTML = `<strong>Producto que pasa a personalización:</strong> ${esc(product.name)} x${quantity}. La unidad deja de estar disponible hasta que finalice el trabajo.`
+        artisanGroup.hidden = false
+        $('work-recipe-preview').innerHTML = `<strong>Producto que se entrega al artesano:</strong> ${esc(product.name)} x${quantity}. La unidad deja de estar disponible mientras se agregan los detalles de plata, alpaca o dijes.`
     }
     if (artisanGroup.hidden) $('work-artisan').value = ''
 }
@@ -106,7 +105,7 @@ const render = () => {
 
     $('artisan-list').innerHTML = state.artisans.map(a => `<tr><td>${esc(a.name)}</td><td>${esc(a.branch_name)}</td><td>${esc(a.specialty || '-')}</td><td>${esc(a.phone || '-')}</td></tr>`).join('') || '<tr><td colspan="4">Todavía no hay artesanos.</td></tr>'
     $('work-list').innerHTML = state.workOrders.map(order => `<tr>
-        <td><strong>${esc(order.code)}</strong><small>${order.type === 'customization' ? 'Personalización' : 'Fabricación'}</small></td>
+        <td><strong>${esc(order.code)}</strong><small>${order.type === 'customization' ? 'Trabajo artesanal' : 'Fabricación'}</small></td>
         <td>${esc(order.artisan_name || 'Taller interno Mercedes')}</td><td>${esc(order.branch_name)}</td>
         <td>${esc(order.custody || 'Sin materiales propios')}</td><td>${esc(order.outputs || '-')}</td>
         <td><span class="status ${order.status}">${esc(labelStatus(order.status))}</span></td>
@@ -130,7 +129,6 @@ document.querySelectorAll('.tab').forEach(button => button.addEventListener('cli
 $('work-type').addEventListener('change', syncWorkProducts)
 $('work-output').addEventListener('change', syncWorkDetails)
 $('work-output-qty').addEventListener('input', syncWorkDetails)
-$('work-personalization-method').addEventListener('change', syncWorkDetails)
 
 $('artisan-form').addEventListener('submit', async event => {
     event.preventDefault()
@@ -145,7 +143,6 @@ $('work-form').addEventListener('submit', async event => {
     try {
         await request('/api/operations-management/work-orders', { method: 'POST', body: JSON.stringify({
             type: $('work-type').value, origin_branch_id: $('work-branch').value, artisan_id: $('work-artisan').value || null,
-            personalization_method: $('work-type').value === 'customization' ? $('work-personalization-method').value : null,
             outputs: [{ product_id: $('work-output').value, quantity: $('work-output-qty').value }],
             artisan_cost: $('work-cost').value || null, notes: $('work-notes').value
         }) })

@@ -92,11 +92,10 @@ export class OperationsModel {
                 }))
             } else if (data.type === 'customization') {
                 if (!product.is_customizable) throw new Error('El producto no esta habilitado para personalizacion')
-                personalizationMethod = data.personalization_method
+                personalizationMethod = 'artisan_metalwork'
                 const [methods] = await connection.execute(`SELECT method FROM product_personalization_methods WHERE product_id = ? AND is_enabled = TRUE`, [product.id])
                 if (!methods.some(item => item.method === personalizationMethod)) throw new Error('Metodo de personalizacion no habilitado para este producto')
-                if (personalizationMethod === 'artisan_metalwork' && !artisanId) throw new Error('Los apliques de plata o alpaca requieren un artesano')
-                if (personalizationMethod === 'laser_internal') artisanId = null
+                if (!artisanId) throw new Error('Los apliques de plata, alpaca o dijes requieren seleccionar un artesano')
                 materials = [{ product_id: product.id, quantity: Number(output.quantity) }]
             }
 

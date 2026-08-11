@@ -1,5 +1,5 @@
 const positiveInt = value => Number.isInteger(Number(value)) && Number(value) > 0
-const allowedWorkTypes = new Set(['manufacturing', 'customization', 'external_commission'])
+const allowedWorkTypes = new Set(['manufacturing', 'customization'])
 const allowedPackageTypes = new Set(['wholesale_order', 'replenishment', 'work_order', 'other'])
 
 const fail = (res, error) => res.status(400).json({ status: 'error', message: error.message || 'Operacion invalida' })

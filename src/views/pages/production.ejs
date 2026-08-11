@@ -22,12 +22,11 @@
                             <h3>Nueva orden de trabajo</h3>
                             <label>Tipo<select id="work-type" required>
                                 <option value="manufacturing">Fabricación</option>
-                                <option value="customization">Personalización</option>
+                                <option value="customization">Trabajo con artesano: plata, alpaca o dijes</option>
                             </select></label>
                             <label>Centro de origen<select id="work-branch" required></select></label>
                             <label>Producto<select id="work-output" required></select></label>
                             <label>Cantidad<input id="work-output-qty" type="number" min="1" required value="1"></label>
-                            <label id="work-personalization-group" hidden>Método de personalización<select id="work-personalization-method"></select></label>
                             <label id="work-artisan-group">Artesano<select id="work-artisan"><option value="">Seleccionar artesano</option></select></label>
                             <div class="recipe-preview" id="work-recipe-preview">
                                 Seleccioná un producto para ver los materiales que se descontarán.
