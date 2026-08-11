@@ -64,6 +64,66 @@
                 </div>
             </div>
 
+            <section class="product-operational-section">
+                <div class="operational-heading">
+                    <div>
+                        <h4>Comportamiento en stock y producción</h4>
+                        <p>Esta información se define junto con el producto y puede modificarse después.</p>
+                    </div>
+                </div>
+
+                <div class="operational-grid">
+                    <div class="form-group">
+                        <label>Tipo de producto</label>
+                        <select id="prod-item-type" required>
+                            <option value="finished">Producto terminado</option>
+                            <option value="raw_material">Materia prima</option>
+                            <option value="merchandising">Merchandising</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Centro habitual</label>
+                        <select id="prod-production-branch"><option value="">Sin centro fijo</option></select>
+                    </div>
+                </div>
+
+                <div class="operational-checks">
+                    <label><input type="checkbox" id="prod-is-sellable" checked> Se vende</label>
+                    <label><input type="checkbox" id="prod-is-manufacturable"> Se fabrica</label>
+                    <label><input type="checkbox" id="prod-is-customizable"> Se personaliza</label>
+                </div>
+
+                <div class="form-group" id="prod-production-method-group" hidden>
+                    <label>Método de producción</label>
+                    <select id="prod-production-method">
+                        <option value="artisan">Artesano externo</option>
+                        <option value="internal_workshop">Taller interno</option>
+                        <option value="purchased">Producto comprado</option>
+                    </select>
+                </div>
+
+                <fieldset class="operational-fieldset">
+                    <legend>Canales habilitados</legend>
+                    <div id="prod-channel-options" class="operational-checks"></div>
+                    <small>Una materia prima también puede venderse, pero solo aparecerá en los canales marcados.</small>
+                </fieldset>
+
+                <fieldset class="operational-fieldset" id="prod-personalization-section" hidden>
+                    <legend>Métodos de personalización</legend>
+                    <div class="operational-checks">
+                        <label><input type="checkbox" value="laser_internal" name="prod-personalization-method"> Láser en taller Mercedes</label>
+                        <label><input type="checkbox" value="artisan_metalwork" name="prod-personalization-method"> Plata, alpaca o dijes con artesano</label>
+                    </div>
+                </fieldset>
+
+                <fieldset class="operational-fieldset" id="prod-recipe-section" hidden>
+                    <legend>Receta por unidad producida</legend>
+                    <p class="operational-help">Indicá únicamente materiales propios. Virolas, cuero u otros insumos aportados por el artesano no se cargan.</p>
+                    <div id="prod-recipe-lines" class="recipe-lines"></div>
+                    <button type="button" class="btn-select-image" id="btn-add-recipe-line">Agregar materia prima</button>
+                </fieldset>
+            </section>
+
             <div class="modal-actions">
                 <button type="button" class="btn-cancel" data-target="modal-add-product">Cancelar</button>
                 <button type="submit" class="btn-confirm" id="btn-save-product">Guardar Producto</button>

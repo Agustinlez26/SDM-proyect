@@ -134,7 +134,8 @@ La migración es idempotente. Crea las materias primas iniciales (calabazas y ba
 los canales sin precios, artesanos, órdenes de trabajo, reservas mayoristas y bultos. La pantalla
 de administración queda disponible en `/production` para usuarios administradores.
 
-- Al enviar una orden, los materiales salen del stock disponible y quedan en custodia del artesano.
+- Los productos definen tipo, canales, centro, método de producción, personalizaciones y receta desde su alta/edición.
+- Al iniciar una orden, la receta calcula los materiales que salen del stock y quedan en producción.
 - Al rendirla, vuelven los productos terminados y los materiales devueltos; también se registran descartes.
 - Un pedido mayorista reserva stock del punto de retiro. Los egresos comunes no pueden consumir esa reserva.
-- Un bulto puede vincularse al pedido mayorista y, opcionalmente, al movimiento de envío ya existente.
+- Por ahora, cada bulto representa un cliente mayorista y admite varios productos y cantidades.

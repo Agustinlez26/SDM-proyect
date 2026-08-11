@@ -19,6 +19,11 @@ export class OperationsController {
         } catch (error) { fail(res, error) }
     }
 
+    catalogs = async (_req, res) => {
+        try { res.json({ status: 'success', data: await this.model.getCatalogs() }) }
+        catch (error) { fail(res, error) }
+    }
+
     createArtisan = async (req, res) => {
         try {
             if (!req.body.name?.trim() || !positiveInt(req.body.branch_id)) throw new Error('Nombre y centro del artesano son obligatorios')
@@ -30,13 +35,12 @@ export class OperationsController {
     createWorkOrder = async (req, res) => {
         try {
             const data = req.body
-            if (!allowedWorkTypes.has(data.type) || !positiveInt(data.origin_branch_id) || !positiveInt(data.artisan_id)) {
-                throw new Error('Tipo, origen y artesano son obligatorios')
+            if (!allowedWorkTypes.has(data.type) || !positiveInt(data.origin_branch_id)) {
+                throw new Error('Tipo y centro de origen son obligatorios')
             }
-            if (!Array.isArray(data.outputs) || !data.outputs.length || data.outputs.some(i => !positiveInt(i.product_id) || !positiveInt(i.quantity))) {
+            if (!Array.isArray(data.outputs) || data.outputs.length !== 1 || data.outputs.some(i => !positiveInt(i.product_id) || !positiveInt(i.quantity))) {
                 throw new Error('La orden necesita al menos un producto terminado y una cantidad valida')
             }
-            if ((data.materials || []).some(i => !positiveInt(i.product_id) || !positiveInt(i.quantity))) throw new Error('Materiales invalidos')
             const id = await this.model.createWorkOrder(data, req.user.id)
             res.status(201).json({ status: 'success', data: { id } })
         } catch (error) { fail(res, error) }
@@ -83,7 +87,8 @@ export class OperationsController {
     createPackage = async (req, res) => {
         try {
             const data = req.body
-            if (!allowedPackageTypes.has(data.package_type)) throw new Error('Tipo de bulto invalido')
+            if (!allowedPackageTypes.has(data.package_type) || data.package_type !== 'wholesale_order') throw new Error('Por ahora solo se permiten bultos de pedidos mayoristas')
+            if (!data.customer_reference?.trim()) throw new Error('El cliente o destinatario es obligatorio')
             if (!Array.isArray(data.items) || !data.items.length || data.items.some(i => !positiveInt(i.product_id) || !positiveInt(i.quantity))) {
                 throw new Error('El bulto necesita productos y cantidades validas')
             }
@@ -94,7 +99,7 @@ export class OperationsController {
 
     updateProductOperations = async (req, res) => {
         try {
-            if (!['finished', 'raw_material', 'component'].includes(req.body.item_type)) throw new Error('Tipo de producto invalido')
+            if (!['finished', 'raw_material', 'merchandising'].includes(req.body.item_type)) throw new Error('Tipo de producto invalido')
             await this.model.updateProductOperations(Number(req.params.id), req.body)
             res.json({ status: 'success' })
         } catch (error) { fail(res, error) }

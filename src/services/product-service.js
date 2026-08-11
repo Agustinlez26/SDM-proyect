@@ -37,7 +37,9 @@ export class ProductService {
             is_active: true
         }
 
-        return await this.productModel.create(producToSave)
+        const productId = await this.productModel.create(producToSave)
+        await this.productModel.saveOperationalConfig(productId, data)
+        return productId
     }
 
     /**
@@ -94,7 +96,16 @@ export class ProductService {
             productToUpdate.is_active = currentProduct.is_active
         }
 
-        return await this.productModel.update(id, productToUpdate)
+        const updated = await this.productModel.update(id, productToUpdate)
+        const operationalData = {
+            is_manufacturable: data.is_manufacturable ?? currentProduct.is_manufacturable,
+            is_customizable: data.is_customizable ?? currentProduct.is_customizable,
+            channels: data.channels ?? currentProduct.channels,
+            personalization_methods: data.personalization_methods ?? currentProduct.personalization_methods,
+            recipe: data.recipe ?? currentProduct.recipe
+        }
+        await this.productModel.saveOperationalConfig(id, operationalData)
+        return updated || true
     }
 
     async #generateUniqueSku(productName) {

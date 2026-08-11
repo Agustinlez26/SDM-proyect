@@ -1,13 +1,15 @@
-let state = { products: [], branches: [], channels: [], artisans: [], workOrders: [], wholesaleOrders: [], packages: [] }
+let state = { products: [], branches: [], artisans: [], workOrders: [], packages: [], recipes: [], personalizationMethods: [] }
+let packageItems = [{ product_id: '', quantity: 1 }]
 
 const $ = id => document.getElementById(id)
 const esc = value => String(value ?? '').replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char])
-const labelStatus = value => ({ draft: 'Borrador', sent: 'Enviado', in_progress: 'En proceso', partial: 'Parcial', completed: 'Completado', reserved: 'Reservado', in_transit: 'En transito', ready: 'Listo', delivered: 'Entregado', prepared: 'Preparado' }[value] || value)
+const labelStatus = value => ({ draft: 'Borrador', sent: 'Enviado', in_progress: 'En proceso', partial: 'Parcial', completed: 'Completado', prepared: 'Preparado', in_transit: 'En viaje', delivered: 'Entregado' }[value] || value)
+const productOptions = (items, placeholder = 'Seleccionar producto') => `<option value="">${placeholder}</option>${items.map(item => `<option value="${item.id}">${esc(item.name)} (${esc(item.sku)})</option>`).join('')}`
 
 const request = async (url, options = {}) => {
     const response = await fetch(url, { headers: { 'Content-Type': 'application/json' }, ...options })
     const body = await response.json().catch(() => ({}))
-    if (!response.ok) throw new Error(body.message || 'No se pudo completar la operacion')
+    if (!response.ok) throw new Error(body.message || 'No se pudo completar la operación')
     return body.data
 }
 
@@ -18,46 +20,105 @@ const notify = (message, error = false) => {
     setTimeout(() => box.classList.add('hidden'), 4500)
 }
 
-const options = (items, placeholder = 'Seleccionar') => `<option value="">${placeholder}</option>${items.map(item => `<option value="${item.id}">${esc(item.name)}${item.sku ? ` (${esc(item.sku)})` : ''}</option>`).join('')}`
+const selectedProduct = () => state.products.find(product => String(product.id) === $('work-output').value)
 
-const hydrateSelects = () => {
-    const productOptions = options(state.products, 'Seleccionar producto')
-    for (const id of ['work-material', 'work-output', 'wholesale-product', 'package-product', 'catalog-product']) $(id).innerHTML = productOptions
-    const branchOptions = options(state.branches, 'Seleccionar centro')
-    for (const id of ['work-branch', 'artisan-branch', 'wholesale-branch']) $(id).innerHTML = branchOptions
-    $('catalog-branch').innerHTML = `<option value="">Sin centro fijo</option>${state.branches.map(b => `<option value="${b.id}">${esc(b.name)}</option>`).join('')}`
-    $('work-artisan').innerHTML = options(state.artisans.filter(a => a.is_active), 'Seleccionar artesano')
-    $('package-order').innerHTML = `<option value="">Sin pedido</option>${state.wholesaleOrders.filter(o => !['delivered', 'cancelled'].includes(o.status)).map(o => `<option value="${o.id}">${esc(o.order_number)} - ${esc(o.customer_reference)}</option>`).join('')}`
-    $('channel-checks').innerHTML = state.channels.map(c => `<label><input type="checkbox" data-channel="${c.id}" checked> ${esc(c.name)}</label>`).join('')
+const syncWorkProducts = () => {
+    const type = $('work-type').value
+    const eligible = state.products.filter(product => type === 'manufacturing' ? product.is_manufacturable : product.is_customizable)
+    const previous = $('work-output').value
+    $('work-output').innerHTML = productOptions(eligible)
+    if (eligible.some(product => String(product.id) === previous)) $('work-output').value = previous
+    syncWorkDetails()
+}
+
+const syncWorkDetails = () => {
+    const type = $('work-type').value
+    const product = selectedProduct()
+    const quantity = Math.max(1, Number($('work-output-qty').value || 1))
+    const personalizationGroup = $('work-personalization-group')
+    const artisanGroup = $('work-artisan-group')
+    personalizationGroup.hidden = type !== 'customization'
+
+    if (!product) {
+        artisanGroup.hidden = false
+        $('work-recipe-preview').innerHTML = 'Seleccioná un producto para ver qué se descontará del stock.'
+        return
+    }
+
+    if (type === 'manufacturing') {
+        artisanGroup.hidden = product.production_method === 'internal_workshop'
+        const recipe = state.recipes.filter(item => Number(item.output_product_id) === Number(product.id))
+        $('work-recipe-preview').innerHTML = recipe.length
+            ? `<strong>Materiales que saldrán del stock:</strong><ul>${recipe.map(item => `<li>${esc(item.material_name)}: ${Number(item.quantity_per_unit) * quantity}</li>`).join('')}</ul>`
+            : '<strong>Sin materiales propios:</strong> el artesano aporta los insumos. Solo se registrará el producto terminado que debe volver.'
+    } else {
+        const methods = state.personalizationMethods.filter(item => Number(item.product_id) === Number(product.id)).map(item => item.method)
+        const previousMethod = $('work-personalization-method').value
+        $('work-personalization-method').innerHTML = methods.map(method => `<option value="${method}">${method === 'laser_internal' ? 'Láser en taller Mercedes' : 'Plata, alpaca o dijes con artesano'}</option>`).join('')
+        if (methods.includes(previousMethod)) $('work-personalization-method').value = previousMethod
+        artisanGroup.hidden = $('work-personalization-method').value === 'laser_internal'
+        $('work-recipe-preview').innerHTML = `<strong>Producto que pasa a personalización:</strong> ${esc(product.name)} x${quantity}. La unidad deja de estar disponible hasta que finalice el trabajo.`
+    }
+    if (artisanGroup.hidden) $('work-artisan').value = ''
+}
+
+const renderPackageLines = () => {
+    $('package-item-lines').innerHTML = packageItems.map((item, index) => `
+        <div class="package-item-line">
+            <select data-package-product="${index}" required>${productOptions(state.products)}</select>
+            <input data-package-quantity="${index}" type="number" min="1" value="${item.quantity}" required aria-label="Cantidad">
+            <button type="button" data-package-remove="${index}" title="Quitar">×</button>
+        </div>
+    `).join('')
+    packageItems.forEach((item, index) => {
+        const select = document.querySelector(`[data-package-product="${index}"]`)
+        if (select) select.value = item.product_id || ''
+    })
+    document.querySelectorAll('[data-package-product]').forEach(select => select.addEventListener('change', () => {
+        packageItems[Number(select.dataset.packageProduct)].product_id = Number(select.value) || ''
+    }))
+    document.querySelectorAll('[data-package-quantity]').forEach(input => input.addEventListener('change', () => {
+        packageItems[Number(input.dataset.packageQuantity)].quantity = Math.max(1, Number(input.value || 1))
+    }))
+    document.querySelectorAll('[data-package-remove]').forEach(button => button.addEventListener('click', () => {
+        if (packageItems.length === 1) return
+        packageItems.splice(Number(button.dataset.packageRemove), 1)
+        renderPackageLines()
+    }))
+}
+
+const hydrate = () => {
+    const branchOptions = `<option value="">Seleccionar centro</option>${state.branches.map(branch => `<option value="${branch.id}">${esc(branch.name)}</option>`).join('')}`
+    $('work-branch').innerHTML = branchOptions
+    $('artisan-branch').innerHTML = branchOptions
+    $('work-artisan').innerHTML = `<option value="">Seleccionar artesano</option>${state.artisans.filter(a => a.is_active).map(a => `<option value="${a.id}">${esc(a.name)} - ${esc(a.branch_name)}</option>`).join('')}`
+    syncWorkProducts()
+    renderPackageLines()
 }
 
 const render = () => {
     $('summary-grid').innerHTML = [
-        ['Ordenes activas', state.workOrders.filter(o => !['completed', 'cancelled'].includes(o.status)).length],
-        ['En poder de artesanos', state.workOrders.filter(o => ['sent', 'in_progress', 'partial'].includes(o.status)).length],
-        ['Pedidos con faltante', state.wholesaleOrders.filter(o => o.status === 'partial').length],
-        ['Bultos preparados', state.packages.filter(p => p.status === 'prepared').length]
+        ['Órdenes activas', state.workOrders.filter(order => !['completed', 'cancelled'].includes(order.status)).length],
+        ['Con artesanos o taller', state.workOrders.filter(order => ['sent', 'in_progress', 'partial'].includes(order.status)).length],
+        ['Artesanos activos', state.artisans.filter(artisan => artisan.is_active).length],
+        ['Bultos preparados', state.packages.filter(pack => pack.status === 'prepared').length]
     ].map(([name, value]) => `<article class="summary-card"><strong>${value}</strong><span>${name}</span></article>`).join('')
 
-    $('artisan-list').innerHTML = state.artisans.map(a => `<tr><td>${esc(a.name)}</td><td>${esc(a.branch_name)}</td><td>${esc(a.specialty || '-')}</td><td>${esc(a.phone || '-')}</td></tr>`).join('') || '<tr><td colspan="4">Todavia no hay artesanos.</td></tr>'
-
-    $('work-list').innerHTML = state.workOrders.map(o => `<tr>
-        <td><strong>${esc(o.code)}</strong><small>${esc(o.type)}</small></td><td>${esc(o.artisan_name)}</td><td>${esc(o.branch_name)}</td>
-        <td>${esc(o.custody || 'Sin materiales propios')}</td><td>${esc(o.outputs || '-')}</td><td><span class="status ${o.status}">${esc(labelStatus(o.status))}</span></td>
-        <td class="actions">${o.status === 'draft' ? `<button data-send="${o.id}">Enviar</button>` : ''}${['sent', 'in_progress', 'partial'].includes(o.status) ? `<button data-receive="${o.id}">Rendir</button>` : ''}</td>
-    </tr>`).join('') || '<tr><td colspan="7">Todavia no hay ordenes.</td></tr>'
-
-    $('wholesale-list').innerHTML = state.wholesaleOrders.map(o => `<tr><td><strong>${esc(o.order_number)}</strong></td><td>${esc(o.customer_reference)}</td><td>${esc(o.pickup_branch)}</td><td>${esc(o.items)}</td><td><span class="status ${o.status}">${esc(labelStatus(o.status))}</span></td><td class="actions">${['reserved', 'ready', 'partial'].includes(o.status) ? `<button data-deliver="${o.id}">Entregar reserva</button>` : ''}</td></tr>`).join('') || '<tr><td colspan="6">Todavia no hay pedidos.</td></tr>'
-
-    $('package-list').innerHTML = state.packages.map(p => `<tr><td><strong>${esc(p.package_code)}</strong></td><td>${esc(p.package_type)}</td><td>${esc(p.order_number || '-')}</td><td>${esc(p.items || '-')}</td><td><span class="status ${p.status}">${esc(labelStatus(p.status))}</span></td></tr>`).join('') || '<tr><td colspan="5">Todavia no hay bultos.</td></tr>'
-    hydrateSelects()
+    $('artisan-list').innerHTML = state.artisans.map(a => `<tr><td>${esc(a.name)}</td><td>${esc(a.branch_name)}</td><td>${esc(a.specialty || '-')}</td><td>${esc(a.phone || '-')}</td></tr>`).join('') || '<tr><td colspan="4">Todavía no hay artesanos.</td></tr>'
+    $('work-list').innerHTML = state.workOrders.map(order => `<tr>
+        <td><strong>${esc(order.code)}</strong><small>${order.type === 'customization' ? 'Personalización' : 'Fabricación'}</small></td>
+        <td>${esc(order.artisan_name || 'Taller interno Mercedes')}</td><td>${esc(order.branch_name)}</td>
+        <td>${esc(order.custody || 'Sin materiales propios')}</td><td>${esc(order.outputs || '-')}</td>
+        <td><span class="status ${order.status}">${esc(labelStatus(order.status))}</span></td>
+        <td class="actions">${order.status === 'draft' ? `<button data-send="${order.id}">Iniciar</button>` : ''}${['sent', 'in_progress', 'partial'].includes(order.status) ? `<button data-receive="${order.id}">Rendir</button>` : ''}</td>
+    </tr>`).join('') || '<tr><td colspan="7">Todavía no hay órdenes.</td></tr>'
+    $('package-list').innerHTML = state.packages.map(pack => `<tr><td><strong>${esc(pack.package_code)}</strong></td><td>${esc(pack.customer_reference)}</td><td>${esc(pack.items || '-')}</td><td><span class="status ${pack.status}">${esc(labelStatus(pack.status))}</span></td></tr>`).join('') || '<tr><td colspan="4">Todavía no hay bultos.</td></tr>'
+    hydrate()
 }
 
 const load = async () => {
-    try {
-        state = await request('/api/operations-management/overview')
-        render()
-    } catch (error) { notify(`${error.message}. Ejecuta primero npm run migrate:operations.`, true) }
+    try { state = await request('/api/operations-management/overview'); render() }
+    catch (error) { notify(`${error.message}. Ejecutá primero la migración operativa.`, true) }
 }
 
 document.querySelectorAll('.tab').forEach(button => button.addEventListener('click', () => {
@@ -65,6 +126,11 @@ document.querySelectorAll('.tab').forEach(button => button.addEventListener('cli
     button.classList.add('active')
     document.querySelector(`[data-panel="${button.dataset.tab}"]`).classList.add('active')
 }))
+
+$('work-type').addEventListener('change', syncWorkProducts)
+$('work-output').addEventListener('change', syncWorkDetails)
+$('work-output-qty').addEventListener('input', syncWorkDetails)
+$('work-personalization-method').addEventListener('change', syncWorkDetails)
 
 $('artisan-form').addEventListener('submit', async event => {
     event.preventDefault()
@@ -76,14 +142,14 @@ $('artisan-form').addEventListener('submit', async event => {
 
 $('work-form').addEventListener('submit', async event => {
     event.preventDefault()
-    const material = $('work-material').value && $('work-material-qty').value ? [{ product_id: $('work-material').value, quantity: $('work-material-qty').value }] : []
     try {
         await request('/api/operations-management/work-orders', { method: 'POST', body: JSON.stringify({
-            type: $('work-type').value, origin_branch_id: $('work-branch').value, artisan_id: $('work-artisan').value,
-            materials: material, outputs: [{ product_id: $('work-output').value, quantity: $('work-output-qty').value }],
+            type: $('work-type').value, origin_branch_id: $('work-branch').value, artisan_id: $('work-artisan').value || null,
+            personalization_method: $('work-type').value === 'customization' ? $('work-personalization-method').value : null,
+            outputs: [{ product_id: $('work-output').value, quantity: $('work-output-qty').value }],
             artisan_cost: $('work-cost').value || null, notes: $('work-notes').value
         }) })
-        event.target.reset(); notify('Orden creada como borrador'); await load()
+        event.target.reset(); $('work-output-qty').value = 1; notify('Orden creada como borrador'); await load()
     } catch (error) { notify(error.message, true) }
 })
 
@@ -92,68 +158,45 @@ $('work-list').addEventListener('click', async event => {
     const receiveId = event.target.dataset.receive
     try {
         if (sendId) {
-            if (!confirm('Se descontaran los materiales del stock del centro y quedaran en custodia del artesano. ¿Continuar?')) return
+            if (!confirm('Los materiales dejarán el stock disponible y pasarán a producción. ¿Continuar?')) return
             await request(`/api/operations-management/work-orders/${sendId}/send`, { method: 'POST' })
-            notify('Orden enviada al artesano')
+            notify('Producción iniciada')
         }
         if (receiveId) {
             const detail = await request(`/api/operations-management/work-orders/${receiveId}`)
-            const materials = detail.materials.map(m => {
-                const custody = m.quantity_sent - m.quantity_consumed - m.quantity_returned - m.quantity_discarded
-                const returned = Number(prompt(`${m.product_name}: hay ${custody} con el artesano. ¿Cuantos vuelven sin usar?`, '0') || 0)
-                const discarded = Number(prompt(`${m.product_name}: ¿Cuantos se descartan/rechazan?`, '0') || 0)
-                return { id: m.id, returned, discarded, consumed: Math.max(0, custody - returned - discarded) }
+            const materials = detail.materials.map(material => {
+                const custody = material.quantity_sent - material.quantity_consumed - material.quantity_returned - material.quantity_discarded
+                const returned = Number(prompt(`${material.product_name}: hay ${custody} en producción. ¿Cuántos vuelven sin usar?`, '0') || 0)
+                const discarded = Number(prompt(`${material.product_name}: ¿Cuántos se descartan?`, '0') || 0)
+                return { id: material.id, returned, discarded, consumed: Math.max(0, custody - returned - discarded) }
             })
-            const outputs = detail.outputs.map(o => {
-                const pending = o.quantity_requested - o.quantity_received - o.quantity_rejected
-                const received = Number(prompt(`${o.product_name}: faltan rendir ${pending}. ¿Cuantos productos terminados ingresan?`, String(pending)) || 0)
-                return { id: o.id, received, rejected: Math.max(0, pending - received) }
+            const outputs = detail.outputs.map(output => {
+                const pending = output.quantity_requested - output.quantity_received - output.quantity_rejected
+                const received = Number(prompt(`${output.product_name}: faltan ${pending}. ¿Cuántos ingresan terminados?`, String(pending)) || 0)
+                return { id: output.id, received, rejected: Math.max(0, pending - received) }
             })
             await request(`/api/operations-management/work-orders/${receiveId}/receive`, { method: 'POST', body: JSON.stringify({ materials, outputs }) })
-            notify('Rendicion registrada y stock actualizado')
+            notify('Rendición registrada y stock actualizado')
         }
         if (sendId || receiveId) await load()
     } catch (error) { notify(error.message, true) }
 })
 
-$('wholesale-form').addEventListener('submit', async event => {
-    event.preventDefault()
-    try {
-        await request('/api/operations-management/wholesale-orders', { method: 'POST', body: JSON.stringify({ customer_reference: $('wholesale-customer').value, pickup_branch_id: $('wholesale-branch').value, notes: $('wholesale-notes').value, items: [{ product_id: $('wholesale-product').value, quantity: $('wholesale-qty').value }] }) })
-        event.target.reset(); notify('Pedido creado y stock disponible reservado'); await load()
-    } catch (error) { notify(error.message, true) }
-})
-
-$('wholesale-list').addEventListener('click', async event => {
-    const id = event.target.dataset.deliver
-    if (!id || !confirm('¿Registrar el egreso mayorista del stock reservado en este punto de retiro?')) return
-    try { await request(`/api/operations-management/wholesale-orders/${id}/deliver`, { method: 'POST' }); notify('Entrega mayorista registrada'); await load() }
-    catch (error) { notify(error.message, true) }
+$('btn-add-package-item').addEventListener('click', () => {
+    packageItems.push({ product_id: '', quantity: 1 })
+    renderPackageLines()
 })
 
 $('package-form').addEventListener('submit', async event => {
     event.preventDefault()
+    const items = packageItems.filter(item => item.product_id && item.quantity > 0)
+    if (!items.length) return notify('Agregá al menos un producto al bulto', true)
     try {
-        await request('/api/operations-management/packages', { method: 'POST', body: JSON.stringify({ package_type: $('package-type').value, wholesale_order_id: $('package-order').value || null, notes: $('package-notes').value, items: [{ product_id: $('package-product').value, quantity: $('package-qty').value }] }) })
-        event.target.reset(); notify('Bulto preparado y vinculado'); await load()
-    } catch (error) { notify(error.message, true) }
-})
-
-$('catalog-product').addEventListener('change', () => {
-    const product = state.products.find(p => String(p.id) === $('catalog-product').value)
-    if (!product) return
-    $('catalog-type').value = product.item_type
-    $('catalog-sellable').checked = Boolean(product.is_sellable)
-    $('catalog-manufacturable').checked = Boolean(product.is_manufacturable)
-    $('catalog-customizable').checked = Boolean(product.is_customizable)
-})
-
-$('catalog-form').addEventListener('submit', async event => {
-    event.preventDefault()
-    const id = $('catalog-product').value
-    try {
-        await request(`/api/operations-management/products/${id}`, { method: 'PATCH', body: JSON.stringify({ item_type: $('catalog-type').value, is_sellable: $('catalog-sellable').checked, is_manufacturable: $('catalog-manufacturable').checked, is_customizable: $('catalog-customizable').checked, production_branch_id: $('catalog-branch').value || null, channels: [...document.querySelectorAll('[data-channel]')].map(box => ({ id: Number(box.dataset.channel), is_enabled: box.checked })) }) })
-        notify('Reglas operativas guardadas'); await load()
+        await request('/api/operations-management/packages', { method: 'POST', body: JSON.stringify({
+            package_type: 'wholesale_order', customer_reference: $('package-customer').value,
+            notes: $('package-notes').value, items
+        }) })
+        event.target.reset(); packageItems = [{ product_id: '', quantity: 1 }]; notify('Bulto mayorista preparado'); await load()
     } catch (error) { notify(error.message, true) }
 })
 

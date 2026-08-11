@@ -6,6 +6,7 @@ const router = Router()
 router.use(checkAuth, isAdmin)
 
 router.get('/overview', operationsController.overview)
+router.get('/catalogs', operationsController.catalogs)
 router.post('/artisans', operationsController.createArtisan)
 router.post('/work-orders', operationsController.createWorkOrder)
 router.get('/work-orders/:id', operationsController.getWorkOrder)

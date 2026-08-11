@@ -54,10 +54,11 @@ CREATE TABLE IF NOT EXISTS products (
     url_img_original VARCHAR(255) NOT NULL,
     url_img_small    VARCHAR(255) NOT NULL,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    item_type ENUM('finished','raw_material','component') NOT NULL DEFAULT 'finished',
+    item_type ENUM('finished','raw_material','merchandising') NOT NULL DEFAULT 'finished',
     is_sellable BOOLEAN NOT NULL DEFAULT TRUE,
     is_manufacturable BOOLEAN NOT NULL DEFAULT FALSE,
     is_customizable BOOLEAN NOT NULL DEFAULT FALSE,
+    production_method ENUM('purchased','internal_workshop','artisan') NOT NULL DEFAULT 'purchased',
     production_branch_id INT UNSIGNED NULL,
     FOREIGN KEY (category_id) REFERENCES product_categories(id)
 );

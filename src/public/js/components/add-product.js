@@ -5,6 +5,8 @@
 let isEditing = false;
 let selectedProductImageFile = null;
 let productImageObjectUrl = null;
+let operationalCatalogs = { products: [], branches: [], channels: [] };
+let recipeDraft = [];
 
 const MAX_PRODUCT_IMAGE_SIZE = 20 * 1024 * 1024;
 
@@ -51,7 +53,32 @@ document.addEventListener('DOMContentLoaded', () => {
     initAddProductSocket()
     setupProductModalListeners();
     fetchProductCategories();
+    fetchOperationalCatalogs();
+    setupOperationalProductListeners();
 });
+
+const escapeProductText = value => String(value ?? '').replace(/[&<>"']/g, char => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+})[char]);
+
+async function fetchOperationalCatalogs() {
+    try {
+        const response = await fetch('/api/operations-management/catalogs');
+        const json = await response.json();
+        if (!response.ok) throw new Error(json.message || 'No se pudo cargar la configuración operativa');
+        operationalCatalogs = json.data;
+
+        const branchSelect = document.getElementById('prod-production-branch');
+        branchSelect.innerHTML = '<option value="">Sin centro fijo</option>' + operationalCatalogs.branches
+            .map(branch => `<option value="${branch.id}">${escapeProductText(branch.name)}</option>`).join('');
+
+        document.getElementById('prod-channel-options').innerHTML = operationalCatalogs.channels
+            .map(channel => `<label><input type="checkbox" name="prod-channel" value="${channel.id}" checked> ${escapeProductText(channel.name)}</label>`).join('');
+        renderRecipeLines();
+    } catch (error) {
+        console.error(error);
+    }
+}
 
 function initAddProductSocket() {
     const socket = io()
@@ -91,6 +118,17 @@ window.openProductModal = function () {
     document.getElementById('prod-code').value = '';
     document.getElementById('prod-sku-group').style.display = 'none';
     document.getElementById('prod-is-active').value = '1';
+    document.getElementById('prod-item-type').value = 'finished';
+    document.getElementById('prod-is-sellable').checked = true;
+    document.getElementById('prod-is-manufacturable').checked = false;
+    document.getElementById('prod-is-customizable').checked = false;
+    document.getElementById('prod-production-method').value = 'purchased';
+    document.getElementById('prod-production-branch').value = '';
+    document.querySelectorAll('[name="prod-channel"]').forEach(box => { box.checked = true; });
+    document.querySelectorAll('[name="prod-personalization-method"]').forEach(box => { box.checked = false; });
+    recipeDraft = [];
+    renderRecipeLines();
+    syncOperationalVisibility();
     resetProductImageSelection();
     document.getElementById('prod-img-label').textContent = 'Imagen del producto';
     document.getElementById('modal-add-product').classList.add('active');
@@ -113,6 +151,21 @@ window.editProduct = async function (id) {
             document.getElementById('prod-category').value = p.category_id || '';
             document.getElementById('prod-desc').value = p.description;
             document.getElementById('prod-is-active').value = p.is_active ? '1' : '0';
+            document.getElementById('prod-item-type').value = p.item_type || 'finished';
+            document.getElementById('prod-is-sellable').checked = Boolean(p.is_sellable);
+            document.getElementById('prod-is-manufacturable').checked = Boolean(p.is_manufacturable);
+            document.getElementById('prod-is-customizable').checked = Boolean(p.is_customizable);
+            document.getElementById('prod-production-method').value = p.production_method || 'purchased';
+            document.getElementById('prod-production-branch').value = p.production_branch_id || '';
+            document.querySelectorAll('[name="prod-channel"]').forEach(box => {
+                box.checked = (p.channels || []).map(Number).includes(Number(box.value));
+            });
+            document.querySelectorAll('[name="prod-personalization-method"]').forEach(box => {
+                box.checked = (p.personalization_methods || []).includes(box.value);
+            });
+            recipeDraft = (p.recipe || []).map(item => ({ product_id: Number(item.product_id), quantity: Number(item.quantity) }));
+            renderRecipeLines();
+            syncOperationalVisibility();
 
             const previewImg = document.getElementById('prod-img-preview');
             const labelImg = document.getElementById('prod-img-label');
@@ -264,6 +317,15 @@ if (formProduct) {
         formData.append('category_id', document.getElementById('prod-category').value);
         formData.append('description', document.getElementById('prod-desc').value);
         formData.append('is_active', document.getElementById('prod-is-active').value);
+        formData.append('item_type', document.getElementById('prod-item-type').value);
+        formData.append('is_sellable', document.getElementById('prod-is-sellable').checked ? '1' : '0');
+        formData.append('is_manufacturable', document.getElementById('prod-is-manufacturable').checked ? '1' : '0');
+        formData.append('is_customizable', document.getElementById('prod-is-customizable').checked ? '1' : '0');
+        formData.append('production_method', document.getElementById('prod-production-method').value);
+        formData.append('production_branch_id', document.getElementById('prod-production-branch').value);
+        formData.append('channels', JSON.stringify([...document.querySelectorAll('[name="prod-channel"]:checked')].map(box => Number(box.value))));
+        formData.append('personalization_methods', JSON.stringify([...document.querySelectorAll('[name="prod-personalization-method"]:checked')].map(box => box.value)));
+        formData.append('recipe', JSON.stringify(recipeDraft.filter(item => item.product_id && item.quantity > 0)));
 
         if (selectedProductImageFile) {
             formData.append('image', selectedProductImageFile);
@@ -299,6 +361,60 @@ if (formProduct) {
             btnSave.textContent = originalText;
         }
     });
+}
+
+function setupOperationalProductListeners() {
+    document.getElementById('prod-is-manufacturable')?.addEventListener('change', syncOperationalVisibility);
+    document.getElementById('prod-is-customizable')?.addEventListener('change', syncOperationalVisibility);
+    document.getElementById('btn-add-recipe-line')?.addEventListener('click', () => {
+        recipeDraft.push({ product_id: '', quantity: 1 });
+        renderRecipeLines();
+    });
+}
+
+function syncOperationalVisibility() {
+    const manufacturable = document.getElementById('prod-is-manufacturable')?.checked;
+    const customizable = document.getElementById('prod-is-customizable')?.checked;
+    document.getElementById('prod-production-method-group').hidden = !manufacturable;
+    document.getElementById('prod-recipe-section').hidden = !manufacturable;
+    document.getElementById('prod-personalization-section').hidden = !customizable;
+    if (!manufacturable) document.getElementById('prod-production-method').value = 'purchased';
+    else if (document.getElementById('prod-production-method').value === 'purchased') document.getElementById('prod-production-method').value = 'artisan';
+}
+
+function renderRecipeLines() {
+    const container = document.getElementById('prod-recipe-lines');
+    if (!container) return;
+    const currentId = Number(document.getElementById('prod-id')?.value || 0);
+    const materialOptions = operationalCatalogs.products
+        .filter(product => Number(product.id) !== currentId)
+        .map(product => `<option value="${product.id}">${escapeProductText(product.name)} (${escapeProductText(product.sku)})</option>`).join('');
+
+    container.innerHTML = recipeDraft.map((item, index) => `
+        <div class="recipe-line">
+            <select data-recipe-product="${index}">
+                <option value="">Seleccionar material</option>
+                ${materialOptions}
+            </select>
+            <input type="number" min="0.001" step="0.001" value="${item.quantity || 1}" data-recipe-quantity="${index}" aria-label="Cantidad por unidad">
+            <button type="button" class="recipe-remove" data-recipe-remove="${index}" title="Quitar">×</button>
+        </div>
+    `).join('');
+
+    recipeDraft.forEach((item, index) => {
+        const select = container.querySelector(`[data-recipe-product="${index}"]`);
+        if (select) select.value = item.product_id || '';
+    });
+    container.querySelectorAll('[data-recipe-product]').forEach(select => select.addEventListener('change', () => {
+        recipeDraft[Number(select.dataset.recipeProduct)].product_id = Number(select.value) || '';
+    }));
+    container.querySelectorAll('[data-recipe-quantity]').forEach(input => input.addEventListener('change', () => {
+        recipeDraft[Number(input.dataset.recipeQuantity)].quantity = Number(input.value) || 0;
+    }));
+    container.querySelectorAll('[data-recipe-remove]').forEach(button => button.addEventListener('click', () => {
+        recipeDraft.splice(Number(button.dataset.recipeRemove), 1);
+        renderRecipeLines();
+    }));
 }
 
 // --- UTILIDADES UI ---

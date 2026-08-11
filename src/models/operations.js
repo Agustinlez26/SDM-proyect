@@ -10,12 +10,23 @@ export class OperationsModel {
     }
 
     async getCatalogs() {
-        const [products, branches, channels] = await Promise.all([
-            this.#db.query(`SELECT id, name, cod_bar AS sku, item_type, is_sellable, is_manufacturable, is_customizable FROM products WHERE is_active = TRUE ORDER BY name`),
+        const [products, branches, channels, recipes, personalizationMethods] = await Promise.all([
+            this.#db.query(`SELECT id, name, cod_bar AS sku, item_type, is_sellable, is_manufacturable, is_customizable, production_method, production_branch_id FROM products WHERE is_active = TRUE ORDER BY name`),
             this.#db.query(`SELECT id, name FROM branches WHERE is_active = TRUE ORDER BY name`),
-            this.#db.query(`SELECT id, code, name FROM sales_channels WHERE is_active = TRUE ORDER BY id`)
+            this.#db.query(`SELECT id, code, name FROM sales_channels WHERE is_active = TRUE ORDER BY id`),
+            this.#db.query(`
+                SELECT pr.output_product_id, pr.material_product_id, pr.quantity_per_unit,
+                    p.name AS material_name, p.cod_bar AS material_sku
+                FROM product_recipes pr JOIN products p ON p.id = pr.material_product_id
+                WHERE pr.is_active = TRUE
+                ORDER BY p.name
+            `),
+            this.#db.query(`SELECT product_id, method FROM product_personalization_methods WHERE is_enabled = TRUE`)
         ])
-        return { products: rowsOnly(products), branches: rowsOnly(branches), channels: rowsOnly(channels) }
+        return {
+            products: rowsOnly(products), branches: rowsOnly(branches), channels: rowsOnly(channels),
+            recipes: rowsOnly(recipes), personalizationMethods: rowsOnly(personalizationMethods)
+        }
     }
 
     async getArtisans() {
@@ -41,7 +52,7 @@ export class OperationsModel {
                 GROUP_CONCAT(DISTINCT CONCAT(pm.name, ' x', wm.quantity_sent - wm.quantity_consumed - wm.quantity_returned - wm.quantity_discarded) SEPARATOR ', ') AS custody,
                 GROUP_CONCAT(DISTINCT CONCAT(po.name, ' ', ow.quantity_received, '/', ow.quantity_requested) SEPARATOR ', ') AS outputs
             FROM work_orders wo
-            JOIN artisans a ON a.id = wo.artisan_id
+            LEFT JOIN artisans a ON a.id = wo.artisan_id
             JOIN branches b ON b.id = wo.origin_branch_id
             LEFT JOIN work_order_materials wm ON wm.work_order_id = wo.id
             LEFT JOIN products pm ON pm.id = wm.product_id
@@ -57,25 +68,57 @@ export class OperationsModel {
         const connection = await this.#db.getConnection()
         try {
             await connection.beginTransaction()
+            const output = data.outputs[0]
+            const [[product]] = await connection.execute(`
+                SELECT id, name, is_manufacturable, is_customizable, production_method
+                FROM products WHERE id = ? AND is_active = TRUE FOR UPDATE
+            `, [output.product_id])
+            if (!product) throw new Error('Producto inexistente')
+
+            let artisanId = data.artisan_id || null
+            let personalizationMethod = null
+            let materials = []
+            if (data.type === 'manufacturing') {
+                if (!product.is_manufacturable) throw new Error('El producto no esta marcado como fabricable')
+                if (product.production_method === 'artisan' && !artisanId) throw new Error('Este producto requiere seleccionar un artesano')
+                if (product.production_method === 'internal_workshop') artisanId = null
+                const [recipe] = await connection.execute(`
+                    SELECT material_product_id AS product_id, quantity_per_unit
+                    FROM product_recipes WHERE output_product_id = ? AND is_active = TRUE
+                `, [product.id])
+                materials = recipe.map(item => ({
+                    product_id: item.product_id,
+                    quantity: Math.ceil(Number(item.quantity_per_unit) * Number(output.quantity))
+                }))
+            } else if (data.type === 'customization') {
+                if (!product.is_customizable) throw new Error('El producto no esta habilitado para personalizacion')
+                personalizationMethod = data.personalization_method
+                const [methods] = await connection.execute(`SELECT method FROM product_personalization_methods WHERE product_id = ? AND is_enabled = TRUE`, [product.id])
+                if (!methods.some(item => item.method === personalizationMethod)) throw new Error('Metodo de personalizacion no habilitado para este producto')
+                if (personalizationMethod === 'artisan_metalwork' && !artisanId) throw new Error('Los apliques de plata o alpaca requieren un artesano')
+                if (personalizationMethod === 'laser_internal') artisanId = null
+                materials = [{ product_id: product.id, quantity: Number(output.quantity) }]
+            }
+
             const code = `OT-${Date.now().toString(36).toUpperCase()}`
             const [result] = await connection.execute(`
                 INSERT INTO work_orders
-                    (code, type, origin_branch_id, artisan_id, wholesale_order_id, due_date, artisan_cost, notes, created_by)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, UUID_TO_BIN(?))
-            `, [code, data.type, data.origin_branch_id, data.artisan_id, data.wholesale_order_id || null,
-                data.due_date || null, data.artisan_cost ?? null, data.notes || null, userId])
+                    (code, type, origin_branch_id, artisan_id, wholesale_order_id, due_date, artisan_cost, notes, personalization_method, created_by)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, UUID_TO_BIN(?))
+            `, [code, data.type, data.origin_branch_id, artisanId, data.wholesale_order_id || null,
+                data.due_date || null, data.artisan_cost ?? null, data.notes || null, personalizationMethod, userId])
 
-            for (const material of data.materials || []) {
+            for (const material of materials) {
                 await connection.execute(`
                     INSERT INTO work_order_materials (work_order_id, product_id, quantity_sent)
                     VALUES (?, ?, ?)
                 `, [result.insertId, material.product_id, material.quantity])
             }
-            for (const output of data.outputs || []) {
+            for (const outputItem of data.outputs || []) {
                 await connection.execute(`
                     INSERT INTO work_order_outputs (work_order_id, product_id, quantity_requested)
                     VALUES (?, ?, ?)
-                `, [result.insertId, output.product_id, output.quantity])
+                `, [result.insertId, outputItem.product_id, outputItem.quantity])
             }
             await connection.commit()
             return result.insertId
@@ -98,10 +141,15 @@ export class OperationsModel {
             const [materials] = await connection.execute('SELECT * FROM work_order_materials WHERE work_order_id = ?', [id])
             for (const material of materials) {
                 const [[stock]] = await connection.execute(`
-                    SELECT id, quantity FROM product_branch_stock
+                    SELECT id, quantity,
+                        COALESCE((SELECT SUM(r.quantity) FROM stock_reservations r
+                            WHERE r.product_id = product_branch_stock.product_id
+                              AND r.branch_id = product_branch_stock.branch_id
+                              AND r.status = 'active'), 0) AS reserved
+                    FROM product_branch_stock
                     WHERE branch_id = ? AND product_id = ? FOR UPDATE
                 `, [order.origin_branch_id, material.product_id])
-                if (!stock || stock.quantity < material.quantity_sent) {
+                if (!stock || Number(stock.quantity) - Number(stock.reserved) < material.quantity_sent) {
                     throw new Error('Stock insuficiente para enviar los materiales al artesano')
                 }
                 await connection.execute('UPDATE product_branch_stock SET quantity = quantity - ? WHERE id = ?', [material.quantity_sent, stock.id])
@@ -303,9 +351,10 @@ export class OperationsModel {
             await connection.beginTransaction()
             const code = `BUL-${Date.now().toString(36).toUpperCase()}`
             const [result] = await connection.execute(`
-                INSERT INTO shipment_packages (package_code, movement_id, package_type, wholesale_order_id, notes)
-                VALUES (?, ?, ?, ?, ?)
-            `, [code, data.movement_id || null, data.package_type, data.wholesale_order_id || null, data.notes || null])
+                INSERT INTO shipment_packages (package_code, movement_id, package_type, wholesale_order_id, customer_reference, notes)
+                VALUES (?, ?, ?, ?, ?, ?)
+            `, [code, data.movement_id || null, data.package_type, data.wholesale_order_id || null,
+                data.customer_reference.trim(), data.notes || null])
             for (const item of data.items || []) {
                 await connection.execute('INSERT INTO shipment_package_items (package_id, product_id, quantity) VALUES (?, ?, ?)', [result.insertId, item.product_id, item.quantity])
             }

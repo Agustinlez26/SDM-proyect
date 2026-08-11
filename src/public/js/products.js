@@ -131,6 +131,8 @@ function renderProductGrid(isActiveView) {
         }
 
         const card = document.createElement('div');
+        const typeLabel = { finished: 'Producto terminado', raw_material: 'Materia prima', merchandising: 'Merchandising' }[prod.item_type] || 'Producto terminado';
+        const operationalLabels = [prod.is_sellable ? 'Venta' : null, prod.is_manufacturable ? 'Producción' : null, prod.is_customizable ? 'Personalizable' : null].filter(Boolean);
         card.className = 'product-card';
         card.innerHTML = `
             <div class="card-img-container">
@@ -139,9 +141,11 @@ function renderProductGrid(isActiveView) {
             </div>
             <div class="card-body">
                 <span class="card-category">${prod.category || 'Sin Categoría'}</span>
+                <span class="card-category">${typeLabel}</span>
                 <h4 class="card-title">${prod.name}</h4>
                 <p class="card-code"><span class="material-symbols-outlined icon-tiny">inventory_2</span> SKU: ${prod.sku || prod.cod_bar || 'N/A'}</p>
                 <p class="card-desc" title="${prod.description}">${prod.description || 'Sin descripción'}</p>
+                <p class="card-code">${operationalLabels.join(' · ') || 'Solo inventario'}</p>
             </div>
             <div class="card-footer">
                 ${actionButtons}

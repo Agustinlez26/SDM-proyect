@@ -101,7 +101,7 @@ export class ViewsController {
 
     renderProduction(req, res) {
         res.render('pages/production', {
-            title: 'Produccion y mayorista',
+            title: 'Producción y artesanos',
             activePage: 'production',
             cssFile: 'production.css',
             user: req.user

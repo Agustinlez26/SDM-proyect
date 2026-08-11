@@ -1,6 +1,8 @@
 /* --- OVERRIDES PARA ESTE MODAL ESPECÍFICO --- */
 #modal-add-product .modal-card {
-  max-width: 800px;
+  max-width: 960px;
+  max-height: 92vh;
+  overflow-y: auto;
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
@@ -253,6 +255,28 @@
   padding-top: 1rem;
 }
 
+#modal-add-product .product-operational-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  border-top: 1px solid var(--border-color);
+  padding-top: 1.25rem;
+}
+
+#modal-add-product .operational-heading h4 { margin-bottom: .25rem; }
+#modal-add-product .operational-heading p,
+#modal-add-product .operational-help,
+#modal-add-product .operational-fieldset small { color: var(--text-muted); font-size: .78rem; }
+#modal-add-product .operational-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+#modal-add-product .operational-checks { display: flex; flex-wrap: wrap; gap: .75rem 1.25rem; }
+#modal-add-product .operational-checks label { display: flex; align-items: center; gap: .4rem; font-size: .84rem; font-weight: 600; }
+#modal-add-product .operational-checks input { width: auto; }
+#modal-add-product .operational-fieldset { border: 1px solid var(--border-color); border-radius: 9px; padding: 1rem; }
+#modal-add-product .operational-fieldset legend { padding: 0 .4rem; font-weight: 700; }
+#modal-add-product .recipe-lines { display: flex; flex-direction: column; gap: .55rem; margin: .75rem 0; }
+#modal-add-product .recipe-line { display: grid; grid-template-columns: minmax(180px, 1fr) 110px 38px; gap: .5rem; }
+#modal-add-product .recipe-remove { border: 1px solid #fecaca; background: #fff1f2; color: #be123c; border-radius: 7px; cursor: pointer; }
+
 #modal-add-product .btn-cancel {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
@@ -276,6 +300,7 @@
     grid-template-columns: 1fr;
     gap: 1rem;
   }
+  #modal-add-product .operational-grid { grid-template-columns: 1fr; }
 }
 
 /* --- DARK THEME OVERRIDES --- */

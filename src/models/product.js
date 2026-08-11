@@ -8,7 +8,10 @@ export class ProductModel {
     #db
     #table = 'products'
     #table2 = 'product_categories'
-    #fieldsToInsert = ['name', 'cod_bar', 'description', 'category_id', 'url_img_original', 'url_img_small', 'is_active']
+    #fieldsToInsert = [
+        'name', 'cod_bar', 'description', 'category_id', 'url_img_original', 'url_img_small', 'is_active',
+        'item_type', 'is_sellable', 'is_manufacturable', 'is_customizable', 'production_method', 'production_branch_id'
+    ]
 
     /**
          * Inicializa el modelo con una instancia de base de datos.
@@ -35,7 +38,12 @@ export class ProductModel {
         p.cod_bar AS sku,
         p.description,
         c.name as category,
-        p.url_img_small
+        p.url_img_small,
+        p.item_type,
+        p.is_sellable,
+        p.is_manufacturable,
+        p.is_customizable,
+        p.production_method
         FROM ${this.#table} p
         JOIN ${this.#table2} c
         ON p.category_id = c.id
@@ -85,7 +93,13 @@ export class ProductModel {
         p.category_id,
         c.name as category,
         p.url_img_original,
-        p.is_active
+        p.is_active,
+        p.item_type,
+        p.is_sellable,
+        p.is_manufacturable,
+        p.is_customizable,
+        p.production_method,
+        p.production_branch_id
         FROM ${this.#table} p
         JOIN ${this.#table2} c
         ON p.category_id = c.id
@@ -95,7 +109,22 @@ export class ProductModel {
 
         if (row.length === 0) return null
 
-        return new ProductDTO(row[0])
+        const [[channels], [recipe], [personalizationMethods]] = await Promise.all([
+            this.#db.query(`SELECT channel_id FROM product_sales_channels WHERE product_id = ? AND is_enabled = TRUE`, [id]),
+            this.#db.query(`
+                SELECT pr.material_product_id AS product_id, p.name, p.cod_bar AS sku, pr.quantity_per_unit AS quantity
+                FROM product_recipes pr JOIN products p ON p.id = pr.material_product_id
+                WHERE pr.output_product_id = ? AND pr.is_active = TRUE ORDER BY p.name
+            `, [id]),
+            this.#db.query(`SELECT method FROM product_personalization_methods WHERE product_id = ? AND is_enabled = TRUE`, [id])
+        ])
+
+        return new ProductDTO({
+            ...row[0],
+            channels: channels.map(item => item.channel_id),
+            recipe,
+            personalization_methods: personalizationMethods.map(item => item.method)
+        })
     }
 
     async findBySku(sku, excludeId = null) {
@@ -178,6 +207,49 @@ export class ProductModel {
         const [result] = await this.#db.query(sql, parameters)
         return result.affectedRows > 0
 
+    }
+
+    async saveOperationalConfig(productId, data) {
+        const connection = await this.#db.getConnection()
+        try {
+            await connection.beginTransaction()
+            await connection.execute('UPDATE product_sales_channels SET is_enabled = FALSE WHERE product_id = ?', [productId])
+            for (const channelId of data.channels || []) {
+                await connection.execute(`
+                    INSERT INTO product_sales_channels (product_id, channel_id, is_enabled)
+                    VALUES (?, ?, TRUE) ON DUPLICATE KEY UPDATE is_enabled = TRUE
+                `, [productId, channelId])
+            }
+
+            await connection.execute('UPDATE product_personalization_methods SET is_enabled = FALSE WHERE product_id = ?', [productId])
+            if (data.is_customizable) {
+                for (const method of data.personalization_methods || []) {
+                    await connection.execute(`
+                        INSERT INTO product_personalization_methods (product_id, method, is_enabled) VALUES (?, ?, TRUE)
+                        ON DUPLICATE KEY UPDATE is_enabled = TRUE
+                    `, [productId, method])
+                }
+            }
+
+            await connection.execute('UPDATE product_recipes SET is_active = FALSE WHERE output_product_id = ?', [productId])
+            if (data.is_manufacturable) {
+                for (const item of data.recipe || []) {
+                    if (Number(item.product_id) === Number(productId)) continue
+                    await connection.execute(`
+                        INSERT INTO product_recipes (output_product_id, material_product_id, quantity_per_unit, is_active)
+                        VALUES (?, ?, ?, TRUE)
+                        ON DUPLICATE KEY UPDATE quantity_per_unit = VALUES(quantity_per_unit), is_active = TRUE
+                    `, [productId, item.product_id, item.quantity])
+                }
+            }
+            await connection.commit()
+            return true
+        } catch (error) {
+            await connection.rollback()
+            throw error
+        } finally {
+            connection.release()
+        }
     }
 
     /**
