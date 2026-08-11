@@ -101,6 +101,18 @@
                                                     <option value="" disabled selected>Seleccionar sucursal...</option>
                                                 </select>
                                             </div>
+                                            <div class="form-group">
+                                                <label>Rol</label>
+                                                <select id="user-app-role" required><option value="seller">Vendedor</option><option value="stock_manager">Encargado de stock</option><option value="admin">Jefe / Administrador</option></select>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Área</label>
+                                                <select id="user-area" required><option value="retail">Minorista</option><option value="wholesale">Mayorista</option><option value="general">General</option></select>
+                                            </div>
+                                            <div class="form-group full-width">
+                                                <label>Ubicaciones habilitadas</label>
+                                                <div id="user-branch-access" style="display:grid;gap:.4rem;"></div>
+                                            </div>
 
                                             <div class="form-group" id="group-initial-password">
                                                 <label>Contraseña</label>

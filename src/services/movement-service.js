@@ -164,7 +164,7 @@ export class MovementService {
         if (movement.type !== 'envio') throw new ValidationError('Solo los envíos se pueden cambiar el estado')
         if (movement.status === 'entregado') throw new ValidationError('Este envío ya está concluido')
 
-        if (!actor?.is_admin) {
+        if (!actor?.is_admin && actor?.app_role !== 'stock_manager') {
             if (movement.status === 'pendiente' && actor?.branch_id !== movement.origin_branch_id) {
                 throw new ValidationError('No tienes permiso para despachar este envio')
             }

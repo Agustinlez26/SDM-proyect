@@ -14,8 +14,8 @@ export class UserModel {
     #db
     #table = 'users'
     #table2 = 'branches'
-    #fieldsToInsert = ['full_name', 'email', 'password', 'is_admin', 'branch_id', 'is_active', 'requires_password_change']
-    #fieldsToUpdate = ['full_name', 'email', 'is_admin', 'branch_id', 'is_active']
+    #fieldsToInsert = ['full_name', 'email', 'password', 'is_admin', 'app_role', 'area', 'branch_id', 'is_active', 'requires_password_change']
+    #fieldsToUpdate = ['full_name', 'email', 'is_admin', 'app_role', 'area', 'branch_id', 'is_active']
 
     /**
      * Inicializa el modelo con una instancia de la base de datos.
@@ -41,10 +41,15 @@ export class UserModel {
         u.full_name,
         b.name as branch,
         u.is_admin,
+        u.app_role,
+        u.area,
+        GROUP_CONCAT(DISTINCT ba.name ORDER BY ba.name SEPARATOR ', ') AS allowed_branches,
         u.is_active
         FROM ${this.#table} u
         LEFT JOIN ${this.#table2} b
         ON u.branch_id = b.id    
+        LEFT JOIN user_branch_access uba ON uba.user_id=u.id AND uba.is_enabled=TRUE
+        LEFT JOIN branches ba ON ba.id=uba.branch_id
         WHERE 1=1`
 
         const params = []
@@ -64,7 +69,7 @@ export class UserModel {
             params.push(filters.is_active)
         }
 
-        sql += ' ORDER BY u.full_name ASC'
+        sql += ' GROUP BY u.id ORDER BY u.full_name ASC'
 
         const [rows] = await this.#db.query(sql, params)
         return rows.map(row => new UserAllDTO(row))
@@ -119,6 +124,8 @@ export class UserModel {
                 full_name,
                 email,
                 is_admin,
+                app_role,
+                area,
                 branch_id,
                 is_active,
                 requires_password_change,
@@ -146,6 +153,9 @@ export class UserModel {
         email,
         branch_id,
         is_admin,
+        app_role,
+        area,
+        (SELECT GROUP_CONCAT(branch_id ORDER BY branch_id) FROM user_branch_access WHERE user_id=users.id AND is_enabled=TRUE) AS branch_ids,
         is_active
         FROM ${this.#table} 
         WHERE id = UUID_TO_BIN(?)`
@@ -213,7 +223,20 @@ export class UserModel {
         const values = [newId, ...this.#fieldsToInsert.map(field => userData[field] ?? null)]
         const sql = `INSERT INTO ${this.#table} (${columns}) VALUES (${placeholders})`
         await this.#db.query(sql, values)
+        await this.setBranchAccess(newId, userData.branch_ids || [userData.branch_id])
         return newId
+    }
+
+    async setBranchAccess(id, branchIds) {
+        const connection = await this.#db.getConnection()
+        try {
+            await connection.beginTransaction()
+            await connection.query('UPDATE user_branch_access SET is_enabled=FALSE WHERE user_id=UUID_TO_BIN(?)', [id])
+            for (const branchId of [...new Set((branchIds || []).map(Number))]) {
+                await connection.query('INSERT INTO user_branch_access (user_id,branch_id,is_enabled) VALUES (UUID_TO_BIN(?),?,TRUE) ON DUPLICATE KEY UPDATE is_enabled=TRUE', [id,branchId])
+            }
+            await connection.commit()
+        } catch (error) { await connection.rollback(); throw error } finally { connection.release() }
     }
 
     /**

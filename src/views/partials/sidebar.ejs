@@ -41,12 +41,14 @@
                 </a>
             </li>
 
-            <li class="nav-item <%= activePage === 'orders' ? 'active' : '' %>">
-                <a href="/orders" class="nav-link">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V9h14v10zM7 11h5v5H7z"/></svg>
-                    <span>Pedidos</span>
-                </a>
-            </li>
+            <% if (user && (['admin','stock_manager'].includes(user.app_role) || user.area === 'wholesale')) { %>
+            <li class="nav-item <%= activePage === 'wholesale' ? 'active' : '' %>"><a href="/mayorista" class="nav-link"><span class="material-symbols-outlined">inventory</span><span>Mayorista</span></a></li>
+            <% } %>
+            <% if (user && (['admin','stock_manager'].includes(user.app_role) || user.area === 'retail')) { %>
+            <li class="nav-item <%= activePage === 'mercado-libre' ? 'active' : '' %>"><a href="/mercado-libre" class="nav-link"><span class="material-symbols-outlined">shopping_cart</span><span>Mercado Libre</span></a></li>
+            <li class="nav-item <%= activePage === 'tienda-nube' ? 'active' : '' %>"><a href="/tienda-nube" class="nav-link"><span class="material-symbols-outlined">cloud</span><span>Tienda Nube</span></a></li>
+            <li class="nav-item <%= activePage === 'showroom-sales' ? 'active' : '' %>"><a href="/ventas-showroom" class="nav-link"><span class="material-symbols-outlined">point_of_sale</span><span>Ventas Showroom</span></a></li>
+            <% } %>
 
             <li class="nav-item <%= activePage === 'operations' ? 'active' : '' %>">
                 <a href="/operations" class="nav-link">

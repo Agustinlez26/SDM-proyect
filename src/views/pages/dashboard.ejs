@@ -62,8 +62,8 @@
 
                             <h2 class="section-title">Acciones Rápidas</h2>
                             <section class="actions-grid">
-                                <% if (user && user.role==='admin' ) { %>
-                                    <button class="action-card" onclick="openProductModal()">
+                                <% if (user && (user.role==='admin' || user.app_role==='stock_manager') ) { %>
+                                    <% if (user.role==='admin') { %><button class="action-card" onclick="openProductModal()">
                                         <span class="material-symbols-outlined" style="font-size: 32px;">add_box</span>
                                         <span>Crear Producto</span>
                                     </button>
@@ -77,12 +77,12 @@
                                         <span class="material-symbols-outlined"
                                             style="font-size: 32px;">local_shipping</span>
                                         <span>Realizar Envío</span>
-                                    </button>
+                                    </button><% } %>
                                     <button class="action-card" onclick="openOperationModal('out')">
                                         <span class="material-symbols-outlined" style="font-size: 32px;">logout</span>
                                         <span>Realizar Egreso</span>
                                     </button>
-                                    <%- include('../partials/modals/modal-add-product') %>
+                                    <% if (user.role==='admin') { %><%- include('../partials/modals/modal-add-product') %><% } %>
                                         <%- include('../partials/modals/modal-op-admin') %>
 
                                             <% } else { %>
@@ -128,8 +128,8 @@
                             </section>
 
                         </div>
-                        <% if (user && user.role==='admin' ) { %>
-                            <script src="/js/components/add-product.js" defer></script>
+                        <% if (user && (user.role==='admin' || user.app_role==='stock_manager') ) { %>
+                            <% if (user.role==='admin') { %><script src="/js/components/add-product.js" defer></script><% } %>
                             <script src="/js/components/op-admin.js" defer></script>
                             <% } else { %>
                                 <script src="/js/components/op-employee.js" defer></script>

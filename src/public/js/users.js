@@ -37,9 +37,17 @@ async function fetchBranches() {
 
         if (json.status === 'success') {
             const selectBranch = document.getElementById('user-branch');
+            const accessBox = document.getElementById('user-branch-access');
+            selectBranch.innerHTML = '<option value="" disabled selected>Seleccionar sucursal...</option>';
+            accessBox.innerHTML = '';
             json.data.forEach(b => {
                 selectBranch.innerHTML += `<option value="${b.id}">${b.name}</option>`;
+                accessBox.innerHTML += `<label style="display:flex;gap:.5rem;align-items:center;"><input type="checkbox" name="user-branch-access" value="${b.id}"> ${b.name}</label>`;
             });
+            selectBranch.onchange = () => {
+                const primary = document.querySelector(`[name="user-branch-access"][value="${selectBranch.value}"]`);
+                if (primary) primary.checked = true;
+            };
         }
     } catch (e) { console.error('Error cargando sucursales:', e); }
 }
@@ -90,8 +98,8 @@ function renderUsers(users) {
     users.forEach(user => {
         const isInactive = !user.is_active;
         const opacityClass = isInactive ? 'opacity: 0.6;' : '';
-        const roleClass = user.is_admin ? 'role-admin' : 'role-vendedor';
-        const roleName = user.is_admin ? 'ADMIN' : 'EMPLEADO';
+        const roleClass = user.app_role === 'admin' ? 'role-admin' : 'role-vendedor';
+        const roleName = ({admin:'JEFE',stock_manager:'ENCARGADO STOCK',seller:'VENDEDOR'}[user.app_role] || 'VENDEDOR');
         const initials = user.full_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 
         const toggleIcon = isInactive ? 'person_add' : 'person_remove';
@@ -115,8 +123,9 @@ function renderUsers(users) {
             <div class="card-body">
                 <div class="info-row">
                     <span class="material-symbols-outlined icon-info">store</span>
-                    <p>${user.branch}</p>
+                    <p>${user.allowed_branches || user.branch}</p>
                 </div>
+                <div class="info-row"><span class="material-symbols-outlined icon-info">badge</span><p>${({general:'General',wholesale:'Mayorista',retail:'Minorista'}[user.area] || user.area)}</p></div>
             </div>
             <div class="card-footer">
                 <button class="btn-action btn-key" title="Resetear Contraseña" onclick="abrirModalPassword('${user.id}', '${user.full_name}')">
@@ -149,6 +158,7 @@ window.abrirModalNuevoUsuario = function () {
     document.getElementById('user-confirm-password').required = true;
 
     document.getElementById('form-user').reset();
+    document.querySelectorAll('[name="user-branch-access"]').forEach(box => box.checked = false);
     document.getElementById('user-id').value = '';
     document.getElementById('create-password-error').style.display = 'none';
 
@@ -179,6 +189,9 @@ window.editarUsuario = async function (id) {
             document.getElementById('user-name').value = userData.full_name;
             document.getElementById('user-email').value = userData.email || '';
             document.getElementById('user-branch').value = userData.branch_id || '';
+            document.getElementById('user-app-role').value = userData.app_role || 'seller';
+            document.getElementById('user-area').value = userData.area || 'retail';
+            document.querySelectorAll('[name="user-branch-access"]').forEach(box => { box.checked = (userData.branch_ids || []).includes(Number(box.value)); });
 
             document.getElementById('modal-user').classList.add('active');
         } else {
@@ -201,7 +214,10 @@ window.saveUser = async function () {
         full_name: document.getElementById('user-name').value,
         email: document.getElementById('user-email').value,
         branch_id: parseInt(document.getElementById('user-branch').value),
-        is_admin: false,
+        app_role: document.getElementById('user-app-role').value,
+        area: document.getElementById('user-area').value,
+        branch_ids: [...document.querySelectorAll('[name="user-branch-access"]:checked')].map(box => Number(box.value)),
+        is_admin: document.getElementById('user-app-role').value === 'admin',
         is_active: true
     };
 

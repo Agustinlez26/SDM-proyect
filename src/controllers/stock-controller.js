@@ -34,7 +34,7 @@ export class StockController {
 
         const filters = result.data
 
-        if (!req.user.is_admin) {
+        if (!req.user.is_admin && req.user.app_role !== 'stock_manager') {
             filters.branch = req.user.branch_id
         }
 
@@ -57,7 +57,7 @@ export class StockController {
         }
 
         const filters = result.data
-        filters.branch = req.user.is_admin ? (filters.branch || req.user.branch_id) : req.user.branch_id
+        filters.branch = (req.user.is_admin || req.user.app_role==='stock_manager') ? (filters.branch || req.user.branch_id) : req.user.branch_id
 
         try {
             const stocks = await this.stockService.findCatalog(filters)

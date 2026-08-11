@@ -37,7 +37,7 @@
                             <section class="actions-section">
                                 <h2>¿Qué operación deseas registrar?</h2>
                                 <div class="action-cards-grid">
-                                    <% if (user && user.role==='admin' ) { %>
+                                    <% if (user && (user.role==='admin' || user.app_role==='stock_manager') ) { %>
                                         <button class="action-card card-in" onclick="openOperationModal('in')">
                                             <div class="card-icon"><span
                                                     class="material-symbols-outlined">download</span></div>
@@ -77,7 +77,7 @@
                             </section>
 
                         </div>
-                        <% if (user && user.role==='admin' ) { %>
+                        <% if (user && (user.role==='admin' || user.app_role==='stock_manager') ) { %>
                             <%- include('../partials/modals/modal-op-admin') %>
                                 <script src="/js/components/op-admin.js" defer></script>
                                 <% } else { %>

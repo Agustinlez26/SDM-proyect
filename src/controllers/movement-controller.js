@@ -2,6 +2,7 @@
 import { validateMovement, validateParams } from "../schemas/movement-schema.js"
 import { validateId } from "../schemas/shared-schema.js"
 import { handleError } from "../utils/error-handler.js"
+const hasGlobalStockAccess = user => user.is_admin || user.app_role === 'stock_manager'
 
 /**
  * Controlador de Movimientos (MovementController).
@@ -42,7 +43,7 @@ export class MovementController {
 
         const queryData = params.data;
 
-        if (!req.user.is_admin) {
+        if (!hasGlobalStockAccess(req.user)) {
 
             if (queryData.type === 'ingreso') {
                 return res.status(403).json({
@@ -97,7 +98,7 @@ export class MovementController {
                 })
             }
 
-            if (!req.user.is_admin) {
+            if (!hasGlobalStockAccess(req.user)) {
                 const validateUser = (movement.origin_branch_id == req.user.branch_id || movement.destination_branch_id == req.user.branch_id)
                 if (!validateUser) {
                     return res.status(403).json({
@@ -139,7 +140,7 @@ export class MovementController {
                 })
             }
 
-            if (!req.user.is_admin) {
+            if (!hasGlobalStockAccess(req.user)) {
                 const validateUser = (movement.origin_branch_id == req.user.branch_id || movement.destination_branch_id == req.user.branch_id)
                 if (!validateUser) {
                     return res.status(403).json({
@@ -168,7 +169,7 @@ export class MovementController {
      */
     getRecent = async (req, res) => {
         let branch_id = null
-        if (!req.user.is_admin) {
+        if (!hasGlobalStockAccess(req.user)) {
             branch_id = req.user.branch_id
         }
 
@@ -182,7 +183,7 @@ export class MovementController {
 
     getShipmentsInProcess = async (req, res) => {
         let branch_id = null
-        if (!req.user.is_admin) {
+        if (!hasGlobalStockAccess(req.user)) {
             branch_id = req.user.branch_id
         }
 
@@ -228,14 +229,14 @@ export class MovementController {
         let destination = null;
 
         if (type === 'ingreso') {
-            if (userRole !== 'admin') {
+            if (!hasGlobalStockAccess(req.user)) {
                 return res.status(403).json({ status: 'error', message: 'Solo los administradores pueden hacer ingresos.' });
             }
             origin = null;
             destination = MAIN_BRANCH_ID;
         }
         else if (type === 'egreso') {
-            origin = req.user.is_admin ? (origin_branch_id || userBranchId) : userBranchId;
+            origin = hasGlobalStockAccess(req.user) ? (origin_branch_id || userBranchId) : userBranchId;
             if (!origin) {
                 return res.status(403).json({
                     status: 'error',
@@ -245,7 +246,7 @@ export class MovementController {
             destination = null;
         }
         else if (type === 'envio') {
-            origin = req.user.is_admin ? (origin_branch_id || userBranchId || MAIN_BRANCH_ID) : userBranchId;
+            origin = hasGlobalStockAccess(req.user) ? (origin_branch_id || userBranchId || MAIN_BRANCH_ID) : userBranchId;
             if (!origin) {
                 return res.status(403).json({ status: 'error', message: 'Los envíos solo pueden realizarse desde la Sucursal Principal.' });
             }

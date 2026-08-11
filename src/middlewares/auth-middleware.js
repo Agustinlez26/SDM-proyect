@@ -59,6 +59,8 @@ export const checkAuth = async (req, res, next) => {
             name: userInDb.full_name,
             email: userInDb.email,
             is_admin: Boolean(userInDb.is_admin),
+            app_role: userInDb.app_role,
+            area: userInDb.area,
             branch_id: userInDb.branch_id,
             requires_password_change: Boolean(userInDb.requires_password_change),
             role: userInDb.is_admin ? 'admin' : 'empleado'
@@ -125,5 +127,10 @@ export const isAdmin = (req, res, next) => {
         });
     }
 
+    next();
+};
+
+export const canManageStock = (req,res,next) => {
+    if (!req.user || (!req.user.is_admin && req.user.app_role!=='stock_manager')) return res.status(403).json({status:'error',message:'Acceso reservado al jefe o encargado de stock'});
     next();
 };

@@ -8,6 +8,7 @@
     "start": "node app.js",
     "dev": "node --watch app.js",
     "migrate:orders": "node src/scripts/migrate_orders.js",
+    "seed:access-roles": "node src/scripts/seed_access_roles.js",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
   },
   "keywords": [],

@@ -40,6 +40,9 @@ export class MovementModel {
                 m.receipt_number,
                 m.type,
                 m.egress_reason,
+                m.movement_purpose,
+                requester.full_name AS requested_by_name,
+                confirmer.full_name AS confirmed_by_name,
                 m.date,
                 COALESCE(m.arrival_date, m.date) as effective_date,
                 m.status,
@@ -60,6 +63,8 @@ export class MovementModel {
 
             FROM ${this.#table} m
             JOIN users u ON m.user_id = u.id
+            LEFT JOIN users requester ON requester.id=m.requested_by
+            LEFT JOIN users confirmer ON confirmer.id=m.confirmed_by
             LEFT JOIN branches bo ON m.origin_branch_id = bo.id
             LEFT JOIN branches bd ON m.destination_branch_id = bd.id
             WHERE 1=1
@@ -130,6 +135,9 @@ export class MovementModel {
                 m.receipt_number,
                 m.type, 
                 m.egress_reason,
+                m.movement_purpose,
+                requester.full_name AS requested_by_name,
+                confirmer.full_name AS confirmed_by_name,
                 m.date,
                 COALESCE(m.arrival_date, m.date) as effective_date,
                 m.status,
@@ -151,6 +159,8 @@ export class MovementModel {
 
             FROM ${this.#table} m
             JOIN users u ON m.user_id = u.id
+            LEFT JOIN users requester ON requester.id=m.requested_by
+            LEFT JOIN users confirmer ON confirmer.id=m.confirmed_by
             LEFT JOIN branches bo ON m.origin_branch_id = bo.id
             LEFT JOIN branches bd ON m.destination_branch_id = bd.id
             WHERE m.id = ? LIMIT 1

@@ -15,6 +15,16 @@ const columnExists = async (table, column) => {
 }
 
 try {
+    if (!await columnExists('users', 'app_role')) await db.query("ALTER TABLE users ADD COLUMN app_role ENUM('admin','stock_manager','seller') NOT NULL DEFAULT 'seller' AFTER is_admin")
+    if (!await columnExists('users', 'area')) await db.query("ALTER TABLE users ADD COLUMN area ENUM('general','wholesale','retail') NOT NULL DEFAULT 'retail' AFTER app_role")
+    await db.query(`CREATE TABLE IF NOT EXISTS user_branch_access (
+        user_id BINARY(16) NOT NULL, branch_id INT UNSIGNED NOT NULL,
+        is_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+        PRIMARY KEY (user_id, branch_id),
+        CONSTRAINT fk_access_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        CONSTRAINT fk_access_branch FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE CASCADE
+    )`)
+    if (!await columnExists('user_branch_access','is_enabled')) await db.query('ALTER TABLE user_branch_access ADD COLUMN is_enabled BOOLEAN NOT NULL DEFAULT TRUE')
     await db.query(`CREATE TABLE IF NOT EXISTS orders (
         id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         order_number VARCHAR(60) NOT NULL UNIQUE,
@@ -56,5 +66,9 @@ try {
         await db.query('ALTER TABLE movements ADD INDEX idx_movements_order (order_id)')
         await db.query('ALTER TABLE movements ADD CONSTRAINT fk_movements_order FOREIGN KEY (order_id) REFERENCES orders(id)')
     }
+    await db.query("ALTER TABLE orders MODIFY COLUMN channel ENUM('mercado_libre','tienda_nube','mayorista','merchandising','showroom') NOT NULL")
+    if (!await columnExists('movements', 'movement_purpose')) await db.query("ALTER TABLE movements ADD COLUMN movement_purpose ENUM('standard','wholesale_order') NOT NULL DEFAULT 'standard' AFTER order_id")
+    if (!await columnExists('movements', 'requested_by')) await db.query('ALTER TABLE movements ADD COLUMN requested_by BINARY(16) NULL AFTER movement_purpose')
+    if (!await columnExists('movements', 'confirmed_by')) await db.query('ALTER TABLE movements ADD COLUMN confirmed_by BINARY(16) NULL AFTER requested_by')
     console.log('Migracion de pedidos, reservas y motivos de egreso completada.')
 } finally { await db.end() }

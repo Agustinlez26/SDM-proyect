@@ -25,6 +25,9 @@ const baseUserSchema = z.object({
     confirm_password: confirmPasswordRule,
 
     is_admin: z.boolean().optional(),
+    app_role: z.enum(['admin','stock_manager','seller']).optional(),
+    area: z.enum(['general','wholesale','retail']).optional(),
+    branch_ids: z.array(z.coerce.number().int().positive()).min(1).optional(),
 
     branch_id: z.coerce.number({ invalid_type_error: "Debes seleccionar una sucursal" })
         .int().positive(),

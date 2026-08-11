@@ -5,7 +5,7 @@ import { checkAuth, isAdmin } from '../src/middlewares/auth-middleware.js'
 
 const router = Router()
 
-router.get('/catalog', checkAuth, isAdmin, (req, res) => productController.getPublicCatalog(req, res))
+router.get('/catalog', checkAuth, (req, res) => productController.getPublicCatalog(req, res))
 router.get('/', checkAuth, isAdmin, (req, res) => productController.getAll(req, res))
 router.post('/', checkAuth, isAdmin, upload.single('image'), (req, res) => productController.create(req, res))
 

@@ -30,17 +30,15 @@ export class UserService {
         if (validate) throw new ValidationError('Ya existe un usuario con este email')
         const existsBranch = await this.branchModel.exists(data.branch_id)
         if (!existsBranch) throw new ValidationError('No existe esta sucursal')
-        const validateBranch = await this.userModel.existsInBranch(data.branch_id)
-        if (validateBranch) throw new ValidationError('Ya existe un usuario en esta sucursal')
-
-
         const hashedPassword = await bcrypt.hash(data.password, 10);
 
-        const isAdminValue = createdByAdmin ? (data.is_admin || false) : false;
+        const isAdminValue = createdByAdmin ? data.app_role === 'admin' : false;
 
         const userToCreate = {
             ...data,
             password: hashedPassword,
+            app_role: data.app_role || 'seller',
+            area: data.area || 'retail',
             is_admin: isAdminValue,
             is_active: true
         };
@@ -108,13 +106,14 @@ export class UserService {
         }
 
         const updated = await this.userModel.update(id, updateData)
-        const shouldInvalidateSession = ['is_admin', 'branch_id', 'is_active'].some(field => field in updateData)
+        if (data.branch_ids) await this.userModel.setBranchAccess(id, data.branch_ids)
+        const shouldInvalidateSession = ['is_admin', 'app_role', 'area', 'branch_id', 'branch_ids', 'is_active'].some(field => field in updateData)
 
-        if (updated && shouldInvalidateSession) {
+        if ((updated || data.branch_ids) && shouldInvalidateSession) {
             await this.userModel.logout(id)
         }
 
-        return updated
+        return updated || Boolean(data.branch_ids)
     }
 
     /**

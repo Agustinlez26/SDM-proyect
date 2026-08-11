@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { stockController } from "../src/config/dependencies.js";
-import { checkAuth, isAdmin } from '../src/middlewares/auth-middleware.js'
+import { checkAuth, isAdmin, canManageStock } from '../src/middlewares/auth-middleware.js'
 
 const router = Router();
 
@@ -10,7 +10,7 @@ router.get('/low-stock/count',checkAuth, (req, res) => stockController.getLowSto
 router.get('/out-stock/count',checkAuth, (req, res) => stockController.getOutStockCount(req, res))
 
 router.get('/:id',checkAuth, (req, res) => stockController.getById(req, res))
-router.patch('/:id',checkAuth, isAdmin, (req, res) => stockController.update(req, res))
+router.patch('/:id',checkAuth, canManageStock, (req, res) => stockController.update(req, res))
 router.delete('/:id',checkAuth, isAdmin, (req, res) => stockController.delete(req, res))
 
 export default router;

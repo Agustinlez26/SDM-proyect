@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="es">
-<%- include('../partials/head', { title: 'Pedidos', cssFile: 'orders.css' }) %>
+<%- include('../partials/head', { title: orderTitle, cssFile: 'orders.css' }) %>
 <body>
     <div class="layout">
-        <%- include('../partials/sidebar', { activePage: 'orders' }) %>
+        <%- include('../partials/sidebar', { activePage }) %>
         <main class="layout__content">
-            <%- include('../partials/navbar', { title: 'Pedidos y reservas' }) %>
+            <%- include('../partials/navbar', { title: orderTitle }) %>
             <div class="orders-container">
                 <div id="orders-message" class="orders-message hidden"></div>
                 <section class="orders-summary" id="orders-summary"></section>
@@ -13,17 +13,10 @@
                     <form id="order-form" class="orders-card order-form">
                         <h2>Nuevo pedido</h2>
                         <p>Al guardarlo, las unidades quedan reservadas pero continúan físicamente en la sucursal.</p>
-                        <label>Canal
-                            <select id="order-channel" required>
-                                <option value="mercado_libre">Mercado Libre</option>
-                                <option value="tienda_nube">Tienda Nube</option>
-                                <option value="mayorista">Mayorista</option>
-                                <option value="merchandising">Merchandising</option>
-                            </select>
-                        </label>
                         <label>Cliente / referencia del pedido<input id="order-reference" required placeholder="Nombre, número de venta o referencia"></label>
                         <label id="order-branch-group">Reservar desde<select id="order-branch" required></select></label>
                         <label>Producto<select id="order-product"></select></label>
+                        <div id="branch-availability" class="branch-availability">Seleccioná un producto para comparar disponibilidades.</div>
                         <div class="order-add-line"><input id="order-quantity" type="number" min="1" value="1"><button type="button" id="order-add-item">Agregar</button></div>
                         <div id="order-items" class="order-items"></div>
                         <label>Notas<textarea id="order-notes" rows="2"></textarea></label>
@@ -35,6 +28,7 @@
                     </section>
                 </div>
             </div>
+            <script nonce="<%= cspNonce %>">window.ORDER_CHANNEL='<%= orderChannel %>'; window.ORDER_TITLE='<%= orderTitle %>';</script>
             <script src="/js/orders.js"></script>
         </main>
     </div>

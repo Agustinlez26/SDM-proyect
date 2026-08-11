@@ -54,9 +54,10 @@ export class ViewsController {
         })
     }
 
-    renderOrders(req, res) {
-        res.render('pages/orders', { title: 'Pedidos', activePage: 'orders', cssFile: 'orders.css', user: req.user })
-    }
+    renderWholesaleOrders(req,res){ if(req.user.app_role==='seller'&&req.user.area!=='wholesale') return res.status(403).send('Sin acceso a Mayorista'); res.render('pages/orders',{title:'Mayorista',activePage:'wholesale',cssFile:'orders.css',user:req.user,orderChannel:'mayorista',orderTitle:'Pedidos mayoristas'}) }
+    renderMercadoLibre(req,res){ if(req.user.app_role==='seller'&&req.user.area!=='retail') return res.status(403).send('Sin acceso a Mercado Libre'); res.render('pages/orders',{title:'Mercado Libre',activePage:'mercado-libre',cssFile:'orders.css',user:req.user,orderChannel:'mercado_libre',orderTitle:'Pedidos de Mercado Libre'}) }
+    renderTiendaNube(req,res){ if(req.user.app_role==='seller'&&req.user.area!=='retail') return res.status(403).send('Sin acceso a Tienda Nube'); res.render('pages/orders',{title:'Tienda Nube',activePage:'tienda-nube',cssFile:'orders.css',user:req.user,orderChannel:'tienda_nube',orderTitle:'Pedidos de Tienda Nube'}) }
+    renderShowroomSales(req,res){ if(req.user.app_role==='seller'&&req.user.area!=='retail') return res.status(403).send('Sin acceso a Ventas Showroom'); res.render('pages/orders',{title:'Ventas Showroom',activePage:'showroom-sales',cssFile:'orders.css',user:req.user,orderChannel:'showroom',orderTitle:'Ventas Showroom'}) }
 
     renderOperations(req, res) {
         res.render('pages/operations', {
