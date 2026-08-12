@@ -4,6 +4,7 @@ let pendingOrderRequestKey = null
 let editingOrder = null
 let detailOrder = null
 let originalEditItems = []
+let selectedCatalogProductId = null
 const $ = id => document.getElementById(id)
 const esc = value => String(value ?? '').replace(/[&<>'"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[c]))
 const channelLabel = value => ({ mercado_libre:'Mercado Libre', tienda_nube:'Tienda Nube', mayorista:'Mayorista', merchandising:'Merchandising', showroom:'Showroom' }[value] || value)
@@ -98,6 +99,7 @@ const resetOrderForm = () => {
     $('order-form').reset()
     editingOrder = null
     originalEditItems = []
+    selectedCatalogProductId = null
     items = []
     renderItems()
     if (state.branches.length) $('order-branch').value = state.branches[0].id
@@ -119,12 +121,17 @@ const loadCatalogs = async () => {
 
 const renderProductOptions = () => {
     const catalog = state.catalogs[selectedBranchId()] || []
-    $('order-product').innerHTML = '<option value="">Seleccionar producto</option>' + catalog.filter(p => Number(p.available) > 0 || originalEditItems.some(item=>item.product_id===Number(p.id)&&item.branch_id===selectedBranchId())).map(p => `<option value="${p.id}">${esc(p.name)} (${esc(p.sku)}) — físico ${p.physical}, reservado ${p.reserved}, disponible ${p.available}</option>`).join('')
-    renderAvailability()
+    const term = $('order-product-search').value.trim().toLocaleLowerCase('es')
+    const visible = catalog.filter(p => {
+        const hasStock = Number(p.available) > 0 || originalEditItems.some(item => item.product_id === Number(p.id) && item.branch_id === selectedBranchId())
+        return hasStock && (!term || `${p.name} ${p.sku || ''}`.toLocaleLowerCase('es').includes(term))
+    })
+    $('order-catalog-grid').innerHTML = visible.length ? visible.map(p => `<button class="catalog-card order-catalog-card" type="button" data-order-product="${p.id}"><img src="${esc(p.url_img_small || '/img/no-image.png')}" onerror="this.src='/img/no-image.png'" alt="" class="catalog-img"><span class="catalog-info"><span class="catalog-code">${esc(p.sku || 'S/C')}</span><span class="catalog-name" title="${esc(p.name)}">${esc(p.name)}</span><span class="catalog-stock">Disponible: ${esc(p.available)}</span></span></button>`).join('') : '<p class="order-catalog-empty">No se encontraron productos con stock disponible.</p>'
+    renderAvailability(selectedCatalogProductId)
 }
 
-const renderAvailability = () => {
-    const productId = Number($('order-product').value)
+const renderAvailability = productIdValue => {
+    const productId = Number(productIdValue)
     if (!productId) {
         $('branch-availability').innerHTML = 'Seleccioná un producto para comparar el stock físico, reservado y disponible.'
         return
@@ -137,13 +144,23 @@ const renderAvailability = () => {
 
 const renderItems = () => {
     $('order-items').innerHTML = items.length
-        ? items.map((item, index) => `<div><span>${esc(item.name)}<small>${esc(item.branch_name)}</small></span>${editingOrder?`<input class="order-item-quantity" data-item-quantity="${index}" type="number" min="1" value="${item.quantity}" aria-label="Cantidad de ${esc(item.name)}">`:`<strong>x${item.quantity}</strong>`}<button type="button" data-remove="${index}">Quitar</button></div>`).join('')
-        : '<small>Todavía no agregaste productos.</small>'
+        ? items.map((item, index) => {
+            const product = (state.catalogs[item.branch_id] || []).find(p => Number(p.id) === Number(item.product_id))
+            const originalQuantity = originalEditItems.find(original => original.product_id === Number(item.product_id) && original.branch_id === Number(item.branch_id))?.quantity || 0
+            const maximum = Math.max(1, Number(product?.available || 0) + originalQuantity)
+            return `<tr><td><strong>${esc(item.name)}</strong></td><td><small>${esc(item.branch_name)}</small></td><td class="text-center"><input class="order-item-quantity" data-item-quantity="${index}" type="number" min="1" max="${maximum}" value="${item.quantity}" aria-label="Cantidad de ${esc(item.name)}"></td><td class="text-center"><button class="order-remove-item" type="button" data-remove="${index}" title="Quitar producto" aria-label="Quitar ${esc(item.name)}"><span class="material-symbols-outlined">delete</span></button></td></tr>`
+        }).join('')
+        : '<tr><td colspan="4" class="order-items-empty">Utilizá el buscador para agregar productos a la lista.</td></tr>'
     document.querySelectorAll('[data-remove]').forEach(button => button.addEventListener('click', () => {
         items.splice(Number(button.dataset.remove), 1)
         renderItems()
     }))
-    document.querySelectorAll('[data-item-quantity]').forEach(input=>input.addEventListener('change',()=>{items[Number(input.dataset.itemQuantity)].quantity=Number(input.value)}))
+    document.querySelectorAll('[data-item-quantity]').forEach(input=>input.addEventListener('change',()=>{
+        const index = Number(input.dataset.itemQuantity)
+        const quantity = Math.max(1, Math.min(Number(input.max), Number(input.value) || 1))
+        items[index].quantity = quantity
+        input.value = quantity
+    }))
 }
 
 const render = () => {
@@ -176,8 +193,18 @@ $('order-modal').addEventListener('click', event => { if (event.target === $('or
 $('close-order-details').addEventListener('click', closeOrderDetails)
 $('edit-order-button').addEventListener('click', startOrderEdit)
 $('order-details-modal').addEventListener('click', event => { if (event.target === $('order-details-modal')) closeOrderDetails() })
-$('order-branch').addEventListener('change', renderProductOptions)
-$('order-product').addEventListener('change', renderAvailability)
+$('order-branch').addEventListener('change', () => {
+    selectedCatalogProductId = null
+    renderProductOptions()
+})
+$('order-product-search').addEventListener('input', renderProductOptions)
+$('order-product-search').addEventListener('keydown', event => {
+    if (event.key === 'Enter') {
+        event.preventDefault()
+        renderProductOptions()
+    }
+})
+$('order-search-product').addEventListener('click', renderProductOptions)
 document.querySelectorAll('input[name="fulfillment_mode"]').forEach(input => input.addEventListener('change', updateSubmitLabel))
 
 document.addEventListener('keydown', event => {
@@ -191,15 +218,18 @@ document.addEventListener('keydown', event => {
     }
 })
 
-$('order-add-item').addEventListener('click', () => {
-    const product = (state.catalogs[selectedBranchId()] || []).find(p => Number(p.id) === Number($('order-product').value))
-    const quantity = Number($('order-quantity').value)
+$('order-catalog-grid').addEventListener('click', event => {
+    const card = event.target.closest('[data-order-product]')
+    if (!card) return
+    const product = (state.catalogs[selectedBranchId()] || []).find(p => Number(p.id) === Number(card.dataset.orderProduct))
     const branch = selectedBranch()
-    if (!product || !branch || !Number.isInteger(quantity) || quantity < 1) return notify('Elegí producto, ubicación y cantidad válida.', true)
+    if (!product || !branch) return notify('Elegí un producto y una ubicación válida.', true)
+    selectedCatalogProductId = Number(product.id)
+    renderAvailability(selectedCatalogProductId)
     if (items.some(item => Number(item.product_id) === Number(product.id) && Number(item.branch_id) === Number(branch.id))) return notify('Ese producto y ubicación ya están agregados.', true)
-    const originalQuantity=originalEditItems.find(item=>item.product_id===Number(product.id)&&item.branch_id===Number(branch.id))?.quantity||0
-    if (quantity > Number(product.available)+originalQuantity) return notify(`Solo hay ${Number(product.available)+originalQuantity} unidades disponibles en ${branch.name}.`, true)
-    items.push({ product_id:product.id, branch_id:branch.id, branch_name:branch.name, quantity, name:product.name })
+    const originalQuantity = originalEditItems.find(item => item.product_id === Number(product.id) && item.branch_id === Number(branch.id))?.quantity || 0
+    if (Number(product.available) + originalQuantity < 1) return notify(`No hay unidades disponibles en ${branch.name}.`, true)
+    items.push({ product_id:product.id, branch_id:branch.id, branch_name:branch.name, quantity:1, name:product.name })
     renderItems()
 })
 

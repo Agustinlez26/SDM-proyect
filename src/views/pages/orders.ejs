@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
-<%- include('../partials/head', { title: orderTitle, cssFile: 'orders.css', extraCss: ['/css/components/modals-base.css'] }) %>
+<%- include('../partials/head', { title: orderTitle, cssFile: 'orders.css', extraCss: ['/css/components/modals-base.css', '/css/components/operational-modal.css'] }) %>
 <body>
     <div class="layout">
         <%- include('../partials/sidebar', { activePage }) %>
@@ -77,10 +77,21 @@
                         <% } %>
                         <label>Cliente / referencia del pedido<input id="order-reference" required placeholder="Nombre, número de venta o referencia"></label>
                         <label id="order-branch-group">Reservar desde<select id="order-branch" required></select></label>
-                        <label>Producto<select id="order-product"></select></label>
+                        <label class="order-product-search">Buscar producto
+                            <div class="search-bar">
+                                <span class="material-symbols-outlined search-icon">search</span>
+                                <input id="order-product-search" type="search" placeholder="Escanear SKU o escribir nombre..." autocomplete="off">
+                                <button class="btn-mini-add" type="button" id="order-search-product" aria-label="Buscar producto"><span class="material-symbols-outlined">search</span></button>
+                            </div>
+                        </label>
                         <div id="branch-availability" class="branch-availability">Seleccioná un producto para comparar disponibilidades.</div>
-                        <div class="order-add-line"><input id="order-quantity" type="number" min="1" value="1"><button type="button" id="order-add-item">Agregar</button></div>
-                        <div id="order-items" class="order-items"></div>
+                        <div class="catalog-wrapper order-catalog-wrapper"><div id="order-catalog-grid" class="catalog-grid"></div></div>
+                        <div class="detail-products-container order-selected-products">
+                            <table class="detail-products-table">
+                                <thead><tr><th>Producto</th><th>Sucursal</th><th class="text-center">Cantidad</th><th></th></tr></thead>
+                                <tbody id="order-items"></tbody>
+                            </table>
+                        </div>
                         <label>Notas<textarea id="order-notes" rows="2"></textarea></label>
                         <label id="order-edit-reason-group" hidden>Motivo de la corrección<textarea id="order-edit-reason" rows="2" placeholder="Explicá por qué se modifica un pedido confirmado"></textarea></label>
                         <div class="modal-actions">
