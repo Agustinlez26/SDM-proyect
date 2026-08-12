@@ -199,13 +199,33 @@
 }
 
 .order-details-card {
-  width: min(720px, calc(100vw - 2rem));
-  max-width: 720px;
+  width: min(1100px, calc(100vw - 3rem));
+  max-width: 1100px;
+  height: min(82vh, 780px);
+  max-height: calc(100vh - 3rem);
+  padding: 1.5rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.order-details-card .modal-header {
+  flex: 0 0 auto;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
 }
 
 .order-details-card .modal-header p {
   margin-top: .25rem;
   color: var(--text-muted, #737373);
+}
+
+.order-details-card > .orders-table-wrap {
+  flex: 1 1 auto;
+  min-height: 220px;
+  overflow: auto;
+  border: 1px solid var(--border-color, #e5e5e5);
+  border-radius: 10px;
 }
 
 .order-details-table {
@@ -216,9 +236,16 @@
 
 .order-details-table th,
 .order-details-table td {
-  padding: .8rem;
+  padding: .85rem 1rem;
   text-align: left;
   border-bottom: 1px solid var(--border-color, #e5e5e5);
+}
+
+.order-details-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--bg-card, #fff);
 }
 
 .order-details-table .text-right {
@@ -257,6 +284,9 @@
   margin-top: 1rem;
   padding-top: 1rem;
   border-top: 1px solid var(--border-color, #e5e5e5);
+  max-height: 170px;
+  overflow-y: auto;
+  flex: 0 0 auto;
 }
 
 .order-audit-section h4 {
@@ -277,6 +307,24 @@
 
 .order-audit-section article p {
   font-size: .85rem;
+}
+
+.order-details-card > .modal-actions {
+  flex: 0 0 auto;
+  margin-top: 1rem;
+}
+
+@media (max-width: 640px) {
+  .order-details-card {
+    width: calc(100vw - 1rem);
+    height: calc(100vh - 1rem);
+    max-height: calc(100vh - 1rem);
+    padding: 1rem;
+  }
+
+  .order-details-card > .orders-table-wrap {
+    min-height: 180px;
+  }
 }
 
 @media (max-width: 640px) {
