@@ -1,6 +1,8 @@
 /* --- OVERRIDES PARA ESTE MODAL ESPECÍFICO --- */
 #modal-add-product .modal-card {
-  max-width: 800px;
+  max-width: 960px;
+  max-height: 92vh;
+  overflow-y: auto;
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
@@ -96,7 +98,7 @@
 
 .image-upload-wrapper:hover {
   border-color: var(--primary);
-  background-color: rgba(33, 77, 92, 0.03);
+  background-color: rgba(120, 98, 58, 0.04);
 }
 
 .image-upload-wrapper img {
@@ -140,6 +142,110 @@
 }
 
 /* --- BOTONES DEL MODAL ESPECÍFICOS DE ESTE DISEÑO --- */
+#modal-add-product .product-image-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+#modal-add-product .product-image-drop-zone {
+  border: 2px dashed var(--border-color);
+  border-radius: 10px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+}
+
+#modal-add-product .product-image-drop-zone:hover,
+#modal-add-product .product-image-drop-zone:focus-visible,
+#modal-add-product .product-image-drop-zone.is-dragging {
+  border-color: var(--primary);
+  background-color: rgba(120, 98, 58, 0.08);
+}
+
+#modal-add-product .product-image-drop-zone.is-dragging {
+  transform: scale(1.015);
+}
+
+#modal-add-product .product-image-drop-zone .preview-img-container {
+  border: 0;
+}
+
+#modal-add-product .product-image-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 1rem;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+#modal-add-product .product-image-placeholder[hidden] {
+  display: none;
+}
+
+#modal-add-product .product-image-placeholder .material-symbols-outlined {
+  font-size: 2.4rem;
+  color: var(--primary);
+}
+
+#modal-add-product .product-image-placeholder strong {
+  color: var(--text-secondary);
+}
+
+#modal-add-product .preview-img-container img {
+  padding: 0.35rem;
+}
+
+#modal-add-product .modal-image-col input.product-image-input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+#modal-add-product .product-image-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+#modal-add-product .btn-select-image {
+  flex: 0 0 auto;
+  border: none;
+  border-radius: 6px;
+  padding: 0.45rem 0.7rem;
+  background-color: var(--primary);
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+#modal-add-product .btn-select-image:hover {
+  background-color: var(--primary-hover);
+}
+
+#modal-add-product #prod-img-filename {
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#modal-add-product #prod-img-help {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
 #modal-add-product .modal-actions {
   display: flex;
   justify-content: flex-end;
@@ -148,6 +254,28 @@
   border-top: 1px solid var(--border-color);
   padding-top: 1rem;
 }
+
+#modal-add-product .product-operational-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  border-top: 1px solid var(--border-color);
+  padding-top: 1.25rem;
+}
+
+#modal-add-product .operational-heading h4 { margin-bottom: .25rem; }
+#modal-add-product .operational-heading p,
+#modal-add-product .operational-help,
+#modal-add-product .operational-fieldset small { color: var(--text-muted); font-size: .78rem; }
+#modal-add-product .operational-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+#modal-add-product .operational-checks { display: flex; flex-wrap: wrap; gap: .75rem 1.25rem; }
+#modal-add-product .operational-checks label { display: flex; align-items: center; gap: .4rem; font-size: .84rem; font-weight: 600; }
+#modal-add-product .operational-checks input { width: auto; }
+#modal-add-product .operational-fieldset { border: 1px solid var(--border-color); border-radius: 9px; padding: 1rem; }
+#modal-add-product .operational-fieldset legend { padding: 0 .4rem; font-weight: 700; }
+#modal-add-product .recipe-lines { display: flex; flex-direction: column; gap: .55rem; margin: .75rem 0; }
+#modal-add-product .recipe-line { display: grid; grid-template-columns: minmax(180px, 1fr) 110px 38px; gap: .5rem; }
+#modal-add-product .recipe-remove { border: 1px solid #fecaca; background: #fff1f2; color: #be123c; border-radius: 7px; cursor: pointer; }
 
 #modal-add-product .btn-cancel {
   background: var(--bg-card);
@@ -172,6 +300,7 @@
     grid-template-columns: 1fr;
     gap: 1rem;
   }
+  #modal-add-product .operational-grid { grid-template-columns: 1fr; }
 }
 
 /* --- DARK THEME OVERRIDES --- */

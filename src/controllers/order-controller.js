@@ -35,7 +35,7 @@ export class OrderController {
             const context=await this.#context(req,channel)
             const branchId=Number(req.query.branch_id)
             if(!context.branchIds.includes(branchId)) throw new Error('No tenés acceso a esa ubicación')
-            res.json({status:'success',data:await this.model.catalog(branchId)})
+            res.json({status:'success',data:await this.model.catalog(branchId,channel)})
         } catch(error){ fail(res,error,403) }
     }
 

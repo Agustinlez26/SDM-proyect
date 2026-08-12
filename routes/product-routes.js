@@ -6,6 +6,7 @@ import { checkAuth, canManageStock } from '../src/middlewares/auth-middleware.js
 const router = Router()
 
 router.get('/catalog', checkAuth, (req, res) => productController.getPublicCatalog(req, res))
+router.get('/operational-catalogs', checkAuth, canManageStock, (req, res) => productController.getOperationalCatalogs(req, res))
 router.get('/', checkAuth, canManageStock, (req, res) => productController.getAll(req, res))
 router.post('/', checkAuth, canManageStock, upload.single('image'), (req, res) => productController.create(req, res))
 

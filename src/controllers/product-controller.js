@@ -124,6 +124,15 @@ export class ProductController {
         }
     }
 
+    getOperationalCatalogs = async (_req, res) => {
+        try {
+            const catalogs = await this.productService.getOperationalCatalogs()
+            return res.json({ status: 'success', data: catalogs })
+        } catch (error) {
+            handleError(res, error)
+        }
+    }
+
     /**
      * Actualiza un producto existente.
      * @param {import('express').Request} req 

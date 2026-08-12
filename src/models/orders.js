@@ -73,15 +73,17 @@ export class OrderModel {
         }))
     }
 
-    async catalog(branchId) {
+    async catalog(branchId, channel) {
         const [rows] = await this.#db.query(`
             SELECT p.id,p.name,p.cod_bar sku,p.url_img_small,s.quantity physical,
                 COALESCE(r.quantity,0) reserved,GREATEST(s.quantity-COALESCE(r.quantity,0),0) available
             FROM product_branch_stock s JOIN products p ON p.id=s.product_id AND p.is_active=TRUE
+            JOIN product_sales_channels psc ON psc.product_id=p.id AND psc.is_enabled=TRUE
+            JOIN sales_channels sc ON sc.id=psc.channel_id AND sc.is_active=TRUE AND sc.code=?
             LEFT JOIN (SELECT product_id,branch_id,SUM(quantity) quantity FROM stock_reservations WHERE status='active' GROUP BY product_id,branch_id) r
                 ON r.product_id=s.product_id AND r.branch_id=s.branch_id
-            WHERE s.branch_id=? ORDER BY p.name
-        `, [branchId])
+            WHERE s.branch_id=? AND p.is_sellable=TRUE ORDER BY p.name
+        `, [channel,branchId])
         return rows
     }
 
