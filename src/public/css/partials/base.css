@@ -478,8 +478,7 @@ html.dark-theme .nav-link {
 
 html.dark-theme .nav-link:hover,
 html.dark-theme .nav-item.active .nav-link {
-  color: var(--primary);
-  background-color: #2b2b2b;
+  color: inherit;
 }
 
 /* Filter menu en dark theme */

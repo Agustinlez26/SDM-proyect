@@ -12,6 +12,8 @@
     <nav class="sidebar__nav">
         <ul class="nav-list">
 
+            <li class="nav-section-title" aria-hidden="true"><span>Principal</span></li>
+
             <li class="nav-item <%= activePage === 'dashboard' ? 'active' : '' %>">
                 <a href="/" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
@@ -20,6 +22,8 @@
                     <span>Inicio</span>
                 </a>
             </li>
+
+            <li class="nav-section-title" aria-hidden="true"><span>Inventario</span></li>
 
             <li class="nav-item <%= activePage === 'stock' ? 'active' : '' %>">
                 <a href="/stock" class="nav-link">
@@ -41,6 +45,10 @@
                 </a>
             </li>
 
+            <% if (user && (['admin','stock_manager'].includes(user.app_role) || ['wholesale','retail'].includes(user.area))) { %>
+            <li class="nav-section-title" aria-hidden="true"><span>Ventas y pedidos</span></li>
+            <% } %>
+
             <% if (user && (['admin','stock_manager'].includes(user.app_role) || user.area === 'wholesale')) { %>
             <li class="nav-item <%= activePage === 'wholesale' ? 'active' : '' %>"><a href="/mayorista" class="nav-link"><span class="material-symbols-outlined">inventory</span><span>Mayorista</span></a></li>
             <% } %>
@@ -49,6 +57,8 @@
             <li class="nav-item <%= activePage === 'tienda-nube' ? 'active' : '' %>"><a href="/tienda-nube" class="nav-link"><span class="material-symbols-outlined">cloud</span><span>Tienda Nube</span></a></li>
             <li class="nav-item <%= activePage === 'showroom-sales' ? 'active' : '' %>"><a href="/ventas-showroom" class="nav-link"><span class="material-symbols-outlined">point_of_sale</span><span>Ventas Showroom</span></a></li>
             <% } %>
+
+            <li class="nav-section-title" aria-hidden="true"><span>Gestión</span></li>
 
             <li class="nav-item <%= activePage === 'operations' ? 'active' : '' %>">
                 <a href="/operations" class="nav-link">
@@ -75,6 +85,8 @@
             <% } %>
 
             <% if (user && user.role === 'admin') { %>
+
+                <li class="nav-section-title" aria-hidden="true"><span>Administración</span></li>
 
                 <li class="nav-item <%= activePage === 'stats' ? 'active' : '' %>">
                     <a href="/stats" class="nav-link">
