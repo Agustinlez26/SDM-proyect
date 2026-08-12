@@ -44,7 +44,7 @@ body::before {
 .login-form {
   width: 100%;
   height: 100%;
-  color: #214d5c;
+  color: #000000;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -140,11 +140,11 @@ body::before {
 }
 
 .login-form__forgot-pass:visited {
-  color: #214d5c;
+  color: #000000;
 }
 
 .login-form__forgot-pass:hover {
-  color: #306e83;
+  color: #262626;
 }
 
 .login-form__submit {
@@ -157,16 +157,16 @@ body::before {
   outline: 0;
   border: 2px transparent;
   border-radius: 20px;
-  background-color: #214d5c;
-  box-shadow: 0 0 10px #214d5c66;
+  background-color: #000000;
+  box-shadow: 0 0 10px #00000040;
   transition:
     background-color 0.3s ease-in-out,
     box-shadow 0.3s ease-in-out;
 }
 
 .login-form__submit:hover {
-  background-color: #36768b;
-  box-shadow: 0 0 10px #15313a66;
+  background-color: #262626;
+  box-shadow: 0 0 10px #00000040;
 }
 
 @media (max-width: 480px) {

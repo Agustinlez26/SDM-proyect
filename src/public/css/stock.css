@@ -560,7 +560,7 @@
 }
 
 .btn-primary:hover {
-  background-color: var(--primary-dark, #1b3d49);
+  background-color: var(--primary-dark, #262626);
   transform: translateY(-1px);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }

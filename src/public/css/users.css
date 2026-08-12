@@ -245,9 +245,9 @@
   border: 1px solid #fecaca;
 }
 .role-encargado {
-  background: #e0e7ff;
-  color: #1d4ed8;
-  border: 1px solid #bfdbfe;
+  background: #f5f5f5;
+  color: #262626;
+  border: 1px solid #d4d4d4;
 }
 .role-vendedor {
   background: #dcfce7;
@@ -317,13 +317,13 @@
   border-color: #fde68a;
 }
 .btn-edit {
-  color: #3b82f6;
+  color: #262626;
   border-color: transparent;
 }
 .btn-edit:hover {
-  background-color: #eff6ff;
-  border-color: #bfdbfe;
-  color: #2563eb;
+  background-color: #f5f5f5;
+  border-color: #d4d4d4;
+  color: #171717;
 }
 .btn-delete {
   color: #ef4444;

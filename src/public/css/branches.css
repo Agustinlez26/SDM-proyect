@@ -56,7 +56,7 @@
 }
 
 .btn-primary:hover {
-  background-color: var(--primary-hover, #0f172a);
+  background-color: var(--primary-hover, #262626);
   transform: translateY(-1px);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
@@ -190,13 +190,13 @@
 
 /* Estilos específicos para Editar */
 .btn-edit {
-  color: #3b82f6;
+  color: #262626;
   border-color: transparent;
 }
 .btn-edit:hover {
-  background-color: #eff6ff;
-  border-color: #bfdbfe;
-  color: #2563eb;
+  background-color: #f5f5f5;
+  border-color: #d4d4d4;
+  color: #171717;
 }
 
 /* Estilos específicos para Eliminar */
@@ -212,13 +212,13 @@
 
 /* Dark theme para botones de acción */
 html.dark-theme .btn-edit {
-  color: #60a5fa;
+  color: #d4d4d4;
 }
 
 html.dark-theme .btn-edit:hover {
   background-color: rgba(96, 165, 250, 0.15);
   border-color: rgba(96, 165, 250, 0.3);
-  color: #93c5fd;
+  color: #e5e5e5;
 }
 
 html.dark-theme .btn-delete {

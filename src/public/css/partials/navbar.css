@@ -275,7 +275,7 @@
   color: white;
 }
 .bg-info {
-  background-color: #3b82f6;
+  background-color: #171717;
 }
 .bg-warning {
   background-color: #eab308;
@@ -459,7 +459,7 @@
   color: #f59e0b;
 } /* Amarillo/Naranja */
 .text-info {
-  color: #3b82f6;
+  color: #262626;
 } /* Azul */
 .text-danger {
   color: #ef4444 !important;
@@ -491,7 +491,7 @@
   padding: 12px;
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--primary-color, #2563eb);
+  color: var(--primary-color, #000000);
   text-decoration: none;
   border-top: 1px solid var(--border-color);
   background-color: #f9fafb;

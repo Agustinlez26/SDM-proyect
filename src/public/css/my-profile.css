@@ -26,7 +26,7 @@
 .profile-avatar {
   width: 80px;
   height: 80px;
-  background-color: var(--primary, #214d5c);
+  background-color: var(--primary, #000000);
   color: white;
   border-radius: 50%;
   display: flex;
@@ -40,7 +40,7 @@
 .profile-titles h2 {
   margin: 0;
   font-size: 1.5rem;
-  color: var(--text-primary, #0f172a);
+  color: var(--text-primary, #171717);
 }
 
 .profile-card .divider {
@@ -58,7 +58,7 @@
 
 .readonly-input {
   background-color: var(--bg-input, #f1f5f9) !important;
-  color: var(--text-secondary, #64748b) !important;
+  color: var(--text-secondary, #525252) !important;
   border-color: transparent !important;
   cursor: not-allowed;
   font-weight: 500;
@@ -97,7 +97,7 @@
 .profile-security h3 {
   margin: 0;
   font-size: 1.1rem;
-  color: var(--text-primary, #0f172a);
+  color: var(--text-primary, #171717);
 }
 
 /* --- MODALES --- */
@@ -191,7 +191,7 @@
 
 .form-group input:focus {
   outline: none;
-  border-color: var(--primary, #214d5c);
+  border-color: var(--primary, #000000);
   box-shadow: 0 0 0 2px rgba(33, 77, 92, 0.1);
 }
 
@@ -220,7 +220,7 @@
 }
 
 .btn-confirm {
-  background: var(--primary, #214d5c);
+  background: var(--primary, #000000);
   color: white;
   border: none;
   padding: 0.6rem 1.2rem;
@@ -231,7 +231,7 @@
 }
 
 .btn-confirm:hover {
-  background-color: var(--primary-hover, #1a3c48);
+  background-color: var(--primary-hover, #262626);
   transform: translateY(-1px);
 }
 
@@ -242,7 +242,7 @@
 }
 
 .btn-primary {
-  background-color: var(--primary, #214d5c);
+  background-color: var(--primary, #000000);
   color: white;
   border: none;
   padding: 0.6rem 1.2rem;
@@ -256,14 +256,14 @@
 }
 
 .btn-primary:hover {
-  background-color: var(--primary-hover, #1a3c48);
+  background-color: var(--primary-hover, #262626);
   transform: translateY(-1px);
   box-shadow: 0 4px 6px rgba(33, 77, 92, 0.2);
 }
 
 .btn-secondary {
   background-color: var(--bg-card, #ffffff);
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #525252);
   border: 1px solid var(--border-color, #e2e8f0);
   padding: 0.6rem 1.2rem;
   border-radius: 6px;
@@ -277,8 +277,8 @@
 
 .btn-secondary:hover {
   background-color: var(--bg-input, #f1f5f9);
-  color: var(--primary, #214d5c);
-  border-color: var(--primary, #214d5c);
+  color: var(--primary, #000000);
+  border-color: var(--primary, #000000);
 }
 
 /* --- DARK THEME OVERRIDES --- */

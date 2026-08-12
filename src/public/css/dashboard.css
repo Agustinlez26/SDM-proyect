@@ -90,8 +90,8 @@
 }
 
 .kpi-icon.blue {
-  background-color: #eff6ff;
-  color: #3b82f6;
+  background-color: #f5f5f5;
+  color: #171717;
 }
 .kpi-icon.green {
   background-color: #f0fdf4;
@@ -249,9 +249,9 @@
   border: 1px solid #fecaca;
 }
 .type-transfer {
-  background: #dbeafe;
-  color: #1d4ed8;
-  border: 1px solid #bfdbfe;
+  background: #f5f5f5;
+  color: #262626;
+  border: 1px solid #d4d4d4;
 }
 .icon-tiny {
   font-size: 14px;
@@ -320,9 +320,9 @@
   border: 1px solid #fde047;
 }
 .badge.en_proceso {
-  background: #dbeafe;
-  color: #1d4ed8;
-  border: 1px solid #bfdbfe;
+  background: #f5f5f5;
+  color: #262626;
+  border: 1px solid #d4d4d4;
 }
 .badge.cancelado {
   background: #fee2e2;
