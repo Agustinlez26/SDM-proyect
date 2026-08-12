@@ -463,3 +463,217 @@ body.order-modal-open {
     padding: 1rem;
   }
 }
+
+/* Mobile orders follow the compact card layout used by the other modules. */
+@media (max-width: 700px) {
+  .orders-container {
+    padding: .75rem;
+    gap: .9rem;
+  }
+
+  .orders-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .6rem;
+  }
+
+  .orders-summary article {
+    min-height: 76px;
+    padding: .75rem .8rem;
+    justify-content: center;
+  }
+
+  .orders-summary strong {
+    font-size: 1.3rem;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+  }
+
+  .orders-summary article:last-child strong {
+    font-size: 1rem;
+  }
+
+  .orders-summary span {
+    margin-top: .2rem;
+    font-size: .72rem;
+  }
+
+  .orders-toolbar {
+    gap: .75rem;
+  }
+
+  .orders-toolbar h2 {
+    font-size: 1.1rem;
+  }
+
+  .orders-toolbar p {
+    font-size: .78rem;
+    line-height: 1.35;
+  }
+
+  .orders-table-card {
+    padding: 0;
+    overflow: visible;
+    border: 0;
+    background: transparent;
+  }
+
+  .orders-table-card .orders-table-wrap {
+    overflow: visible;
+  }
+
+  .orders-table-card table,
+  .orders-table-card tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .orders-table-card thead {
+    display: none;
+  }
+
+  .orders-table-card tbody {
+    display: grid;
+    gap: .75rem;
+  }
+
+  .orders-table-card tbody tr {
+    display: block;
+    padding: .25rem .8rem;
+    border: 1px solid var(--border-color, #e5e5e5);
+    border-radius: 12px;
+    background: var(--bg-card, #fff);
+    box-shadow: 0 3px 12px rgba(0, 0, 0, .04);
+  }
+
+  .orders-table-card tbody td {
+    display: grid;
+    grid-template-columns: minmax(105px, 42%) minmax(0, 1fr);
+    align-items: center;
+    gap: .75rem;
+    width: 100% !important;
+    min-height: 40px;
+    padding: .55rem 0;
+    border-bottom: 1px solid var(--border-color, #e5e5e5);
+    text-align: right;
+    font-size: .8rem;
+    overflow-wrap: anywhere;
+  }
+
+  .orders-table-card tbody td::before {
+    content: attr(data-label);
+    color: var(--text-muted, #737373);
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .035em;
+    text-align: left;
+    text-transform: uppercase;
+  }
+
+  .orders-table-card tbody td:last-child {
+    border-bottom: 0;
+  }
+
+  .orders-table-card tbody td > * {
+    justify-self: end;
+  }
+
+  .order-details-button {
+    min-width: 84px;
+  }
+
+  .order-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: .4rem;
+  }
+
+  .order-actions button {
+    margin: 0 !important;
+  }
+
+  .order-no-actions {
+    color: var(--text-muted, #737373);
+    font-size: .72rem;
+  }
+
+  .orders-empty-row {
+    padding: 1rem !important;
+  }
+
+  .orders-empty-row td {
+    display: block !important;
+    min-height: 0;
+    padding: 1rem !important;
+    border: 0 !important;
+    text-align: center !important;
+  }
+
+  .orders-empty-row td::before {
+    content: none !important;
+  }
+
+  .order-details-card > .orders-table-wrap {
+    overflow-x: hidden;
+    border: 0;
+  }
+
+  .order-details-table,
+  .order-details-table tbody {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .order-details-table thead {
+    display: none;
+  }
+
+  .order-details-table tbody {
+    display: grid;
+    gap: .65rem;
+  }
+
+  .order-details-table tr {
+    display: block;
+    padding: .3rem .7rem;
+    border: 1px solid var(--border-color, #e5e5e5);
+    border-radius: 10px;
+    background: var(--bg-card, #fff);
+  }
+
+  .order-details-table td {
+    display: grid;
+    grid-template-columns: 90px minmax(0, 1fr);
+    align-items: center;
+    gap: .5rem;
+    padding: .5rem 0;
+    border-bottom: 1px solid var(--border-color, #e5e5e5);
+    text-align: right !important;
+    overflow-wrap: anywhere;
+  }
+
+  .order-details-table td::before {
+    content: attr(data-label);
+    color: var(--text-muted, #737373);
+    font-size: .66rem;
+    font-weight: 700;
+    letter-spacing: .03em;
+    text-align: left;
+    text-transform: uppercase;
+  }
+
+  .order-details-table td:last-child {
+    border-bottom: 0;
+  }
+
+  .order-details-table td > * {
+    justify-self: end;
+  }
+}
+
+@media (max-width: 340px) {
+  .orders-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
