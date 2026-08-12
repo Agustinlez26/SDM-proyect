@@ -39,6 +39,17 @@ export class OrderController {
         } catch(error){ fail(res,error,403) }
     }
 
+    details = async (req,res) => {
+        try {
+            const order=await this.model.orderInfo(Number(req.params.id))
+            if(!order||!this.#canUseChannel(req.user,order.channel)) throw new Error('Pedido inexistente o sin acceso')
+            const context=await this.#context(req,order.channel)
+            const details=await this.model.details(order.id)
+            if(!context.globalAccess&&details.some(item=>!context.branchIds.includes(Number(item.branch_id)))) throw new Error('El pedido incluye stock de una ubicación no habilitada')
+            res.json({status:'success',data:details})
+        } catch(error){ fail(res,error,403) }
+    }
+
     create = async (req,res) => {
         try {
             const data={...req.body}

@@ -34,6 +34,29 @@ const closeOrderModal = () => {
     document.body.classList.remove('order-modal-open')
 }
 
+const closeOrderDetails = () => {
+    $('order-details-modal').classList.remove('active')
+    $('order-details-modal').setAttribute('aria-hidden', 'true')
+}
+
+const openOrderDetails = async order => {
+    const modal = $('order-details-modal')
+    const list = $('order-details-list')
+    $('order-details-number').textContent = order.order_number
+    list.innerHTML = '<tr><td colspan="4" class="order-details-loading">Cargando productos...</td></tr>'
+    modal.classList.add('active')
+    modal.setAttribute('aria-hidden', 'false')
+    try {
+        const details = await request(`/api/orders/${order.id}/details`)
+        list.innerHTML = details.length
+            ? details.map(item => `<tr><td><span class="order-sku">${esc(item.sku || 'S/C')}</span></td><td><strong>${esc(item.name)}</strong></td><td>${esc(item.branch_name)}</td><td class="text-right"><span class="order-quantity-badge">${esc(item.quantity)}</span></td></tr>`).join('')
+            : '<tr><td colspan="4" class="order-details-loading">El pedido no tiene productos.</td></tr>'
+    } catch (error) {
+        closeOrderDetails()
+        notify(error.message, true)
+    }
+}
+
 const resetOrderForm = () => {
     $('order-form').reset()
     items = []
@@ -91,7 +114,7 @@ const render = () => {
         ['Canal', channelLabel(state.channel)]
     ].map(([label, value]) => `<article><strong>${esc(value)}</strong><span>${label}</span></article>`).join('')
     const canConfirm = state.channel !== 'mayorista' || ['admin', 'stock_manager'].includes(state.appRole)
-    $('orders-list').innerHTML = state.orders.map(o => `<tr><td><strong>${esc(o.order_number)}</strong></td><td>${esc(channelLabel(o.channel))}</td><td>${esc(o.customer_reference)}</td><td>${esc(o.branch_name)}</td><td>${esc(o.items)}</td><td><span class="order-status ${o.status}">${esc(statusLabel(o.status))}</span></td><td>${o.status === 'reserved' ? `${canConfirm ? `<button data-complete="${o.id}">Confirmar retiro</button>` : ''}<button class="danger" data-cancel="${o.id}">Cancelar</button>` : ''}</td></tr>`).join('') || '<tr><td colspan="7">Todavía no hay pedidos en este canal.</td></tr>'
+    $('orders-list').innerHTML = state.orders.map(o => `<tr><td><strong>${esc(o.order_number)}</strong></td><td>${esc(channelLabel(o.channel))}</td><td>${esc(o.customer_reference)}</td><td>${esc(o.branch_name)}</td><td><button class="order-details-button" data-details="${o.id}" type="button"><span class="material-symbols-outlined">visibility</span> Ver productos${Number(o.item_count) ? ` (${o.item_count})` : ''}</button></td><td><span class="order-status ${o.status}">${esc(statusLabel(o.status))}</span></td><td>${o.status === 'reserved' ? `${canConfirm ? `<button data-complete="${o.id}">Confirmar retiro</button>` : ''}<button class="danger" data-cancel="${o.id}">Cancelar</button>` : ''}</td></tr>`).join('') || '<tr><td colspan="7">Todavía no hay pedidos en este canal.</td></tr>'
     $('order-branch').innerHTML = state.branches.map((branch, index) => `<option value="${branch.id}" ${index === 0 ? 'selected' : ''}>${esc(branch.name)}</option>`).join('')
     $('order-branch-group').hidden = state.branches.length === 1
 }
@@ -110,6 +133,8 @@ $('open-order-modal').addEventListener('click', openOrderModal)
 $('close-order-modal').addEventListener('click', closeOrderModal)
 $('cancel-order-modal').addEventListener('click', closeOrderModal)
 $('order-modal').addEventListener('click', event => { if (event.target === $('order-modal')) closeOrderModal() })
+$('close-order-details').addEventListener('click', closeOrderDetails)
+$('order-details-modal').addEventListener('click', event => { if (event.target === $('order-details-modal')) closeOrderDetails() })
 $('order-branch').addEventListener('change', renderProductOptions)
 $('order-product').addEventListener('change', renderAvailability)
 document.querySelectorAll('input[name="fulfillment_mode"]').forEach(input => input.addEventListener('change', updateSubmitLabel))
@@ -117,7 +142,8 @@ document.querySelectorAll('input[name="fulfillment_mode"]').forEach(input => inp
 document.addEventListener('keydown', event => {
     const target = event.target
     const isTyping = target instanceof HTMLElement && (target.matches('input, textarea, select') || target.isContentEditable)
-    if (event.key === 'Escape' && $('order-modal').classList.contains('active')) closeOrderModal()
+    if (event.key === 'Escape' && $('order-details-modal').classList.contains('active')) closeOrderDetails()
+    else if (event.key === 'Escape' && $('order-modal').classList.contains('active')) closeOrderModal()
     if (event.key.toLowerCase() === 'v' && !event.ctrlKey && !event.metaKey && !event.altKey && !isTyping && !$('order-modal').classList.contains('active')) {
         event.preventDefault()
         openOrderModal()
@@ -160,6 +186,12 @@ $('order-form').addEventListener('submit', async event => {
 
 $('orders-list').addEventListener('click', async event => {
     try {
+        const detailsButton = event.target.closest('[data-details]')
+        if (detailsButton) {
+            const order = state.orders.find(item => Number(item.id) === Number(detailsButton.dataset.details))
+            if (order) await openOrderDetails(order)
+            return
+        }
         if (event.target.dataset.complete) {
             if (!confirm('Se descontará el stock físico de cada ubicación y quedará registrada la confirmación. ¿Continuar?')) return
             await request(`/api/orders/${event.target.dataset.complete}/complete`, { method:'POST' })

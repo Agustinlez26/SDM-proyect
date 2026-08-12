@@ -28,6 +28,26 @@
 
             <div id="orders-message" class="orders-message hidden" role="status" aria-live="polite"></div>
 
+            <div class="modal-overlay" id="order-details-modal" aria-hidden="true">
+                <div class="modal-card order-details-card" role="dialog" aria-modal="true" aria-labelledby="order-details-title">
+                    <header class="modal-header">
+                        <div>
+                            <h3 id="order-details-title">Productos del pedido</h3>
+                            <p id="order-details-number"></p>
+                        </div>
+                        <button class="btn-close-modal" id="close-order-details" type="button" aria-label="Cerrar detalle">
+                            <span class="material-symbols-outlined">close</span>
+                        </button>
+                    </header>
+                    <div class="orders-table-wrap">
+                        <table class="order-details-table">
+                            <thead><tr><th>SKU</th><th>Producto</th><th>Sucursal</th><th class="text-right">Cantidad</th></tr></thead>
+                            <tbody id="order-details-list"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             <div class="modal-overlay" id="order-modal" aria-hidden="true">
                 <div class="modal-card modal-order-card" role="dialog" aria-modal="true" aria-labelledby="order-modal-title">
                     <header class="modal-header">

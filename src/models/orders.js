@@ -37,13 +37,24 @@ export class OrderModel {
         const [orders] = await this.#db.query(`
             SELECT o.id,o.order_number,o.channel,o.customer_reference,o.status,o.notes,o.branch_id,
                 b.name branch_name,o.created_at,
-                GROUP_CONCAT(DISTINCT CONCAT(p.name,' x',sr.quantity,' — ',rb.name) ORDER BY p.name,rb.name SEPARATOR ', ') items
+                COUNT(*) item_count
             FROM orders o JOIN branches b ON b.id=o.branch_id
             JOIN stock_reservations sr ON sr.order_id=o.id
-            JOIN products p ON p.id=sr.product_id JOIN branches rb ON rb.id=sr.branch_id
             ${where} GROUP BY o.id ORDER BY o.id DESC
         `, params)
         return { orders }
+    }
+
+    async details(id) {
+        const [rows] = await this.#db.query(`
+            SELECT sr.product_id,p.cod_bar sku,p.name,sr.quantity,sr.branch_id,b.name branch_name
+            FROM stock_reservations sr
+            JOIN products p ON p.id=sr.product_id
+            JOIN branches b ON b.id=sr.branch_id
+            WHERE sr.order_id=?
+            ORDER BY p.name,b.name
+        `, [id])
+        return rows
     }
 
     async catalog(branchId) {
