@@ -1,145 +1,47 @@
 <!DOCTYPE html>
 <html lang="es">
+<%- include('../partials/head', { title: 'Operaciones', cssFile: 'operations.css', extraCss: ['/css/components/modals-base.css', '/css/components/operational-modal.css'] }) %>
+<body>
+    <div class="layout">
+        <%- include('../partials/sidebar', { activePage: 'operations' }) %>
+        <main class="layout__content">
+            <%- include('../partials/navbar', { title: 'Operaciones' }) %>
 
-<%- include('../partials/head', { title: 'Operaciones' , cssFile: 'operations.css' , extraCss:
-    [ '/css/components/modals-base.css' , '/css/components/operational-modal.css' ] }) %>
-
-    <body>
-        <div class="layout">
-            <%- include('../partials/sidebar', { activePage: 'operations' }) %>
-
-                <main class="layout__content">
-                    <%- include('../partials/navbar', { title: 'Operaciones' }) %>
-
-                        <script nonce="<%= cspNonce %>">
-                            window.USER_ROLE = '<%= user && user.role === "admin" ? "admin" : "empleado" %>';
-                        </script>
-                        <script src="/js/operations.js" defer></script>
-
-                        <div class="main-container">
-
-                            <section class="alerts-section" id="alerts-section">
-                                <div class="section-header">
-                                    <span class="material-symbols-outlined icon-alert"
-                                        id="alert-icon">notifications_active</span>
-                                    <h2 id="alert-title">Requiere tu atención</h2>
-                                </div>
-                                <div class="alerts-grid" id="alerts-grid-container">
-                                    <div style="padding: 2rem; color: #64748b; font-size: 0.9rem;"
-                                        id="alert-empty-text">
-                                        Buscando envíos...
-                                    </div>
-                                </div>
-                            </section>
-
-                            <hr class="divider">
-
-                            <section class="actions-section">
-                                <h2>¿Qué operación deseas registrar?</h2>
-                                <div class="action-cards-grid">
-                                    <% if (user && (user.role==='admin' || user.app_role==='stock_manager') ) { %>
-                                        <button class="action-card card-in" onclick="openOperationModal('in')">
-                                            <div class="card-icon"><span
-                                                    class="material-symbols-outlined">download</span></div>
-                                            <div class="card-text">
-                                                <h3>Ingreso de Mercadería</h3>
-                                                <p>Cargar compras a proveedores o ajustes a favor.</p>
-                                            </div>
-                                        </button>
-                                        <button class="action-card card-transfer"
-                                            onclick="openOperationModal('transfer')">
-                                            <div class="card-icon"><span
-                                                    class="material-symbols-outlined">local_shipping</span></div>
-                                            <div class="card-text">
-                                                <h3>Enviar a Sucursal</h3>
-                                                <p>Mover stock hacia otro local o depósito.</p>
-                                            </div>
-                                        </button>
-                                        <button class="action-card card-out" onclick="openOperationModal('out')">
-                                            <div class="card-icon"><span class="material-symbols-outlined">upload</span></div>
-                                            <div class="card-text"><h3>Egreso / Salida</h3><p>Registrar venta, devolución o cambio.</p></div>
-                                        </button>
-                                        <% } else { %>
-                                            <button class="action-card card-out" onclick="openOperationModal('out')">
-                                                <div class="card-icon"><span
-                                                        class="material-symbols-outlined">upload</span></div>
-                                                <div class="card-text">
-                                                    <h3>Egreso / Salida</h3>
-                                                    <p>Registrar ventas, mermas o productos dañados.</p>
-                                                </div>
-                                            </button>
-                                            <button class="action-card card-transfer" onclick="openOperationModal('transfer')">
-                                                <div class="card-icon"><span class="material-symbols-outlined">local_shipping</span></div>
-                                                <div class="card-text"><h3>Enviar a Sucursal</h3><p>Mover stock desde este punto de venta.</p></div>
-                                            </button>
-                                            <% } %>
-                                </div>
-                            </section>
-
+            <div class="main-container">
+                <section class="actions-section">
+                    <div class="section-header">
+                        <div>
+                            <h2>Devoluciones y cambios</h2>
+                            <p class="text-muted">Usá esta sección solamente para descontar productos por una devolución o un cambio.</p>
                         </div>
-                        <% if (user && (user.role==='admin' || user.app_role==='stock_manager') ) { %>
-                            <%- include('../partials/modals/modal-op-admin') %>
-                                <script src="/js/components/op-admin.js" defer></script>
-                                <% } else { %>
-                                    <%- include('../partials/modals/modal-op-employee') %>
-                                        <script src="/js/components/op-employee.js" defer></script>
-                                        <% } %>
+                    </div>
+                    <div class="action-cards-grid">
+                        <button class="action-card card-out" type="button" onclick="openOperationModal('out', 'return')">
+                            <div class="card-icon"><span class="material-symbols-outlined">assignment_return</span></div>
+                            <div class="card-text">
+                                <h3>Registrar devolución</h3>
+                                <p>Registrar la salida de productos vinculada a una devolución.</p>
+                            </div>
+                        </button>
+                        <button class="action-card card-transfer" type="button" onclick="openOperationModal('out', 'exchange')">
+                            <div class="card-icon"><span class="material-symbols-outlined">swap_horiz</span></div>
+                            <div class="card-text">
+                                <h3>Registrar cambio</h3>
+                                <p>Registrar los productos entregados como parte de un cambio.</p>
+                            </div>
+                        </button>
+                    </div>
+                </section>
+            </div>
 
-                                            <div class="modal-overlay" id="modal-shipment">
-                                                <div class="modal-card modal-large modal-shipment-card">
-
-                                                    <header class="modal-header modal-shipment-header" id="modal-shipment-header">
-
-                                                        <div id="modal-shipment-icon" class="material-symbols-outlined modal-shipment-icon">
-                                                            local_shipping
-                                                        </div>
-
-                                                        <div class="modal-shipment-title-container">
-                                                            <h3 id="modal-shipment-title">
-                                                                Título Envío</h3>
-                                                            <p id="modal-shipment-subtitle">
-                                                                Subtítulo</p>
-                                                        </div>
-
-                                                        <button class="btn-close-modal"
-                                                            onclick="document.getElementById('modal-shipment').classList.remove('active')">
-                                                            <span class="material-symbols-outlined">close</span>
-                                                        </button>
-
-                                                    </header>
-
-                                                    <div class="modal-body modal-shipment-body">
-                                                        <h4>Detalle de Productos</h4>
-                                                        <div class="detail-products-container">
-                                                            <table class="detail-products-table">
-                                                                <thead>
-                                                                    <tr>
-                                                                        <th>Código</th>
-                                                                        <th>Producto</th>
-                                                                        <th class="text-center" width="150">Cantidad a Mover</th>
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody id="shipment-products-list">
-                                                                </tbody>
-                                                            </table>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="modal-actions modal-shipment-actions">
-                                                        <button class="btn-cancel"
-                                                            onclick="document.getElementById('modal-shipment').classList.remove('active')">Volver Atrás</button>
-                                                        <button class="btn-primary" id="btn-confirm-shipment">
-                                                            <span class="material-symbols-outlined"
-                                                                id="btn-confirm-shipment-icon">check_circle</span>
-                                                            <span id="btn-confirm-shipment-text">Confirmar</span>
-                                                        </button>
-                                                    </div>
-
-                                                </div>
-                                            </div>
-
-                </main>
-        </div>
-    </body>
-
+            <% if (user && (user.role === 'admin' || user.app_role === 'stock_manager')) { %>
+                <%- include('../partials/modals/modal-op-admin') %>
+                <script src="/js/components/op-admin.js" defer></script>
+            <% } else { %>
+                <%- include('../partials/modals/modal-op-employee') %>
+                <script src="/js/components/op-employee.js" defer></script>
+            <% } %>
+        </main>
+    </div>
+</body>
 </html>

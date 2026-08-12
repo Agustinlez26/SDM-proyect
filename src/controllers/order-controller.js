@@ -42,6 +42,9 @@ export class OrderController {
         try {
             const data={...req.body}
             const context=await this.#context(req,data.channel)
+            const fulfillmentMode=data.fulfillment_mode||'reserve'
+            if(!['reserve','immediate'].includes(fulfillmentMode)) throw new Error('Tipo de operación inválido')
+            if(fulfillmentMode==='immediate'&&data.channel!=='showroom') throw new Error('La venta inmediata solo está disponible en Ventas Showroom')
             if(!data.customer_reference?.trim()) throw new Error('La referencia del pedido es obligatoria')
             if(!Array.isArray(data.items)||!data.items.length||data.items.some(item=>!positiveInt(item.product_id)||!positiveInt(item.quantity)||!positiveInt(item.branch_id))) throw new Error('El pedido necesita productos, ubicaciones y cantidades válidas')
             if(data.items.some(item=>!context.branchIds.includes(Number(item.branch_id)))) throw new Error('Una de las ubicaciones no está habilitada para tu usuario')
@@ -50,8 +53,19 @@ export class OrderController {
             const keys=data.items.map(item=>`${item.product_id}:${item.branch_id}`)
             if(new Set(keys).size!==keys.length) throw new Error('No se puede repetir el mismo producto y ubicación')
             const id=await this.model.create(data,req.user.id)
-            req.app.get('io').emit('movements_updated')
-            res.status(201).json({status:'success',data:{id}})
+            let movementId=null
+            if(fulfillmentMode==='immediate') {
+                try {
+                    movementId=await this.model.complete(id,req.user.id)
+                } catch(error) {
+                    await this.model.cancel(id).catch(()=>{})
+                    throw error
+                }
+                req.app.get('io').emit('new_movement')
+            } else {
+                req.app.get('io').emit('movements_updated')
+            }
+            res.status(201).json({status:'success',data:{id,movementId,status:fulfillmentMode==='immediate'?'completed':'reserved'}})
         } catch(error){ fail(res,error) }
     }
 

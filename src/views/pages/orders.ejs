@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
-<%- include('../partials/head', { title: orderTitle, cssFile: 'orders.css' }) %>
+<%- include('../partials/head', { title: orderTitle, cssFile: 'orders.css', extraCss: ['/css/components/modals-base.css'] }) %>
 <body>
     <div class="layout">
         <%- include('../partials/sidebar', { activePage }) %>
@@ -9,10 +9,44 @@
             <div class="orders-container">
                 <div id="orders-message" class="orders-message hidden"></div>
                 <section class="orders-summary" id="orders-summary"></section>
-                <div class="orders-layout">
-                    <form id="order-form" class="orders-card order-form">
-                        <h2>Nuevo pedido</h2>
-                        <p>Al guardarlo, las unidades quedan reservadas pero continúan físicamente en la sucursal.</p>
+
+                <section class="orders-toolbar">
+                    <div>
+                        <h2><%= orderTitle %></h2>
+                        <p>Consultá las operaciones y el stock comprometido de este canal.</p>
+                    </div>
+                    <button class="order-primary order-open-button" type="button" id="open-order-modal">
+                        <span class="material-symbols-outlined">add</span>
+                        <span><%= orderChannel === 'showroom' ? 'Nueva venta' : 'Nuevo pedido' %></span>
+                        <kbd>V</kbd>
+                    </button>
+                </section>
+
+                <section class="orders-card orders-table-card">
+                    <div class="orders-table-wrap"><table><thead><tr><th>Pedido</th><th>Canal</th><th>Cliente / referencia</th><th>Sucursal</th><th>Productos</th><th>Estado</th><th></th></tr></thead><tbody id="orders-list"></tbody></table></div>
+                </section>
+            </div>
+
+            <div class="modal-overlay" id="order-modal" aria-hidden="true">
+                <div class="modal-card modal-order-card" role="dialog" aria-modal="true" aria-labelledby="order-modal-title">
+                    <header class="modal-header">
+                        <div>
+                            <h3 id="order-modal-title"><%= orderChannel === 'showroom' ? 'Nueva venta de showroom' : 'Nuevo pedido' %></h3>
+                            <p>Las reservas comprometen unidades sin descontarlas del stock físico.</p>
+                        </div>
+                        <button class="btn-close-modal" id="close-order-modal" type="button" aria-label="Cerrar formulario">
+                            <span class="material-symbols-outlined">close</span>
+                        </button>
+                    </header>
+
+                    <form id="order-form" class="order-form">
+                        <% if (orderChannel === 'showroom') { %>
+                            <fieldset class="sale-mode">
+                                <legend>Tipo de operación</legend>
+                                <label><input type="radio" name="fulfillment_mode" value="immediate" checked><span><strong>Venta inmediata</strong><small>Descuenta el stock en el momento.</small></span></label>
+                                <label><input type="radio" name="fulfillment_mode" value="reserve"><span><strong>Reservar</strong><small>Separa el stock para retirarlo después.</small></span></label>
+                            </fieldset>
+                        <% } %>
                         <label>Cliente / referencia del pedido<input id="order-reference" required placeholder="Nombre, número de venta o referencia"></label>
                         <label id="order-branch-group">Reservar desde<select id="order-branch" required></select></label>
                         <label>Producto<select id="order-product"></select></label>
@@ -20,14 +54,14 @@
                         <div class="order-add-line"><input id="order-quantity" type="number" min="1" value="1"><button type="button" id="order-add-item">Agregar</button></div>
                         <div id="order-items" class="order-items"></div>
                         <label>Notas<textarea id="order-notes" rows="2"></textarea></label>
-                        <button class="order-primary" type="submit">Crear y reservar stock</button>
+                        <div class="modal-actions">
+                            <button class="btn-cancel" id="cancel-order-modal" type="button">Cancelar</button>
+                            <button class="order-primary" id="submit-order" type="submit"><%= orderChannel === 'showroom' ? 'Registrar venta' : 'Crear y reservar stock' %></button>
+                        </div>
                     </form>
-                    <section class="orders-card orders-table-card">
-                        <h2>Pedidos</h2>
-                        <div class="orders-table-wrap"><table><thead><tr><th>Pedido</th><th>Canal</th><th>Cliente / referencia</th><th>Sucursal</th><th>Productos</th><th>Estado</th><th></th></tr></thead><tbody id="orders-list"></tbody></table></div>
-                    </section>
                 </div>
             </div>
+
             <script nonce="<%= cspNonce %>">window.ORDER_CHANNEL='<%= orderChannel %>'; window.ORDER_TITLE='<%= orderTitle %>';</script>
             <script src="/js/orders.js"></script>
         </main>

@@ -74,26 +74,35 @@
                                     </button>
 
                                     <button class="action-card" onclick="openOperationModal('transfer')">
-                                        <span class="material-symbols-outlined"
-                                            style="font-size: 32px;">local_shipping</span>
+                                        <span class="material-symbols-outlined" style="font-size: 32px;">local_shipping</span>
                                         <span>Realizar Envío</span>
-                                    </button><% } %>
-                                    <button class="action-card" onclick="openOperationModal('out')">
-                                        <span class="material-symbols-outlined" style="font-size: 32px;">logout</span>
-                                        <span>Realizar Egreso</span>
+                                    </button>
+
+                                    <% } %>
+                                    <button class="action-card" onclick="openOperationModal('out', 'return')">
+                                        <span class="material-symbols-outlined" style="font-size: 32px;">assignment_return</span>
+                                        <span>Registrar Devolución</span>
+                                    </button>
+                                    <button class="action-card" onclick="openOperationModal('out', 'exchange')">
+                                        <span class="material-symbols-outlined" style="font-size: 32px;">swap_horiz</span>
+                                        <span>Registrar Cambio</span>
                                     </button>
                                     <% if (user.role==='admin') { %><%- include('../partials/modals/modal-add-product') %><% } %>
                                         <%- include('../partials/modals/modal-op-admin') %>
 
                                             <% } else { %>
-                                                <button class="action-card" onclick="openOperationModal('out')">
-                                                    <span class="material-symbols-outlined"
-                                                        style="font-size: 32px;">logout</span>
-                                                    <span>Realizar Egreso</span>
-                                                </button>
                                                 <button class="action-card" onclick="openOperationModal('transfer')">
                                                     <span class="material-symbols-outlined" style="font-size: 32px;">local_shipping</span>
                                                     <span>Realizar Envío</span>
+                                                </button>
+                                                <button class="action-card" onclick="openOperationModal('out', 'return')">
+                                                    <span class="material-symbols-outlined"
+                                                        style="font-size: 32px;">assignment_return</span>
+                                                    <span>Registrar Devolución</span>
+                                                </button>
+                                                <button class="action-card" onclick="openOperationModal('out', 'exchange')">
+                                                    <span class="material-symbols-outlined" style="font-size: 32px;">swap_horiz</span>
+                                                    <span>Registrar Cambio</span>
                                                 </button>
                                                 <%- include('../partials/modals/modal-op-employee') %>
 

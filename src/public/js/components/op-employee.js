@@ -75,8 +75,9 @@ function setupEmployeeModalListeners() {
 }
 
 // --- APERTURA DEL MODAL ---
-window.openOperationModal = function (type) {
+window.openOperationModal = function (type, reason = 'return') {
     if (!['out', 'transfer'].includes(type)) return;
+    if (type === 'out' && !['return', 'exchange'].includes(reason)) return;
     currentOperationType = type;
 
     selectedProductsForOp = [];
@@ -84,11 +85,13 @@ window.openOperationModal = function (type) {
     renderEmptyEditableRow();
 
     const isTransfer = type === 'transfer';
+    const isExchange = reason === 'exchange';
     document.getElementById('group-dest').style.display = isTransfer ? 'block' : 'none';
-    document.getElementById('group-egress-reason').style.display = isTransfer ? 'none' : 'block';
-    document.getElementById('modal-op-title').textContent = isTransfer ? 'Enviar a Sucursal' : 'Egreso / Salida';
-    document.getElementById('modal-op-subtitle').textContent = isTransfer ? 'Selecciona destino y productos para trasladar.' : 'Selecciona el motivo y los productos a descontar.';
-    document.getElementById('btn-confirm-text').textContent = isTransfer ? 'Confirmar Envío' : 'Registrar Egreso';
+    document.getElementById('group-egress-reason').style.display = 'none';
+    if (!isTransfer) document.getElementById('op-egress-reason').value = reason;
+    document.getElementById('modal-op-title').textContent = isTransfer ? 'Enviar a Sucursal' : (isExchange ? 'Cambio de producto' : 'Devolución');
+    document.getElementById('modal-op-subtitle').textContent = isTransfer ? 'Selecciona destino y productos para trasladar.' : `Selecciona los productos de la ${isExchange ? 'operación de cambio' : 'devolución'}.`;
+    document.getElementById('btn-confirm-text').textContent = isTransfer ? 'Confirmar Envío' : (isExchange ? 'Registrar Cambio' : 'Registrar Devolución');
 
     searchProductsForOperation(''); // Cargamos todo el stock de entrada
 

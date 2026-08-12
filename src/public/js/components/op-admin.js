@@ -89,7 +89,7 @@ function setupAdminModalListeners() {
     }
 }
 
-window.openOperationModal = function (type) {
+window.openOperationModal = function (type, reason = 'return') {
     if (!['in', 'transfer', 'out'].includes(type)) return;
 
     currentOperationType = type;
@@ -115,6 +115,10 @@ window.openOperationModal = function (type) {
     groupDest.style.display = 'none';
     groupOrigin.style.display = type === 'in' ? 'none' : 'block';
     groupReason.style.display = type === 'out' ? 'block' : 'none';
+    if (type === 'out' && ['return', 'exchange'].includes(reason)) {
+        document.getElementById('op-egress-reason').value = reason;
+        groupReason.style.display = 'none';
+    }
     btnConfirmOp.className = 'btn-primary';
 
     if (type === 'in') {
@@ -131,10 +135,11 @@ window.openOperationModal = function (type) {
         btnConfirmText.textContent = 'Confirmar Envío';
         thead.innerHTML = `<th>Código</th><th>Producto</th><th class="text-center" width="100">Stock Disp.</th><th class="text-center" width="140">Cant. a Enviar</th><th class="text-center" width="60"></th>`;
     } else if (type === 'out') {
-        titleOp.textContent = 'Egreso / Salida';
-        subtitleOp.textContent = 'Selecciona sucursal, motivo y productos.';
+        const isExchange = reason === 'exchange';
+        titleOp.textContent = isExchange ? 'Cambio de producto' : 'Devolución';
+        subtitleOp.textContent = `Selecciona la sucursal y los productos de la ${isExchange ? 'operación de cambio' : 'devolución'}.`;
         btnConfirmIcon.textContent = 'logout';
-        btnConfirmText.textContent = 'Registrar Egreso';
+        btnConfirmText.textContent = isExchange ? 'Registrar Cambio' : 'Registrar Devolución';
         btnConfirmOp.className = 'btn-danger';
         thead.innerHTML = `<th>Código</th><th>Producto</th><th class="text-center" width="100">Stock Disp.</th><th class="text-center" width="140">Cant. a Egresar</th><th class="text-center" width="60"></th>`;
     }
