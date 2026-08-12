@@ -95,6 +95,38 @@
   }
 }
 
+/* Toasts live outside the animated content stacking context so they remain
+   visible while an order modal is open. */
+.orders-message {
+  position: fixed;
+  top: 1.25rem;
+  right: 1.25rem;
+  z-index: 3000;
+  width: min(420px, calc(100vw - 2rem));
+  padding: .9rem 1rem;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, .18);
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.orders-message.success {
+  border-color: #86efac;
+}
+
+.orders-message.error {
+  border-color: #fca5a5;
+}
+
+@media (max-width: 640px) {
+  .orders-message {
+    top: .75rem;
+    right: .75rem;
+    width: calc(100vw - 1.5rem);
+  }
+}
+
 .orders-toolbar {
   display: flex;
   align-items: center;

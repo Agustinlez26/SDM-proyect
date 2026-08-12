@@ -7,7 +7,6 @@
         <main class="layout__content">
             <%- include('../partials/navbar', { title: orderTitle }) %>
             <div class="orders-container">
-                <div id="orders-message" class="orders-message hidden"></div>
                 <section class="orders-summary" id="orders-summary"></section>
 
                 <section class="orders-toolbar">
@@ -26,6 +25,8 @@
                     <div class="orders-table-wrap"><table><thead><tr><th>Pedido</th><th>Canal</th><th>Cliente / referencia</th><th>Sucursal</th><th>Productos</th><th>Estado</th><th></th></tr></thead><tbody id="orders-list"></tbody></table></div>
                 </section>
             </div>
+
+            <div id="orders-message" class="orders-message hidden" role="status" aria-live="polite"></div>
 
             <div class="modal-overlay" id="order-modal" aria-hidden="true">
                 <div class="modal-card modal-order-card" role="dialog" aria-modal="true" aria-labelledby="order-modal-title">
