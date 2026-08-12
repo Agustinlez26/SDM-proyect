@@ -78,6 +78,10 @@ function closeAndCleanOperationModal() {
     if (destSelect) destSelect.value = '';
     const originSelect = document.getElementById('op-origin');
     if (originSelect) originSelect.value = '';
+    const saleChannel = document.getElementById('op-sale-channel');
+    if (saleChannel) saleChannel.value = '';
+    const explanation = document.getElementById('op-explanation');
+    if (explanation) explanation.value = '';
     renderAdminDestinations();
 
     document.getElementById('catalog-grid').innerHTML = ''; // Limpiamos grilla
@@ -117,6 +121,9 @@ window.openOperationModal = function (type, reason = 'return') {
     const groupDest = document.getElementById('group-dest');
     const groupOrigin = document.getElementById('group-origin');
     const groupReason = document.getElementById('group-egress-reason');
+    const groupSaleChannel = document.getElementById('group-sale-channel');
+    const groupExplanation = document.getElementById('group-explanation');
+    const explanationLabel = document.getElementById('op-explanation-label');
     const groupSearch = document.getElementById('group-search');
     const thead = document.querySelector('.detail-products-table thead tr');
     const btnConfirmText = document.getElementById('btn-confirm-text');
@@ -130,6 +137,10 @@ window.openOperationModal = function (type, reason = 'return') {
     groupDest.style.display = 'none';
     groupOrigin.style.display = type === 'in' ? 'none' : 'block';
     groupReason.style.display = type === 'out' ? 'block' : 'none';
+    groupSaleChannel.style.display = type === 'out' && reason === 'exchange' ? 'block' : 'none';
+    groupExplanation.style.display = type === 'in' ? 'none' : 'block';
+    document.getElementById('op-sale-channel').value = '';
+    document.getElementById('op-explanation').value = '';
     if (type === 'out' && ['return', 'exchange'].includes(reason)) {
         document.getElementById('op-egress-reason').value = reason;
         groupReason.style.display = 'none';
@@ -148,6 +159,7 @@ window.openOperationModal = function (type, reason = 'return') {
         groupDest.style.display = 'block';
         btnConfirmIcon.textContent = 'send';
         btnConfirmText.textContent = 'Confirmar Envío';
+        explanationLabel.textContent = 'Detalle del envío';
         thead.innerHTML = `<th>Código</th><th>Producto</th><th class="text-center" width="100">Stock Disp.</th><th class="text-center" width="140">Cant. a Enviar</th><th class="text-center" width="60"></th>`;
     } else if (type === 'out') {
         const isExchange = reason === 'exchange';
@@ -155,6 +167,7 @@ window.openOperationModal = function (type, reason = 'return') {
         subtitleOp.textContent = `Selecciona la sucursal y los productos de la ${isExchange ? 'operación de cambio' : 'devolución'}.`;
         btnConfirmIcon.textContent = 'logout';
         btnConfirmText.textContent = isExchange ? 'Registrar Cambio' : 'Registrar Devolución';
+        explanationLabel.textContent = isExchange ? 'Motivo del cambio' : 'Motivo de la devolución';
         btnConfirmOp.className = 'btn-danger';
         thead.innerHTML = `<th>Código</th><th>Producto</th><th class="text-center" width="100">Stock Disp.</th><th class="text-center" width="140">Cant. a Egresar</th><th class="text-center" width="60"></th>`;
     }
@@ -307,6 +320,17 @@ document.getElementById('btn-confirm-op').addEventListener('click', async () => 
         payload.origin_branch_id = parseInt(originSelect.value);
     }
     if (dbType === 'egreso') payload.egress_reason = document.getElementById('op-egress-reason').value;
+
+    if (dbType !== 'ingreso') {
+        const explanation = document.getElementById('op-explanation').value.trim();
+        if (!explanation) return alert('Ingresá una explicación para identificar la operación.');
+        payload.explanation = explanation;
+    }
+    if (dbType === 'egreso' && payload.egress_reason === 'exchange') {
+        const saleChannel = document.getElementById('op-sale-channel').value;
+        if (!saleChannel) return alert('Seleccioná el canal de venta del cambio.');
+        payload.sale_channel = saleChannel;
+    }
 
     if (!confirm(`¿Estás seguro de registrar este ${dbType}?`)) return;
 

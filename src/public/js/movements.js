@@ -336,18 +336,30 @@ function openDetailModal(mov, details) {
     document.getElementById('detail-receipt').textContent = mov.receipt_number || '-';
     document.getElementById('detail-type').innerHTML = generateTypeBadge(mov.type);
     if (mov.type === 'egreso' && mov.egress_reason) document.getElementById('detail-type').innerHTML += ` <small>${escapeHTML(({sale:'Venta',return:'Devolución',exchange:'Cambio de producto'}[mov.egress_reason] || mov.egress_reason))}</small>`;
+    if (mov.type === 'egreso' && mov.egress_reason === 'exchange' && mov.sale_channel) document.getElementById('detail-type').innerHTML += ` <small>${escapeHTML(({mercado_libre:'Mercado Libre',tienda_nube:'Tienda Nube',mayorista:'Mayorista',merchandising:'Merchandising',showroom:'Showroom'}[mov.sale_channel] || mov.sale_channel))}</small>`;
     if (mov.movement_purpose === 'wholesale_order') document.getElementById('detail-type').innerHTML += ` <small>Solicitado por ${escapeHTML(mov.requested_by || '-')} · confirmado por ${escapeHTML(mov.confirmed_by || '-')}</small>`;
     document.getElementById('detail-status').innerHTML = generateStatusBadge(mov.status);
     document.getElementById('detail-date').textContent = mov.date ? new Date(mov.date).toLocaleDateString('es-AR') : '-';
     
-    // Lógica para mostrar usuario solo si es admin
-    const userRole = typeof window.USER_ROLE !== 'undefined' ? window.USER_ROLE : '';
     const userContainer = document.getElementById('detail-user-container');
-    if (userRole === 'admin') {
-        document.getElementById('detail-user').textContent = mov.user?.name || '-';
-        if(userContainer) userContainer.style.display = 'flex';
+    document.getElementById('detail-user').textContent = mov.user?.name || '-';
+    if (userContainer) userContainer.style.display = 'flex';
+
+    const channelContainer = document.getElementById('detail-channel-container');
+    const channelLabels = {mercado_libre:'Mercado Libre',tienda_nube:'Tienda Nube',mayorista:'Mayorista',merchandising:'Merchandising',showroom:'Showroom'};
+    if (mov.sale_channel) {
+        document.getElementById('detail-channel').textContent = channelLabels[mov.sale_channel] || mov.sale_channel;
+        channelContainer.style.display = 'flex';
     } else {
-        if(userContainer) userContainer.style.display = 'none';
+        channelContainer.style.display = 'none';
+    }
+
+    const explanationContainer = document.getElementById('detail-explanation-container');
+    if (mov.explanation) {
+        document.getElementById('detail-explanation').textContent = mov.explanation;
+        explanationContainer.style.display = 'block';
+    } else {
+        explanationContainer.style.display = 'none';
     }
 
     document.getElementById('detail-created').textContent = mov.created_at ? new Date(mov.created_at).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' }) : '-';

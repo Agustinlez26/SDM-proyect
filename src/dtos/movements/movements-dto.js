@@ -4,6 +4,8 @@ export class MovementDTO {
         this.receipt_number = data.receipt_number
         this.type = data.type
         this.egress_reason = data.egress_reason
+        this.sale_channel = data.sale_channel
+        this.explanation = data.explanation
         this.movement_purpose = data.movement_purpose
         this.requested_by = data.requested_by_name
         this.confirmed_by = data.confirmed_by_name

@@ -61,6 +61,8 @@ try {
         await db.query('ALTER TABLE stock_reservations ADD CONSTRAINT fk_res_order FOREIGN KEY (order_id) REFERENCES orders(id)')
     }
     if (!await columnExists('movements', 'egress_reason')) await db.query("ALTER TABLE movements ADD COLUMN egress_reason ENUM('sale','return','exchange') NULL AFTER type")
+    if (!await columnExists('movements', 'sale_channel')) await db.query("ALTER TABLE movements ADD COLUMN sale_channel ENUM('mercado_libre','tienda_nube','mayorista','merchandising','showroom') NULL AFTER egress_reason")
+    if (!await columnExists('movements', 'explanation')) await db.query('ALTER TABLE movements ADD COLUMN explanation TEXT NULL AFTER sale_channel')
     if (!await columnExists('movements', 'order_id')) {
         await db.query('ALTER TABLE movements ADD COLUMN order_id INT UNSIGNED NULL AFTER egress_reason')
         await db.query('ALTER TABLE movements ADD INDEX idx_movements_order (order_id)')

@@ -55,6 +55,8 @@ function closeAndCleanOperationModal() {
     document.getElementById('modal-operation').classList.remove('active');
     selectedProductsForOp = [];
     document.getElementById('op-search-prod').value = '';
+    document.getElementById('op-sale-channel').value = '';
+    document.getElementById('op-explanation').value = '';
 
     const grid = document.getElementById('catalog-grid');
     if (grid) grid.innerHTML = '';
@@ -99,6 +101,10 @@ window.openOperationModal = function (type, reason = 'return') {
     const isExchange = reason === 'exchange';
     document.getElementById('group-dest').style.display = isTransfer ? 'block' : 'none';
     document.getElementById('group-egress-reason').style.display = 'none';
+    document.getElementById('group-sale-channel').style.display = !isTransfer && isExchange ? 'block' : 'none';
+    document.getElementById('op-sale-channel').value = '';
+    document.getElementById('op-explanation').value = '';
+    document.getElementById('op-explanation-label').textContent = isTransfer ? 'Detalle del envío' : (isExchange ? 'Motivo del cambio' : 'Motivo de la devolución');
     if (!isTransfer) document.getElementById('op-egress-reason').value = reason;
     document.getElementById('modal-op-title').textContent = isTransfer ? 'Enviar a Sucursal' : (isExchange ? 'Cambio de producto' : 'Devolución');
     document.getElementById('modal-op-subtitle').textContent = isTransfer ? 'Selecciona destino y productos para trasladar.' : `Selecciona los productos de la ${isExchange ? 'operación de cambio' : 'devolución'}.`;
@@ -243,6 +249,16 @@ if (btnConfirmOp) {
             payload.destination_branch_id = Number(destination);
         } else {
             payload.egress_reason = document.getElementById('op-egress-reason').value;
+        }
+
+        const explanation = document.getElementById('op-explanation').value.trim();
+        if (!explanation) return alert('Ingresá una explicación para identificar la operación.');
+        payload.explanation = explanation;
+
+        if (payload.type === 'egreso' && payload.egress_reason === 'exchange') {
+            const saleChannel = document.getElementById('op-sale-channel').value;
+            if (!saleChannel) return alert('Seleccioná el canal de venta del cambio.');
+            payload.sale_channel = saleChannel;
         }
 
         if (!confirm('¿Estás seguro de registrar este egreso?')) return;

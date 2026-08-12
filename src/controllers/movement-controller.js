@@ -218,7 +218,7 @@ export class MovementController {
             });
         }
 
-        const { type, origin_branch_id, destination_branch_id, egress_reason, details } = result.data;
+        const { type, origin_branch_id, destination_branch_id, egress_reason, sale_channel, explanation, details } = result.data;
 
         const userId = req.user.id;
         const userBranchId = req.user.branch_id;
@@ -260,6 +260,8 @@ export class MovementController {
             receipt_number: `MOV-${Date.now()}`,
             type: type,
             egress_reason: type === 'egreso' ? egress_reason : null,
+            sale_channel: type === 'egreso' && egress_reason === 'exchange' ? sale_channel : null,
+            explanation: type === 'ingreso' ? null : explanation,
             user_id: userId,
             origin_branch_id: origin,
             destination_branch_id: destination,

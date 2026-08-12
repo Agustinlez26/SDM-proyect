@@ -21,6 +21,23 @@
                     <label>Motivo del egreso</label>
                     <select id="op-egress-reason"><option value="return">Devolución</option><option value="exchange">Cambio de producto</option></select>
                 </div>
+                <div class="form-group" id="group-sale-channel" style="display:none;">
+                    <label for="op-sale-channel">Canal de venta</label>
+                    <select id="op-sale-channel">
+                        <option value="" disabled selected>Seleccionar canal...</option>
+                        <option value="mercado_libre">Mercado Libre</option>
+                        <option value="tienda_nube">Tienda Nube</option>
+                        <option value="mayorista">Mayorista</option>
+                        <option value="merchandising">Merchandising</option>
+                        <option value="showroom">Showroom</option>
+                    </select>
+                </div>
+                <div class="form-group" id="group-explanation">
+                    <label for="op-explanation" id="op-explanation-label">Explicación</label>
+                    <textarea id="op-explanation" rows="3" maxlength="1000"
+                        placeholder="Describí el motivo y cualquier dato necesario para identificar la operación."></textarea>
+                    <small class="text-muted">Este detalle quedará asociado al movimiento y al usuario responsable.</small>
+                </div>
                 <div class="form-group" id="group-search">
                     <label>Buscar Producto a egresar</label>
                     <div class="search-bar" style="position: relative;">

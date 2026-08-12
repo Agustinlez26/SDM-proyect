@@ -40,6 +40,8 @@ export class MovementModel {
                 m.receipt_number,
                 m.type,
                 m.egress_reason,
+                m.sale_channel,
+                m.explanation,
                 m.movement_purpose,
                 requester.full_name AS requested_by_name,
                 confirmer.full_name AS confirmed_by_name,
@@ -135,6 +137,8 @@ export class MovementModel {
                 m.receipt_number,
                 m.type, 
                 m.egress_reason,
+                m.sale_channel,
+                m.explanation,
                 m.movement_purpose,
                 requester.full_name AS requested_by_name,
                 confirmer.full_name AS confirmed_by_name,
@@ -260,11 +264,12 @@ export class MovementModel {
 
             const sqlHeader = `
                 INSERT INTO ${this.#table} 
-                (receipt_number, type, egress_reason, date, user_id, origin_branch_id, destination_branch_id, status)
-                VALUES (?, ?, ?, NOW(), UUID_TO_BIN(?), ?, ?, ?)
+                (receipt_number, type, egress_reason, sale_channel, explanation, date, user_id, origin_branch_id, destination_branch_id, status)
+                VALUES (?, ?, ?, ?, ?, NOW(), UUID_TO_BIN(?), ?, ?, ?)
             `
             const [resultHeader] = await connection.query(sqlHeader, [
-                data.receipt_number, data.type, data.egress_reason || null, data.user_id,
+                data.receipt_number, data.type, data.egress_reason || null, data.sale_channel || null,
+                data.explanation || null, data.user_id,
                 data.origin_branch_id, data.destination_branch_id, data.status
             ])
             const movementId = resultHeader.insertId
