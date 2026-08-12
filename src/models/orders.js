@@ -215,9 +215,9 @@ export class OrderModel {
             const purpose = order.channel==='mayorista' ? 'wholesale_order' : 'standard'
             for (const [branchId,items] of [...byBranch.entries()].sort((a,b)=>Number(a[0])-Number(b[0]))) {
                 const [movement] = await connection.query(`INSERT INTO movements
-                    (receipt_number,type,egress_reason,order_id,movement_purpose,requested_by,confirmed_by,date,user_id,origin_branch_id,destination_branch_id,status)
-                    VALUES (?,'egreso','sale',?,?,?,UUID_TO_BIN(?),NOW(),UUID_TO_BIN(?),?,NULL,'entregado')`,
-                    [`MOV-${Date.now()}-${branchId}`,id,purpose,order.created_by,userId,userId,branchId])
+                    (receipt_number,type,egress_reason,sale_channel,order_id,movement_purpose,requested_by,confirmed_by,date,user_id,origin_branch_id,destination_branch_id,status)
+                    VALUES (?,'egreso','sale',?,?,?,?,UUID_TO_BIN(?),NOW(),UUID_TO_BIN(?),?,NULL,'entregado')`,
+                    [`MOV-${Date.now()}-${branchId}`,order.channel,id,purpose,order.created_by,userId,userId,branchId])
                 firstMovementId ||= movement.insertId
                 await connection.query('INSERT INTO movement_details (movement_id,product_id,quantity) VALUES ?',[items.map(item=>[movement.insertId,item.product_id,item.quantity])])
             }

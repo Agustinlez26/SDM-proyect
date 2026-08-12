@@ -26,21 +26,36 @@ export class StatisticModel {
      * Obtiene los 5 productos con mayor cantidad de egresos históricos.
      * @returns {Promise<Array>} Lista de objetos con 'product_name' y 'total_quantity'.
      */
-    async getTopSellingProducts() {
-        const query = `
+    async getTopSellingProducts({ year = null, channel = null, branchId = null } = {}) {
+        let query = `
             SELECT 
                 p.name AS product_name, 
                 SUM(md.quantity) AS total_quantity
             FROM movement_details md
             JOIN movements m ON md.movement_id = m.id
             JOIN products p ON md.product_id = p.id
+            LEFT JOIN orders o ON o.id = m.order_id
             WHERE m.type = 'egreso' 
             AND m.status = 'entregado'
-            GROUP BY md.product_id, p.name
+            AND COALESCE(m.egress_reason, 'sale') = 'sale'
+        `
+        const params = []
+        if (year) {
+            query += ' AND YEAR(m.date) = ?'
+            params.push(year)
+        }
+        if (channel) {
+            query += ' AND COALESCE(m.sale_channel, o.channel) = ?'
+            params.push(channel)
+        }
+        if (branchId) {
+            query += ' AND m.origin_branch_id = ?'
+            params.push(branchId)
+        }
+        query += ` GROUP BY md.product_id, p.name
             ORDER BY total_quantity DESC
-            LIMIT 5;
-        `;
-        const [rows] = await this.#db.query(query);
+            LIMIT 5`
+        const [rows] = await this.#db.query(query, params)
         return rows.map(row => new SellingProductsDTO(row))
     }
 

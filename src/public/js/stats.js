@@ -1,5 +1,6 @@
 const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 let charts = {};
+let selectedSeasonalityProduct = null;
 
 function getChartColors() {
     const isDarkTheme = document.documentElement.classList.contains('dark-theme');
@@ -25,9 +26,12 @@ const modernTooltip = {
 
 document.addEventListener('DOMContentLoaded', () => {
     initStatsSocket()
-    loadTopSelling();
     loadDefaultSeasonality();
     loadGlobalData();
+    loadRankingBranches();
+
+    document.getElementById('topSellingChannel').addEventListener('change', loadTopSelling);
+    document.getElementById('topSellingBranch').addEventListener('change', loadTopSelling);
 
     const observer = new MutationObserver(() => {
         Object.keys(charts).forEach(canvasId => {
@@ -37,7 +41,6 @@ document.addEventListener('DOMContentLoaded', () => {
         modernTooltip.backgroundColor = getChartColors().tooltipBg;
         modernTooltip.titleColor = getChartColors().tooltipText;
         modernTooltip.bodyColor = getChartColors().tooltipText;
-        loadTopSelling();
         loadTopSelling();
         loadGlobalData();
     });
@@ -59,15 +62,17 @@ document.addEventListener('DOMContentLoaded', () => {
 let searchDebounceTimer = null;
 let activeSuggestionIndex = -1;
 
+function onProductSearchFocus() {
+    const query = document.getElementById('productSearchInput').value.trim();
+    fetchSuggestions(query);
+}
+
 function onProductSearchInput() {
     clearTimeout(searchDebounceTimer);
     const input = document.getElementById('productSearchInput');
     const query = input.value.trim();
-
-    if (query.length < 1) {
-        closeDropdown();
-        return;
-    }
+    selectedSeasonalityProduct = null;
+    renderSelectedSeasonalityProduct();
 
     searchDebounceTimer = setTimeout(() => fetchSuggestions(query), 280);
 
@@ -111,18 +116,32 @@ function renderDropdown(products) {
     } else {
         products.slice(0, 8).forEach(prod => {
             const li = document.createElement('li');
-            li.textContent = prod.name || prod.product_name;
+            const name = prod.name || prod.product_name;
+            const sku = prod.cod_bar || prod.code || 'S/C';
+            li.innerHTML = `<img src="${escapeStatsHtml(prod.url_img_small || '/img/no-image.png')}" alt=""><span><strong>${escapeStatsHtml(name)}</strong><small>${escapeStatsHtml(sku)}</small></span>`;
             li.setAttribute('role', 'option');
             li.addEventListener('click', () => {
-                document.getElementById('productSearchInput').value = li.textContent;
+                selectedSeasonalityProduct = { id: Number(prod.id), name, sku };
+                document.getElementById('productSearchInput').value = name;
+                renderSelectedSeasonalityProduct();
                 closeDropdown();
-                loadProductSeasonality(prod.id, li.textContent);
+                loadProductSeasonality(prod.id, name);
             });
             dropdown.appendChild(li);
         });
     }
 
     dropdown.classList.add('open');
+}
+
+function escapeStatsHtml(value) {
+    return String(value ?? '').replace(/[&<>'"]/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[char]));
+}
+
+function renderSelectedSeasonalityProduct() {
+    const element = document.getElementById('selectedSeasonalityProduct');
+    element.hidden = !selectedSeasonalityProduct;
+    element.innerHTML = selectedSeasonalityProduct ? `<span class="material-symbols-outlined">inventory_2</span><span><small>Producto seleccionado</small><strong>${escapeStatsHtml(selectedSeasonalityProduct.name)}</strong></span><code>${escapeStatsHtml(selectedSeasonalityProduct.sku || 'S/C')}</code>` : '';
 }
 
 function updateActiveItem(items) {
@@ -179,6 +198,7 @@ function loadGlobalData() {
     const year = document.getElementById('globalYear').value;
     loadMonthlyEgresses(year);
     loadBranchPerformance(year);
+    loadTopSelling();
     if (document.getElementById('productSearchInput').value.trim() !== '') {
         loadProductSeasonality();
     }
@@ -186,12 +206,26 @@ function loadGlobalData() {
 
 async function loadTopSelling() {
     try {
-        const res = await fetch('/api/statistics/top-selling-products');
+        const params = new URLSearchParams({ year: document.getElementById('globalYear').value });
+        const channel = document.getElementById('topSellingChannel')?.value;
+        const branchId = document.getElementById('topSellingBranch')?.value;
+        if (channel) params.set('channel', channel);
+        if (branchId) params.set('branch_id', branchId);
+        const res = await fetch(`/api/statistics/top-selling-products?${params}`);
         const json = await res.json();
         if (json.status === 'success' && json.data) {
             renderPieChart('topSellingChart', json.data);
         }
     } catch (e) { console.error(e); }
+}
+
+async function loadRankingBranches() {
+    try {
+        const res = await fetch('/api/branches/catalog');
+        const json = await res.json();
+        if (json.status !== 'success') return;
+        document.getElementById('topSellingBranch').innerHTML = '<option value="">Todas</option>' + json.data.map(branch => `<option value="${branch.id}">${escapeStatsHtml(branch.name)}</option>`).join('');
+    } catch (error) { console.error(error); }
 }
 
 async function loadMonthlyEgresses(year) {
@@ -229,7 +263,9 @@ async function loadDefaultSeasonality() {
         const json = await res.json();
         if (json.status === 'success' && json.data) {
             const prod = json.data;
+            selectedSeasonalityProduct = { id: Number(prod.id), name: prod.name, sku: prod.cod_bar || '' };
             document.getElementById('productSearchInput').value = prod.name;
+            renderSelectedSeasonalityProduct();
             loadProductSeasonality(prod.id, prod.name);
         }
     } catch (e) { console.error(e); }
@@ -239,6 +275,10 @@ async function loadProductSeasonality(directId = null, directName = null) {
     const searchInput = document.getElementById('productSearchInput').value.trim();
     const year = document.getElementById('globalYear').value;
 
+    if (!directId && selectedSeasonalityProduct) {
+        directId = selectedSeasonalityProduct.id;
+        directName = selectedSeasonalityProduct.name;
+    }
     if (!directId && !searchInput) return;
 
     let productId = directId;
@@ -251,7 +291,9 @@ async function loadProductSeasonality(directId = null, directName = null) {
             if (searchJson.status === 'success' && searchJson.data.length > 0) {
                 productId = searchJson.data[0].id;
                 productName = searchJson.data[0].name || searchJson.data[0].product_name;
+                selectedSeasonalityProduct = { id: Number(productId), name: productName, sku: searchJson.data[0].cod_bar || '' };
                 document.getElementById('productSearchInput').value = productName;
+                renderSelectedSeasonalityProduct();
             } else {
                 return alert('No se encontró ningún producto.');
             }
@@ -377,12 +419,15 @@ function renderMultiLineChart(canvasId, rawData, allBranches) {
         if (indexMes >= 0 && indexMes < 12) branchesData[row.branch_name][indexMes] = parseFloat(row.total_items_sold);
     });
 
+    const recordedMonths = rawData.map(row => Number(row.month)).filter(month => month >= 1 && month <= 12);
+    const firstRecordedMonth = recordedMonths.length ? Math.min(...recordedMonths) : 13;
+    const visibleLabels = firstRecordedMonth <= 12 ? meses.slice(firstRecordedMonth - 1) : [];
     const colorScheme = ['#214d5c', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
     const datasets = Object.keys(branchesData).map((branchName, index) => {
         const color = colorScheme[index % colorScheme.length];
         return {
             label: branchName,
-            data: branchesData[branchName],
+            data: firstRecordedMonth <= 12 ? branchesData[branchName].slice(firstRecordedMonth - 1) : [],
             borderColor: color,
             backgroundColor: color,
             borderWidth: 3,
@@ -397,7 +442,7 @@ function renderMultiLineChart(canvasId, rawData, allBranches) {
 
     charts[canvasId] = new Chart(ctx, {
         type: 'line',
-        data: { labels: meses, datasets: datasets },
+        data: { labels: visibleLabels, datasets: datasets },
         options: {
             responsive: true, maintainAspectRatio: false,
             animation: {

@@ -30,7 +30,7 @@
                         <div class="stats-grid">
 
                             <article class="stat-card">
-                                <div class="card-header">
+                                <div class="card-header with-actions">
                                     <h3>
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                             fill="currentColor" viewBox="0 0 24 24">
@@ -40,6 +40,10 @@
                                         </svg>
                                         Productos Más Vendidos
                                     </h3>
+                                    <div class="ranking-filters">
+                                        <label>Canal<select id="topSellingChannel"><option value="">Todos</option><option value="mercado_libre">Mercado Libre</option><option value="tienda_nube">Tienda Nube</option><option value="mayorista">Mayorista</option><option value="merchandising">Merchandising</option><option value="showroom">Showroom</option></select></label>
+                                        <label>Sucursal<select id="topSellingBranch"><option value="">Todas</option></select></label>
+                                    </div>
                                 </div>
                                 <div class="chart-wrapper">
                                     <canvas id="topSellingChart"></canvas>
@@ -62,17 +66,20 @@
                                     </h3>
                                     <div class="mini-search">
                                         <div class="search-wrapper">
-                                            <input type="text" id="productSearchInput" placeholder="Nombre o Código..."
+                                            <span class="material-symbols-outlined seasonality-search-icon">search</span>
+                                            <input type="text" id="productSearchInput" placeholder="Buscar por nombre o SKU..."
                                                 autocomplete="off"
                                                 oninput="onProductSearchInput()"
+                                                onfocus="onProductSearchFocus()"
                                                 onkeypress="if(event.key === 'Enter') { selectFirstSuggestion(); }">
                                             <ul id="productSuggestionsDropdown" class="search-dropdown" role="listbox"></ul>
                                         </div>
-                                        <button onclick="loadProductSeasonality()" title="Buscar">
-                                            <span class="material-symbols-outlined">search</span>
+                                        <button onclick="loadProductSeasonality()" title="Ver estacionalidad">
+                                            <span class="material-symbols-outlined">arrow_forward</span>
                                         </button>
                                     </div>
                                 </div>
+                                <div id="selectedSeasonalityProduct" class="selected-seasonality-product" hidden></div>
                                 <div class="chart-wrapper">
                                     <canvas id="seasonalityChart"></canvas>
                                 </div>

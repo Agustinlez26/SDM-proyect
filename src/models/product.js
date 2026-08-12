@@ -216,17 +216,8 @@ export class ProductModel {
 
         const params = []
         if (search) {
-            sql += ' AND ('
-            const isNumeric = /^\d+$/.test(search)
-
-            if (isNumeric) {
-                sql += 'p.cod_bar LIKE ?'
-            } else {
-                sql += 'p.name LIKE ?'
-            }
-
-            params.push(`%${search}%`)
-            sql += ')'
+            sql += ' AND (p.name LIKE ? OR p.cod_bar LIKE ?)'
+            params.push(`%${search}%`, `%${search}%`)
         }
 
         const [rows] = await this.#db.query(sql, params)

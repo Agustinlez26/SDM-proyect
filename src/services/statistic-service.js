@@ -20,8 +20,8 @@ export class StatisticService {
      * Obtiene los 5 productos con mayor cantidad de egresos históricos.
      * @returns {Promise<Array>} Ej: [{ product_name: 'Clavos', total_quantity: 500 }]
      */
-    async getTopSellingProducts() {
-        return await this.statisticsModel.getTopSellingProducts()
+    async getTopSellingProducts(filters = {}) {
+        return await this.statisticsModel.getTopSellingProducts(filters)
     }
 
     /**

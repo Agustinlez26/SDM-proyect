@@ -142,6 +142,34 @@
   width: 100%;
 }
 
+.ranking-filters {
+  display: flex;
+  align-items: end;
+  gap: .55rem;
+  flex-wrap: wrap;
+}
+
+.ranking-filters label {
+  display: grid;
+  gap: .2rem;
+  color: var(--text-muted);
+  font-size: .68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .035em;
+}
+
+.ranking-filters select {
+  min-width: 130px;
+  padding: .42rem .6rem;
+  border: 1px solid var(--border-color);
+  border-radius: 7px;
+  background: var(--bg-input, #fff);
+  color: var(--text-primary);
+  font-size: .78rem;
+  text-transform: none;
+}
+
 /* --- MINI BÚSQUEDA --- */
 .mini-search {
   display: flex;
@@ -192,7 +220,7 @@
 
 .search-wrapper input {
   width: 100%;
-  padding: 0.4rem 0.8rem;
+  padding: 0.5rem 0.8rem 0.5rem 2.15rem;
   border: 1px solid var(--border-color);
   border-radius: 8px;
   font-size: 0.85rem;
@@ -200,6 +228,17 @@
   background-color: var(--bg-input, #fff);
   color: var(--text-primary);
   transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.seasonality-search-icon {
+  position: absolute;
+  top: 50%;
+  left: .65rem;
+  z-index: 1;
+  color: var(--text-muted);
+  font-size: 18px;
+  transform: translateY(-50%);
+  pointer-events: none;
 }
 
 .search-wrapper input:focus {
@@ -240,6 +279,76 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.search-dropdown li:not(.no-results) {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+}
+
+.search-dropdown li img {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.search-dropdown li span {
+  display: grid;
+  min-width: 0;
+}
+
+.search-dropdown li strong,
+.search-dropdown li small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-dropdown li small {
+  color: var(--text-muted);
+  font-family: monospace;
+  font-size: .7rem;
+}
+
+.selected-seasonality-product {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  margin: -.75rem 0 1rem;
+  padding: .55rem .7rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-body);
+}
+
+.selected-seasonality-product[hidden] {
+  display: none;
+}
+
+.selected-seasonality-product > span:nth-child(2) {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+}
+
+.selected-seasonality-product small {
+  color: var(--text-muted);
+  font-size: .68rem;
+}
+
+.selected-seasonality-product strong {
+  overflow: hidden;
+  font-size: .82rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.selected-seasonality-product code {
+  color: var(--text-muted);
+  font-size: .72rem;
 }
 
 .search-dropdown li:hover,
@@ -292,6 +401,20 @@ html.dark-theme .search-dropdown li.active {
   /* La mini búsqueda toma todo el ancho disponible si se cae a otra línea */
   .mini-search {
     width: 100%;
+  }
+
+  .ranking-filters {
+    width: 100%;
+  }
+
+  .ranking-filters label {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .ranking-filters select {
+    width: 100%;
+    min-width: 0;
   }
 
   /* Hacemos los gráficos un poco más bajitos para que quepan en la pantalla del celu sin scrollear tanto */

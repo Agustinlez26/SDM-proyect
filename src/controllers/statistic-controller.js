@@ -24,7 +24,14 @@ export class StatisticController {
      */
     getTopSellingProducts = async (req, res) => {
         try {
-            const SellingProducts = await this.statisticService.getTopSellingProducts()
+            const allowedChannels = new Set(['mercado_libre', 'tienda_nube', 'mayorista', 'merchandising', 'showroom'])
+            const year = req.query.year ? Number(req.query.year) : null
+            const branchId = req.query.branch_id ? Number(req.query.branch_id) : null
+            const channel = req.query.channel || null
+            if (year && (!Number.isInteger(year) || year < 2026 || year > 2100)) return res.status(400).json({ status:'error', message:'El año es inválido' })
+            if (branchId && (!Number.isInteger(branchId) || branchId < 1)) return res.status(400).json({ status:'error', message:'La sucursal es inválida' })
+            if (channel && !allowedChannels.has(channel)) return res.status(400).json({ status:'error', message:'El canal es inválido' })
+            const SellingProducts = await this.statisticService.getTopSellingProducts({ year, channel, branchId })
             return res.json({ status: 'success', data: SellingProducts })
         } catch (error) {
             handleError(res, error)
