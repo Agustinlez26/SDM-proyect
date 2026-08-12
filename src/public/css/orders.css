@@ -61,6 +61,7 @@
   font-size: .78rem;
   line-height: 1.25;
   overflow-wrap: anywhere;
+  vertical-align: middle;
 }
 
 .orders-table-card th {
@@ -244,6 +245,38 @@
   padding: 2rem !important;
   text-align: center !important;
   color: var(--text-muted, #737373);
+}
+
+.order-item-quantity {
+  width: 72px !important;
+  padding: .4rem !important;
+  text-align: center;
+}
+
+.order-audit-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color, #e5e5e5);
+}
+
+.order-audit-section h4 {
+  margin-bottom: .65rem;
+}
+
+.order-audit-section article {
+  display: grid;
+  gap: .2rem;
+  padding: .65rem 0;
+  border-bottom: 1px solid var(--border-color, #e5e5e5);
+}
+
+.order-audit-section article span {
+  color: var(--text-muted, #737373);
+  font-size: .78rem;
+}
+
+.order-audit-section article p {
+  font-size: .85rem;
 }
 
 @media (max-width: 640px) {

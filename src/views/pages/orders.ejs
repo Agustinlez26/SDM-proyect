@@ -45,6 +45,13 @@
                             <tbody id="order-details-list"></tbody>
                         </table>
                     </div>
+                    <section class="order-audit-section" id="order-audit-section" hidden>
+                        <h4>Historial de modificaciones</h4>
+                        <div id="order-audit-list"></div>
+                    </section>
+                    <div class="modal-actions">
+                        <button class="order-primary" id="edit-order-button" type="button" hidden>Modificar pedido</button>
+                    </div>
                 </div>
             </div>
 
@@ -75,6 +82,7 @@
                         <div class="order-add-line"><input id="order-quantity" type="number" min="1" value="1"><button type="button" id="order-add-item">Agregar</button></div>
                         <div id="order-items" class="order-items"></div>
                         <label>Notas<textarea id="order-notes" rows="2"></textarea></label>
+                        <label id="order-edit-reason-group" hidden>Motivo de la corrección<textarea id="order-edit-reason" rows="2" placeholder="Explicá por qué se modifica un pedido confirmado"></textarea></label>
                         <div class="modal-actions">
                             <button class="btn-cancel" id="cancel-order-modal" type="button">Cancelar</button>
                             <button class="order-primary" id="submit-order" type="submit"><%= orderChannel === 'showroom' ? 'Registrar venta' : 'Crear y reservar stock' %></button>

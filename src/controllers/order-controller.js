@@ -25,7 +25,7 @@ export class OrderController {
             const channel=req.query.channel
             const context=await this.#context(req,channel)
             const data=await this.model.overview(channel,context.globalAccess?null:context.branchIds)
-            res.json({status:'success',data:{...data,branches:context.branches,userBranchId:req.user.branch_id,isAdmin:req.user.app_role==='admin',appRole:req.user.app_role,area:req.user.area,channel}})
+            res.json({status:'success',data:{...data,branches:context.branches,userId:req.user.id,userBranchId:req.user.branch_id,isAdmin:Boolean(req.user.is_admin)||req.user.app_role==='admin',appRole:req.user.app_role,area:req.user.area,channel}})
         } catch(error){ fail(res,error,403) }
     }
 
@@ -46,7 +46,32 @@ export class OrderController {
             const context=await this.#context(req,order.channel)
             const details=await this.model.details(order.id)
             if(!context.globalAccess&&details.some(item=>!context.branchIds.includes(Number(item.branch_id)))) throw new Error('El pedido incluye stock de una ubicación no habilitada')
-            res.json({status:'success',data:details})
+            const audit=await this.model.auditHistory(order.id)
+            res.json({status:'success',data:{items:details,audit}})
+        } catch(error){ fail(res,error,403) }
+    }
+
+    update = async (req,res) => {
+        try {
+            const order=await this.model.orderInfo(Number(req.params.id))
+            if(!order||!this.#canUseChannel(req.user,order.channel)) throw new Error('Pedido inexistente o sin acceso')
+            const context=await this.#context(req,order.channel)
+            const data={...req.body}
+            if(!data.customer_reference?.trim()) throw new Error('La referencia del pedido es obligatoria')
+            if(!Array.isArray(data.items)||!data.items.length||data.items.some(item=>!positiveInt(item.product_id)||!positiveInt(item.quantity)||!positiveInt(item.branch_id))) throw new Error('El pedido necesita productos, ubicaciones y cantidades válidas')
+            if(data.items.some(item=>!context.branchIds.includes(Number(item.branch_id)))) throw new Error('Una de las ubicaciones no está habilitada para tu usuario')
+            if(order.channel!=='mayorista'&&new Set(data.items.map(item=>Number(item.branch_id))).size>1) throw new Error('Un pedido del punto de venta debe pertenecer a una sola ubicación')
+            const keys=data.items.map(item=>`${item.product_id}:${item.branch_id}`)
+            if(new Set(keys).size!==keys.length) throw new Error('No se puede repetir el mismo producto y ubicación')
+            const isAdmin=Boolean(req.user.is_admin)||req.user.app_role==='admin'
+            const managesStock=['admin','stock_manager'].includes(req.user.app_role)
+            if(order.status==='reserved'&&order.created_by!==req.user.id&&!managesStock) throw new Error('Solo quien creó el pedido, el encargado o el jefe pueden modificarlo')
+            if(order.status==='completed'&&!isAdmin) throw new Error('Solo el administrador puede corregir un pedido confirmado')
+            if(order.status==='completed'&&(!data.reason||data.reason.trim().length<5)) throw new Error('La corrección necesita un motivo de al menos 5 caracteres')
+            const result=await this.model.update(order.id,data,req.user.id,isAdmin)
+            req.app.get('io').emit('movements_updated')
+            if(order.status==='completed') req.app.get('io').emit('new_movement')
+            res.json({status:'success',data:result})
         } catch(error){ fail(res,error,403) }
     }
 

@@ -36,6 +36,7 @@ export class OrderModel {
         }
         const [orders] = await this.#db.query(`
             SELECT o.id,o.order_number,o.channel,o.customer_reference,o.status,o.notes,o.branch_id,
+                BIN_TO_UUID(o.created_by) created_by,
                 b.name branch_name,o.created_at,
                 COUNT(*) item_count
             FROM orders o JOIN branches b ON b.id=o.branch_id
@@ -55,6 +56,21 @@ export class OrderModel {
             ORDER BY p.name,b.name
         `, [id])
         return rows
+    }
+
+    async auditHistory(id) {
+        const [rows] = await this.#db.query(`
+            SELECT a.id,a.action,a.reason,a.before_data,a.after_data,a.created_at,
+                BIN_TO_UUID(a.changed_by) changed_by,u.full_name changed_by_name
+            FROM order_audit_logs a
+            JOIN users u ON u.id=a.changed_by
+            WHERE a.order_id=? ORDER BY a.id DESC
+        `, [id])
+        return rows.map(row => ({
+            ...row,
+            before_data: typeof row.before_data === 'string' ? JSON.parse(row.before_data) : row.before_data,
+            after_data: typeof row.after_data === 'string' ? JSON.parse(row.after_data) : row.after_data
+        }))
     }
 
     async catalog(branchId) {
@@ -102,6 +118,80 @@ export class OrderModel {
             }
             throw error
         }
+    }
+
+    async update(id, data, actorId, isAdmin) {
+        const newItems = sortStockItems(data.items)
+        return runTransactionWithRetry(this.#db, async connection => {
+            const [[order]] = await connection.query('SELECT *,BIN_TO_UUID(created_by) created_by_uuid FROM orders WHERE id=? FOR UPDATE', [id])
+            if (!order) throw new Error('El pedido no existe')
+            if (order.status === 'cancelled') throw new Error('Un pedido cancelado no se puede modificar')
+            if (order.status === 'completed' && !isAdmin) throw new Error('Solo el administrador puede corregir un pedido confirmado')
+
+            const [oldItems] = await connection.query('SELECT product_id,branch_id,quantity,status FROM stock_reservations WHERE order_id=? ORDER BY branch_id,product_id FOR UPDATE', [id])
+            const beforeData = { customer_reference:order.customer_reference,notes:order.notes,status:order.status,items:oldItems.map(({product_id,branch_id,quantity})=>({product_id,branch_id,quantity})) }
+            const itemKey = item => `${Number(item.branch_id)}:${Number(item.product_id)}`
+            const oldMap = new Map(oldItems.map(item => [itemKey(item), Number(item.quantity)]))
+            const newMap = new Map(newItems.map(item => [itemKey(item), Number(item.quantity)]))
+            const stockKeys = [...new Set([...oldMap.keys(), ...newMap.keys()])].sort((a,b) => {
+                const [ab,ap]=a.split(':').map(Number),[bb,bp]=b.split(':').map(Number)
+                return ab-bb || ap-bp
+            })
+
+            for (const key of stockKeys) {
+                const [branchId,productId] = key.split(':').map(Number)
+                const [[stock]] = await connection.query('SELECT quantity FROM product_branch_stock WHERE branch_id=? AND product_id=? FOR UPDATE', [branchId,productId])
+                if (!stock) throw new Error(`No existe stock para el producto ${productId} en la ubicación ${branchId}`)
+
+                if (order.status === 'reserved') {
+                    const [[reservation]] = await connection.query("SELECT COALESCE(SUM(quantity),0) reserved FROM stock_reservations WHERE branch_id=? AND product_id=? AND status='active' AND (order_id IS NULL OR order_id<>?)", [branchId,productId,id])
+                    const available = Number(stock.quantity)-Number(reservation.reserved)
+                    if ((newMap.get(key)||0)>available) throw new Error(`Stock disponible insuficiente para el producto ${productId}. Disponible: ${available}`)
+                } else {
+                    const delta=(newMap.get(key)||0)-(oldMap.get(key)||0)
+                    if (delta>0) {
+                        const [updated]=await connection.query('UPDATE product_branch_stock SET quantity=quantity-? WHERE branch_id=? AND product_id=? AND quantity>=?', [delta,branchId,productId,delta])
+                        if (!updated.affectedRows) throw new Error(`El stock físico no alcanza para agregar ${delta} unidades del producto ${productId}`)
+                    } else if (delta<0) {
+                        await connection.query('UPDATE product_branch_stock SET quantity=quantity+? WHERE branch_id=? AND product_id=?', [-delta,branchId,productId])
+                    }
+                }
+            }
+
+            if (order.status === 'completed') {
+                const corrections = new Map()
+                for (const key of stockKeys) {
+                    const [branchId,productId]=key.split(':').map(Number)
+                    const delta=(newMap.get(key)||0)-(oldMap.get(key)||0)
+                    if (!delta) continue
+                    const type=delta>0?'egreso':'ingreso'
+                    const groupKey=`${type}:${branchId}`
+                    if(!corrections.has(groupKey)) corrections.set(groupKey,{type,branchId,items:[]})
+                    corrections.get(groupKey).items.push({productId,quantity:Math.abs(delta)})
+                }
+                for (const correction of corrections.values()) {
+                    const isEgress=correction.type==='egreso'
+                    const [movement]=await connection.query(`INSERT INTO movements
+                        (receipt_number,type,egress_reason,sale_channel,explanation,order_id,movement_purpose,requested_by,confirmed_by,date,user_id,origin_branch_id,destination_branch_id,status)
+                        VALUES (?,?,?,?,?,?,?,UUID_TO_BIN(?),UUID_TO_BIN(?),NOW(),UUID_TO_BIN(?),?,?,'entregado')`,
+                        [`COR-${id}-${Date.now()}-${correction.branchId}-${correction.type}`,correction.type,isEgress?'sale':null,order.channel,data.reason,id,order.channel==='mayorista'?'wholesale_order':'standard',actorId,actorId,actorId,isEgress?correction.branchId:null,isEgress?null:correction.branchId])
+                    await connection.query('INSERT INTO movement_details (movement_id,product_id,quantity) VALUES ?', [correction.items.map(item=>[movement.insertId,item.productId,item.quantity])])
+                }
+            }
+
+            await connection.query('DELETE FROM stock_reservations WHERE order_id=?', [id])
+            await connection.query('DELETE FROM order_items WHERE order_id=?', [id])
+            const reservationStatus=order.status==='completed'?'fulfilled':'active'
+            for (const item of newItems) await connection.query('INSERT INTO stock_reservations (product_id,branch_id,order_id,quantity,status) VALUES (?,?,?,?,?)', [item.product_id,item.branch_id,id,item.quantity,reservationStatus])
+            const totals=new Map()
+            for(const item of newItems) totals.set(Number(item.product_id),(totals.get(Number(item.product_id))||0)+Number(item.quantity))
+            for(const [productId,quantity] of totals) await connection.query('INSERT INTO order_items (order_id,product_id,quantity) VALUES (?,?,?)',[id,productId,quantity])
+            await connection.query('UPDATE orders SET customer_reference=?,notes=?,branch_id=? WHERE id=?',[data.customer_reference.trim(),data.notes||null,newItems[0].branch_id,id])
+
+            const afterData={customer_reference:data.customer_reference.trim(),notes:data.notes||null,status:order.status,items:newItems.map(({product_id,branch_id,quantity})=>({product_id,branch_id,quantity}))}
+            await connection.query('INSERT INTO order_audit_logs (order_id,changed_by,action,reason,before_data,after_data) VALUES (?,UUID_TO_BIN(?),?,?,?,?)', [id,actorId,order.status==='completed'?'admin_correction':'reservation_edit',data.reason||'Actualización de pedido reservado',JSON.stringify(beforeData),JSON.stringify(afterData)])
+            return { status:order.status }
+        })
     }
 
     async complete(id, userId) {

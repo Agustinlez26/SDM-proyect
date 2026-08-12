@@ -84,5 +84,18 @@ try {
     if (!await columnExists('movements', 'movement_purpose')) await db.query("ALTER TABLE movements ADD COLUMN movement_purpose ENUM('standard','wholesale_order') NOT NULL DEFAULT 'standard' AFTER order_id")
     if (!await columnExists('movements', 'requested_by')) await db.query('ALTER TABLE movements ADD COLUMN requested_by BINARY(16) NULL AFTER movement_purpose')
     if (!await columnExists('movements', 'confirmed_by')) await db.query('ALTER TABLE movements ADD COLUMN confirmed_by BINARY(16) NULL AFTER requested_by')
+    await db.query(`CREATE TABLE IF NOT EXISTS order_audit_logs (
+        id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        order_id INT UNSIGNED NOT NULL,
+        changed_by BINARY(16) NOT NULL,
+        action ENUM('reservation_edit','admin_correction') NOT NULL,
+        reason VARCHAR(500) NOT NULL,
+        before_data JSON NOT NULL,
+        after_data JSON NOT NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_order_audit_order (order_id,created_at),
+        CONSTRAINT fk_order_audit_order FOREIGN KEY (order_id) REFERENCES orders(id),
+        CONSTRAINT fk_order_audit_user FOREIGN KEY (changed_by) REFERENCES users(id)
+    )`)
     console.log('Migracion de pedidos, reservas y motivos de egreso completada.')
 } finally { await db.end() }
