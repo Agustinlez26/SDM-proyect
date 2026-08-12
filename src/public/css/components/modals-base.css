@@ -39,6 +39,14 @@
   max-height: 90vh;
   overflow-y: auto;
   border: 1px solid var(--border-color);
+  opacity: 0;
+  transform: translateY(18px) scale(0.975);
+  transition: opacity 0.24s ease, transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-overlay.active .modal-card {
+  opacity: 1;
+  transform: translateY(0) scale(1);
 }
 
 .modal-header {
@@ -78,6 +86,13 @@
   background: #fee2e2;
   color: #ef4444;
   border-color: #fca5a5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-overlay,
+  .modal-card {
+    transition: none;
+  }
 }
 
 .modal-form {

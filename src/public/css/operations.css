@@ -170,12 +170,25 @@ html.dark-theme .alert-card .btn-secondary.waiting-dispatch {
   width: 100%; /* Asegura que tome el ancho en su grilla */
   text-align: left; /* Alinea el texto a la izquierda porque es un botón */
   cursor: pointer;
+  animation: operation-card-in 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.action-card:nth-child(2) {
+  animation-delay: 0.07s;
+}
+
+.action-card:nth-child(3) {
+  animation-delay: 0.14s;
 }
 
 .action-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 12px 20px -8px rgba(0, 0, 0, 0.1);
   border-color: var(--primary-light);
+}
+
+.action-card:active {
+  transform: translateY(-1px) scale(0.985);
 }
 
 .card-icon {
@@ -190,6 +203,33 @@ html.dark-theme .alert-card .btn-secondary.waiting-dispatch {
 
 .card-icon span {
   font-size: 28px;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.action-card:hover .card-icon span {
+  transform: scale(1.1) rotate(-3deg);
+}
+
+@keyframes operation-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .action-card {
+    animation: none;
+    transition: none;
+  }
+
+  .card-icon span {
+    transition: none;
+  }
 }
 
 .card-text h3 {
