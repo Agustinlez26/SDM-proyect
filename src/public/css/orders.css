@@ -730,3 +730,95 @@ body.order-modal-open {
     font-size: .7rem;
   }
 }
+
+/* The shared modal stylesheet is loaded after this module and otherwise
+   limits sales dialogs to 500px. Keep both product dialogs proportional. */
+.modal-card.modal-order-card {
+  width: min(920px, calc(100vw - 2.5rem)) !important;
+  max-width: 920px !important;
+}
+
+.modal-card.order-details-card {
+  width: min(1160px, calc(100vw - 2.5rem)) !important;
+  max-width: 1160px !important;
+}
+
+.modal-order-card .catalog-name,
+.modal-order-card .detail-products-table td {
+  font-size: .8rem;
+}
+
+.modal-order-card .detail-products-table th {
+  font-size: .7rem;
+}
+
+.order-details-table th {
+  color: var(--text-secondary, #525252);
+  font-size: .72rem;
+  letter-spacing: .035em;
+  text-transform: uppercase;
+}
+
+.order-details-table td {
+  font-size: .8rem;
+  line-height: 1.25;
+}
+
+@media (max-width: 700px) {
+  .modal-card.modal-order-card,
+  .modal-card.order-details-card {
+    width: calc(100vw - .75rem) !important;
+    max-width: calc(100vw - .75rem) !important;
+    padding: .8rem !important;
+    border-radius: 12px;
+  }
+
+  .order-details-card .modal-header {
+    margin-bottom: .65rem;
+    padding-bottom: .65rem;
+  }
+
+  .order-details-card .modal-header h3 {
+    font-size: 1rem;
+  }
+
+  .order-details-card .modal-header p {
+    font-size: .7rem;
+  }
+
+  .order-details-card .btn-close-modal {
+    width: 30px;
+    height: 30px;
+  }
+
+  .order-details-table th,
+  .order-details-table td {
+    padding: .42rem .22rem;
+    font-size: .61rem;
+    line-height: 1.15;
+  }
+
+  .order-details-table th:nth-child(1) { width: 18%; }
+  .order-details-table th:nth-child(2) { width: 35%; }
+  .order-details-table th:nth-child(3) { width: 29%; }
+  .order-details-table th:nth-child(4) { width: 18%; }
+
+  .order-sku {
+    font-size: .58rem;
+  }
+
+  .order-quantity-badge {
+    min-width: 1.45rem;
+    padding: .16rem .3rem;
+    font-size: .64rem;
+  }
+
+  .modal-order-card .catalog-name,
+  .modal-order-card .detail-products-table td {
+    font-size: .68rem;
+  }
+
+  .modal-order-card .detail-products-table th {
+    font-size: .61rem;
+  }
+}
