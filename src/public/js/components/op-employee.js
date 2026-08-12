@@ -17,7 +17,18 @@ async function fetchEmployeeBranches() {
         const response = await fetch('/api/branches/catalog');
         const body = await response.json();
         const select = document.getElementById('op-dest');
-        if (body.status === 'success' && select) body.data.forEach(branch => select.innerHTML += `<option value="${branch.id}">${branch.name}</option>`);
+        const currentBranchId = Number(document.getElementById('modal-operation')?.dataset.userBranchId);
+        if (body.status === 'success' && select) {
+            const branches = [...body.data];
+            if (!branches.some(branch => Number(branch.id) === 1)) {
+                branches.push({ id: 1, name: 'Taller Mercedes Corrientes' });
+            }
+            branches.sort((a, b) => a.name.localeCompare(b.name, 'es'));
+            select.innerHTML = '<option value="" disabled selected>Seleccionar sucursal...</option>';
+            branches
+                .filter(branch => Number(branch.id) !== currentBranchId)
+                .forEach(branch => select.innerHTML += `<option value="${branch.id}">${branch.name}</option>`);
+        }
     } catch (error) { console.error('No se pudieron cargar las sucursales', error); }
 }
 

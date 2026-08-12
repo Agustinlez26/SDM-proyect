@@ -26,6 +26,13 @@ export const movementSchema = z.object({
             path: ["destination_branch_id"]
         });
     }
+    if (data.type === 'envio' && data.origin_branch_id && data.origin_branch_id === data.destination_branch_id) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "La sucursal de destino debe ser diferente del origen",
+            path: ["destination_branch_id"]
+        });
+    }
     if (data.type === 'egreso' && !data.egress_reason) {
         ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'El egreso requiere un motivo', path: ['egress_reason'] })
     }

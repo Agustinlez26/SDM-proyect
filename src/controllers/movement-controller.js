@@ -251,6 +251,9 @@ export class MovementController {
                 return res.status(403).json({ status: 'error', message: 'Los envíos solo pueden realizarse desde la Sucursal Principal.' });
             }
             destination = destination_branch_id;
+            if (Number(origin) === Number(destination)) {
+                return res.status(400).json({ status: 'error', message: 'No se puede enviar stock a la misma sucursal de origen.' });
+            }
         }
 
         const dbPayload = {

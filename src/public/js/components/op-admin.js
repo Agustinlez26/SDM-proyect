@@ -3,6 +3,16 @@ let searchTimeout = null;
 let selectedProductsForOp = [];
 let adminBranches = [];
 
+function renderAdminDestinations(originId = null) {
+    const select = document.getElementById('op-dest');
+    if (!select) return;
+    select.innerHTML = '<option value="" disabled selected>Seleccionar sucursal...</option>';
+    adminBranches
+        .filter(branch => !originId || Number(branch.id) !== Number(originId))
+        .forEach(branch => select.innerHTML += `<option value="${branch.id}">${branch.name}</option>`);
+    select.disabled = Boolean(!originId);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     initOpAdminSocket()
     fetchAdminBranches();
@@ -40,17 +50,21 @@ async function fetchAdminBranches() {
         const json = await window.fetchWithCache('/api/branches/catalog', 'cache_branches_catalog', 120)
 
         if (json.status === 'success') {
-            adminBranches = json.data;
+            adminBranches = [...json.data];
+            if (!adminBranches.some(branch => Number(branch.id) === 1)) {
+                adminBranches.push({ id: 1, name: 'Taller Mercedes Corrientes' });
+            }
+            adminBranches.sort((a, b) => a.name.localeCompare(b.name, 'es'));
             const select = document.getElementById('op-dest');
             const originSelect = document.getElementById('op-origin');
-            if (select) {
-                select.innerHTML = '<option value="" disabled selected>Seleccionar sucursal...</option>';
-                adminBranches.forEach(branch => select.innerHTML += `<option value="${branch.id}">${branch.name}</option>`);
-            }
+            if (select) renderAdminDestinations();
             if (originSelect) {
                 originSelect.innerHTML = '<option value="" disabled selected>Seleccionar sucursal...</option>';
                 adminBranches.forEach(branch => originSelect.innerHTML += `<option value="${branch.id}">${branch.name}</option>`);
-                originSelect.addEventListener('change', () => searchProductsForOperation(''));
+                originSelect.onchange = () => {
+                    renderAdminDestinations(originSelect.value);
+                    searchProductsForOperation('');
+                };
             }
         }
     } catch (error) { console.error("Error cargando sucursales:", error); }
@@ -64,6 +78,7 @@ function closeAndCleanOperationModal() {
     if (destSelect) destSelect.value = '';
     const originSelect = document.getElementById('op-origin');
     if (originSelect) originSelect.value = '';
+    renderAdminDestinations();
 
     document.getElementById('catalog-grid').innerHTML = ''; // Limpiamos grilla
     renderEmptyEditableRow();

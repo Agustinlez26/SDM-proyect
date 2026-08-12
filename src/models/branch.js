@@ -96,7 +96,7 @@ export class BranchModel {
     }
 
     async getCatalog() {
-        const sql = `SELECT id, name FROM ${this.#table} WHERE is_active != 0 AND id != 1 ORDER BY name ASC`
+        const sql = `SELECT id, name FROM ${this.#table} WHERE is_active != 0 ORDER BY name ASC`
         const [rows] = await this.#db.query(sql)
         return rows.map(row => new BranchListDTO(row))
     }
