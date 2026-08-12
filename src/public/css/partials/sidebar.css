@@ -134,6 +134,7 @@ body {
   flex-shrink: 0;
   font-size: 20px;
   text-align: center;
+  color: currentColor;
 }
 
 .nav-link:hover {
@@ -196,6 +197,12 @@ html.dark-theme .nav-section-title {
 
 html.dark-theme .nav-link {
   color: #d4d4d4;
+}
+
+html.dark-theme .sidebar .nav-link svg,
+html.dark-theme .sidebar .nav-link .material-symbols-outlined {
+  color: currentColor;
+  fill: currentColor;
 }
 
 html.dark-theme .nav-link:hover {
