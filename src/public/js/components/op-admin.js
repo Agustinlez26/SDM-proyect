@@ -196,7 +196,7 @@ window.searchProductsForOperation = async function () {
     const originBranch = document.getElementById('op-origin')?.value;
     let apiUrl = currentOperationType === 'in'
         ? `/api/products/catalog?search=${encodeURIComponent(searchTerm)}`
-        : `/api/stocks/catalog?search=${encodeURIComponent(searchTerm)}${originBranch ? `&branch=${originBranch}` : ''}`;
+        : `/api/stocks/catalog?search=${encodeURIComponent(searchTerm)}${originBranch ? `&branch_id=${originBranch}` : ''}`;
 
     try {
         const res = await fetch(apiUrl);

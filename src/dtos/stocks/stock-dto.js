@@ -1,6 +1,7 @@
 export class StockDTO {
     constructor(stock){
         this.id = stock.id;
+        this.branch_id = stock.branch_id;
         this.cod_bar = stock.cod_bar;
         this.name = stock.name;
         this.branch = stock.branch;

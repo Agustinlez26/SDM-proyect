@@ -34,7 +34,7 @@
                                             </button>
                                         </header>
 
-                                        <% if (user.role === 'admin') { %>
+                                        <% if (user.is_admin || user.app_role === 'admin' || user.app_role === 'stock_manager' || (user.app_role === 'seller' && user.area === 'wholesale')) { %>
                                         <div class="filter-group">
                                             <label>Sucursal</label>
                                             <select id="filter-branch">
@@ -80,13 +80,13 @@
                                                 <th class="text-center">Cantidad</th>
                                                 <th class="text-center">Mínimo</th>
 
-                                                <% if (user.role==='admin' ) { %>
+                                                <% if (user.is_admin || user.app_role === 'admin' || user.app_role === 'stock_manager') { %>
                                                     <th class="text-center" id="col-acciones">Acciones</th>
                                                     <% } %>
                                             </tr>
                                         </thead>
 
-                                        <% if (user.role==='admin' ) { %>
+                                        <% if (user.is_admin || user.app_role === 'admin' || user.app_role === 'stock_manager') { %>
                                             <div class="modal-overlay" id="modal-edit-stock">
                                                 <div class="modal-content" style="max-width: 450px;">
                                                     <header class="modal-header">
@@ -142,7 +142,7 @@
                                             </div>
 
                                             <script nonce="<%= cspNonce %>">
-                                                // Lógica para enviar el formulario (Solo se carga si es admin)
+                                                // Solo se carga para el jefe o el encargado de stock.
                                                 document.getElementById('form-edit-stock').addEventListener('submit', async (e) => {
                                                     e.preventDefault();
                                                     const stockId = document.getElementById('edit-stock-id').value;

@@ -149,6 +149,7 @@ export class StockModel {
         const sql = `
         SELECT
         s.id,
+        s.branch_id,
         p.name,
         p.cod_bar,
         b.name as branch,
@@ -246,8 +247,8 @@ export class StockModel {
             sql += ' AND branch_id = ?'
             params.push(id)
         }
-        const rows = await this.#db.query(sql, params)
-        return rows[0]
+        const [rows] = await this.#db.query(sql, params)
+        return rows[0].count
     }
 
     /**

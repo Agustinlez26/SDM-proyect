@@ -1,6 +1,7 @@
 import { validateParams, validateStock, validateUpdateStock } from '../schemas/stock-schema.js'
 import { validateId } from '../schemas/shared-schema.js'
 import { handleError } from '../utils/error-handler.js'
+import { canViewAllStock } from '../utils/stock-access.js'
 
 /**
  * Controlador para la gestión de Inventario (Stock).
@@ -34,7 +35,7 @@ export class StockController {
 
         const filters = result.data
 
-        if (!req.user.is_admin && req.user.app_role !== 'stock_manager') {
+        if (!canViewAllStock(req.user)) {
             filters.branch = req.user.branch_id
         }
 
@@ -57,7 +58,9 @@ export class StockController {
         }
 
         const filters = result.data
-        filters.branch = (req.user.is_admin || req.user.app_role==='stock_manager') ? (filters.branch || req.user.branch_id) : req.user.branch_id
+        filters.branch = canViewAllStock(req.user)
+            ? (filters.branch || req.user.branch_id)
+            : req.user.branch_id
 
         try {
             const stocks = await this.stockService.findCatalog(filters)
@@ -80,10 +83,10 @@ export class StockController {
         })
 
         try {
-            const stock = await this.stockService.getById(result.data)
+            const stock = await this.stockService.findById(result.data)
             if (!stock) return res.status(404).json({ message: 'Stock no encontrado' })
 
-            if (!req.user.is_admin && stock.branch_id !== req.user.branch_id) {
+            if (!canViewAllStock(req.user) && Number(stock.branch_id) !== Number(req.user.branch_id)) {
                 return res.status(403).json({
                     status: 'error',
                     message: 'No tienes permiso para ver el inventario de otra sucursal'
@@ -103,7 +106,7 @@ export class StockController {
      */
     getLowStockCount = async (req, res) => {
         let branch_id = null
-        if (!req.user.is_admin) {
+        if (!canViewAllStock(req.user)) {
             const result = validateId(req.user.branch_id)
             if (!result.success) {
                 return res.status(400).json({
@@ -131,7 +134,7 @@ export class StockController {
      */
     getOutStockCount = async (req, res) => {
         let branch_id = null
-        if (!req.user.is_admin) {
+        if (!canViewAllStock(req.user)) {
             const result = validateId(req.user.branch_id)
             if (!result.success) {
                 return res.status(400).json({
