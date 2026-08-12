@@ -87,7 +87,7 @@
                                         <span class="material-symbols-outlined" style="font-size: 32px;">swap_horiz</span>
                                         <span>Registrar Cambio</span>
                                     </button>
-                                    <% if (user.role==='admin') { %><%- include('../partials/modals/modal-add-product') %><% } %>
+                                    <% if (user && (user.role==='admin' || user.app_role==='stock_manager')) { %><%- include('../partials/modals/modal-add-product') %><% } %>
                                         <%- include('../partials/modals/modal-op-admin') %>
 
                                             <% } else { %>
@@ -138,7 +138,7 @@
 
                         </div>
                         <% if (user && (user.role==='admin' || user.app_role==='stock_manager') ) { %>
-                            <% if (user.role==='admin') { %><script src="/js/components/add-product.js" defer></script><% } %>
+                            <% if (user && (user.role==='admin' || user.app_role==='stock_manager')) { %><script src="/js/components/add-product.js" defer></script><% } %>
                             <script src="/js/components/op-admin.js" defer></script>
                             <% } else { %>
                                 <script src="/js/components/op-employee.js" defer></script>
