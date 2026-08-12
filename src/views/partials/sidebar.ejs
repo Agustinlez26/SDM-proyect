@@ -60,7 +60,7 @@
                 </a>
             </li>
 
-            <% if (user && user.role==='admin' ) { %>
+            <% if (user && (user.role === 'admin' || user.app_role === 'stock_manager')) { %>
 
                 <li class="nav-item <%= activePage === 'products' ? 'active' : '' %>">
                     <a href="/products" class="nav-link">
@@ -71,6 +71,10 @@
                         <span>Productos</span>
                     </a>
                 </li>
+
+            <% } %>
+
+            <% if (user && user.role === 'admin') { %>
 
                 <li class="nav-item <%= activePage === 'stats' ? 'active' : '' %>">
                     <a href="/stats" class="nav-link">

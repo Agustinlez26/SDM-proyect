@@ -63,7 +63,7 @@
                             <h2 class="section-title">Acciones Rápidas</h2>
                             <section class="actions-grid">
                                 <% if (user && (user.role==='admin' || user.app_role==='stock_manager') ) { %>
-                                    <% if (user.role==='admin') { %><button class="action-card" onclick="openProductModal()">
+                                    <% if (user.role==='admin' || user.app_role==='stock_manager') { %><button class="action-card" onclick="openProductModal()">
                                         <span class="material-symbols-outlined" style="font-size: 32px;">add_box</span>
                                         <span>Crear Producto</span>
                                     </button>
