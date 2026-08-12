@@ -14,6 +14,11 @@ const columnExists = async (table, column) => {
     return rows.length > 0
 }
 
+const indexExists = async (table, index) => {
+    const [rows] = await db.query(`SELECT 1 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = ? AND index_name = ?`, [table, index])
+    return rows.length > 0
+}
+
 try {
     if (!await columnExists('users', 'app_role')) await db.query("ALTER TABLE users ADD COLUMN app_role ENUM('admin','stock_manager','seller') NOT NULL DEFAULT 'seller' AFTER is_admin")
     if (!await columnExists('users', 'area')) await db.query("ALTER TABLE users ADD COLUMN area ENUM('general','wholesale','retail') NOT NULL DEFAULT 'retail' AFTER app_role")
@@ -28,6 +33,7 @@ try {
     await db.query(`CREATE TABLE IF NOT EXISTS orders (
         id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         order_number VARCHAR(60) NOT NULL UNIQUE,
+        request_key VARCHAR(64) NULL,
         channel ENUM('mercado_libre','tienda_nube','mayorista','merchandising') NOT NULL,
         customer_reference VARCHAR(180) NOT NULL,
         branch_id INT UNSIGNED NOT NULL,
@@ -35,6 +41,7 @@ try {
         notes TEXT NULL, movement_id INT UNSIGNED NULL, created_by BINARY(16) NOT NULL,
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY uq_orders_request_key (request_key),
         CONSTRAINT fk_orders_branch FOREIGN KEY (branch_id) REFERENCES branches(id),
         CONSTRAINT fk_orders_movement FOREIGN KEY (movement_id) REFERENCES movements(id),
         CONSTRAINT fk_orders_user FOREIGN KEY (created_by) REFERENCES users(id)
@@ -61,6 +68,11 @@ try {
         await db.query('ALTER TABLE stock_reservations ADD CONSTRAINT fk_res_order FOREIGN KEY (order_id) REFERENCES orders(id)')
     }
     if (!await columnExists('movements', 'egress_reason')) await db.query("ALTER TABLE movements ADD COLUMN egress_reason ENUM('sale','return','exchange') NULL AFTER type")
+    if (!await columnExists('movements', 'request_key')) await db.query('ALTER TABLE movements ADD COLUMN request_key VARCHAR(64) NULL AFTER receipt_number')
+    if (!await indexExists('movements', 'uq_movements_request_key')) await db.query('ALTER TABLE movements ADD UNIQUE INDEX uq_movements_request_key (request_key)')
+    if (!await columnExists('orders', 'request_key')) await db.query('ALTER TABLE orders ADD COLUMN request_key VARCHAR(64) NULL AFTER order_number')
+    if (!await indexExists('orders', 'uq_orders_request_key')) await db.query('ALTER TABLE orders ADD UNIQUE INDEX uq_orders_request_key (request_key)')
+    if (!await indexExists('stock_reservations', 'idx_reservations_stock_lookup')) await db.query('ALTER TABLE stock_reservations ADD INDEX idx_reservations_stock_lookup (branch_id, product_id, status)')
     if (!await columnExists('movements', 'sale_channel')) await db.query("ALTER TABLE movements ADD COLUMN sale_channel ENUM('mercado_libre','tienda_nube','mayorista','merchandising','showroom') NULL AFTER egress_reason")
     if (!await columnExists('movements', 'explanation')) await db.query('ALTER TABLE movements ADD COLUMN explanation TEXT NULL AFTER sale_channel')
     if (!await columnExists('movements', 'order_id')) {

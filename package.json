@@ -9,7 +9,9 @@
     "dev": "node --watch app.js",
     "migrate:orders": "node src/scripts/migrate_orders.js",
     "migrate:movement-metadata": "node src/scripts/migrate_movement_metadata.js",
+    "migrate:transaction-safety": "node src/scripts/migrate_transaction_safety.js",
     "seed:access-roles": "node src/scripts/seed_access_roles.js",
+    "test:transaction-concurrency": "node src/scripts/test_transaction_concurrency.js",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
   },
   "keywords": [],

@@ -3,6 +3,7 @@ import { MovementDetailsDTO } from "../dtos/movements/movement-details-dto.js"
 import { MovementRecentsDTO } from "../dtos/movements/movement-recents-dto.js"
 import { MovementDTO } from "../dtos/movements/movements-dto.js"
 import { ShipmentsDTO } from "../dtos/movements/shipments-dto.js"
+import { runTransactionWithRetry, sortStockItems } from "../utils/transaction-retry.js"
 
 /**
  * Modelo de Movimientos (MovementsModel).
@@ -197,6 +198,12 @@ export class MovementModel {
         return rows.map(row => new MovementDetailsDTO(row))
     }
 
+    async findIdByRequestKey(requestKey) {
+        if (!requestKey) return null
+        const [rows] = await this.#db.query(`SELECT id FROM ${this.#table} WHERE request_key = ? LIMIT 1`, [requestKey])
+        return rows[0]?.id || null
+    }
+
     async findShipmentsInProcess(branch_id = null) {
         let sql = `
             SELECT
@@ -258,66 +265,53 @@ export class MovementModel {
      * @returns {Promise<number>} ID del nuevo movimiento.
      */
     async createTransaction(data, details, stockAction, targetBranchId) {
-        const connection = await this.#db.getConnection()
+        const sortedDetails = sortStockItems(details)
         try {
-            await connection.beginTransaction()
+            return await runTransactionWithRetry(this.#db, async connection => {
+                const sqlHeader = `
+                    INSERT INTO ${this.#table}
+                    (receipt_number, request_key, type, egress_reason, sale_channel, explanation, date, user_id, origin_branch_id, destination_branch_id, status)
+                    VALUES (?, ?, ?, ?, ?, ?, NOW(), UUID_TO_BIN(?), ?, ?, ?)
+                `
+                const [resultHeader] = await connection.query(sqlHeader, [
+                    data.receipt_number, data.request_key, data.type, data.egress_reason || null, data.sale_channel || null,
+                    data.explanation || null, data.user_id,
+                    data.origin_branch_id, data.destination_branch_id, data.status
+                ])
+                const movementId = resultHeader.insertId
 
-            const sqlHeader = `
-                INSERT INTO ${this.#table} 
-                (receipt_number, type, egress_reason, sale_channel, explanation, date, user_id, origin_branch_id, destination_branch_id, status)
-                VALUES (?, ?, ?, ?, ?, NOW(), UUID_TO_BIN(?), ?, ?, ?)
-            `
-            const [resultHeader] = await connection.query(sqlHeader, [
-                data.receipt_number, data.type, data.egress_reason || null, data.sale_channel || null,
-                data.explanation || null, data.user_id,
-                data.origin_branch_id, data.destination_branch_id, data.status
-            ])
-            const movementId = resultHeader.insertId
+                const values = sortedDetails.map(d => [movementId, d.product_id, d.quantity])
+                await connection.query(`INSERT INTO ${this.#tableDetails} (movement_id, product_id, quantity) VALUES ?`, [values])
 
-            const values = details.map(d => [movementId, d.product_id, d.quantity])
-            await connection.query(`INSERT INTO ${this.#tableDetails} (movement_id, product_id, quantity) VALUES ?`, [values])
+                for (const item of sortedDetails) {
+                    if (stockAction === 'ADD') {
+                        const minQty = item.min_quantity || 0
+                        await connection.query(`
+                            INSERT INTO ${this.#tableStock} (branch_id, product_id, quantity, min_quantity)
+                            VALUES (?, ?, ?, ?)
+                            ON DUPLICATE KEY UPDATE quantity = quantity + ?
+                        `, [targetBranchId, item.product_id, item.quantity, minQty, item.quantity])
+                    } else if (stockAction === 'SUBTRACT') {
+                        const [res] = await connection.query(`
+                            UPDATE ${this.#tableStock}
+                            SET quantity = quantity - ?
+                            WHERE branch_id = ? AND product_id = ?
+                              AND quantity - COALESCE((SELECT SUM(r.quantity) FROM stock_reservations r
+                                  WHERE r.branch_id = ? AND r.product_id = ? AND r.status = 'active'), 0) >= ?
+                        `, [item.quantity, targetBranchId, item.product_id, targetBranchId, item.product_id, item.quantity])
 
-            for (const item of details) {
-                if (stockAction === 'ADD') {
-
-                    const minQty = item.min_quantity || 0;
-
-                    const sqlUpsert = `
-                        INSERT INTO ${this.#tableStock} (branch_id, product_id, quantity, min_quantity)
-                        VALUES (?, ?, ?, ?) 
-                        ON DUPLICATE KEY UPDATE quantity = quantity + ?
-                    `
-                    await connection.query(sqlUpsert, [
-                        targetBranchId,
-                        item.product_id,
-                        item.quantity,
-                        minQty,
-                        item.quantity
-                    ])
-
-                } else if (stockAction === 'SUBTRACT') {
-                    const sqlUpdate = `
-                        UPDATE ${this.#tableStock} 
-                        SET quantity = quantity - ? 
-                        WHERE branch_id = ? AND product_id = ?
-                          AND quantity - COALESCE((SELECT SUM(r.quantity) FROM stock_reservations r
-                              WHERE r.branch_id = ? AND r.product_id = ? AND r.status = 'active'), 0) >= ?
-                    `
-                    const [res] = await connection.query(sqlUpdate, [item.quantity, targetBranchId, item.product_id, targetBranchId, item.product_id, item.quantity])
-
-                    if (res.affectedRows === 0) {
-                        throw new Error(`Stock insuficiente para el producto ID: ${item.product_id}`)
+                        if (res.affectedRows === 0) throw new Error(`Stock insuficiente para el producto ID: ${item.product_id}`)
                     }
                 }
-            }
 
-            await connection.commit()
-            return movementId
+                return movementId
+            })
         } catch (error) {
-            await connection.rollback()
+            if (error?.code === 'ER_DUP_ENTRY' && data.request_key) {
+                const existingId = await this.findIdByRequestKey(data.request_key)
+                if (existingId) return existingId
+            }
             throw error
-        } finally {
-            connection.release()
         }
     }
 
@@ -330,10 +324,7 @@ export class MovementModel {
      * @param {Array} details 
      */
     async dispatchShipment(movementId) {
-        const connection = await this.#db.getConnection()
-        try {
-            await connection.beginTransaction()
-
+        return runTransactionWithRetry(this.#db, async connection => {
             const [rows] = await connection.query(
                 `SELECT status FROM ${this.#table} WHERE id = ? FOR UPDATE`,
                 [movementId]
@@ -348,13 +339,7 @@ export class MovementModel {
                 [movementId]
             )
 
-            await connection.commit()
-        } catch (error) {
-            await connection.rollback()
-            throw error
-        } finally {
-            connection.release()
-        }
+        })
     }
 
     /**
@@ -364,10 +349,8 @@ export class MovementModel {
      * @param {Array} details 
      */
     async receiveShipment(movementId, details) {
-        const connection = await this.#db.getConnection()
-        try {
-            await connection.beginTransaction()
-
+        const sortedDetails = sortStockItems(details, () => 0, item => item.product.id)
+        return runTransactionWithRetry(this.#db, async connection => {
             const [rows] = await connection.query(
                 `SELECT status, origin_branch_id, destination_branch_id FROM ${this.#table} WHERE id = ? FOR UPDATE`,
                 [movementId]
@@ -380,7 +363,7 @@ export class MovementModel {
             const destinationBranchId = rows[0].destination_branch_id
             const originBranchId = rows[0].origin_branch_id
 
-            for (const item of details) {
+            for (const item of sortedDetails) {
 
                 const productId = item.product.id
 
@@ -406,12 +389,6 @@ export class MovementModel {
                 [movementId]
             )
 
-            await connection.commit()
-        } catch (error) {
-            await connection.rollback()
-            throw error
-        } finally {
-            connection.release()
-        }
+        })
     }
 }

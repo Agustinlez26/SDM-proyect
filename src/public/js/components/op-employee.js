@@ -5,6 +5,7 @@
 let searchTimeout = null;
 let selectedProductsForOp = [];
 let currentOperationType = 'out';
+let pendingOperationRequestKey = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     initOpEmployeeSocket();
@@ -54,6 +55,7 @@ function initOpEmployeeSocket() {
 function closeAndCleanOperationModal() {
     document.getElementById('modal-operation').classList.remove('active');
     selectedProductsForOp = [];
+    pendingOperationRequestKey = null;
     document.getElementById('op-search-prod').value = '';
     document.getElementById('op-sale-channel').value = '';
     document.getElementById('op-explanation').value = '';
@@ -92,6 +94,7 @@ window.openOperationModal = function (type, reason = 'return') {
     if (!['out', 'transfer'].includes(type)) return;
     if (type === 'out' && !['return', 'exchange'].includes(reason)) return;
     currentOperationType = type;
+    pendingOperationRequestKey = null;
 
     selectedProductsForOp = [];
     document.getElementById('op-search-prod').value = '';
@@ -236,6 +239,7 @@ if (btnConfirmOp) {
         if (selectedProductsForOp.length === 0) return alert('Debes agregar al menos un producto a la operación.');
 
         const payload = {
+            idempotency_key: pendingOperationRequestKey ||= crypto.randomUUID(),
             type: currentOperationType === 'transfer' ? 'envio' : 'egreso',
             details: selectedProductsForOp.map(p => ({
                 product_id: p.id,

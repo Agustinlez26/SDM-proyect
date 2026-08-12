@@ -1,4 +1,5 @@
 import { Database } from '../config/connection.js'
+import { runTransactionWithRetry, sortStockItems } from '../utils/transaction-retry.js'
 
 export class OrderModel {
     #db
@@ -12,8 +13,13 @@ export class OrderModel {
     }
 
     async orderInfo(id) {
-        const [[row]] = await this.#db.query('SELECT id,channel,BIN_TO_UUID(created_by) created_by,branch_id,status FROM orders WHERE id=?', [id])
+        const [[row]] = await this.#db.query('SELECT id,channel,BIN_TO_UUID(created_by) created_by,branch_id,status,movement_id,request_key FROM orders WHERE id=?', [id])
         return row
+    }
+
+    async findByRequestKey(requestKey) {
+        const [[row]] = await this.#db.query('SELECT id,status,movement_id FROM orders WHERE request_key=? LIMIT 1', [requestKey])
+        return row || null
     }
 
     async reservationBranchIds(orderId) {
@@ -53,35 +59,51 @@ export class OrderModel {
     }
 
     async create(data, userId) {
-        const connection = await this.#db.getConnection()
+        const sortedItems = sortStockItems(data.items)
         try {
-            await connection.beginTransaction()
-            for (const item of data.items) {
-                const [[stock]] = await connection.query(`SELECT s.quantity,
-                    COALESCE((SELECT SUM(sr.quantity) FROM stock_reservations sr WHERE sr.product_id=s.product_id AND sr.branch_id=s.branch_id AND sr.status='active'),0) reserved
-                    FROM product_branch_stock s WHERE s.branch_id=? AND s.product_id=? FOR UPDATE`, [item.branch_id,item.product_id])
-                const available = stock ? Number(stock.quantity)-Number(stock.reserved) : 0
-                if (available < item.quantity) throw new Error(`Stock disponible insuficiente para el producto ${item.product_id} en la ubicación ${item.branch_id}. Disponible: ${available}`)
+            return await runTransactionWithRetry(this.#db, async connection => {
+                const orderNumber = `PED-${Date.now().toString(36).toUpperCase()}`
+                const [result] = await connection.query(`INSERT INTO orders (order_number,request_key,channel,customer_reference,branch_id,notes,created_by) VALUES (?,?,?,?,?,?,UUID_TO_BIN(?))`,
+                    [orderNumber,data.idempotency_key,data.channel,data.customer_reference.trim(),sortedItems[0].branch_id,data.notes||null,userId])
+
+                for (const item of sortedItems) {
+                    const [[stock]] = await connection.query(`SELECT s.quantity,
+                        COALESCE((SELECT SUM(sr.quantity) FROM stock_reservations sr WHERE sr.product_id=s.product_id AND sr.branch_id=s.branch_id AND sr.status='active'),0) reserved
+                        FROM product_branch_stock s WHERE s.branch_id=? AND s.product_id=? FOR UPDATE`, [item.branch_id,item.product_id])
+                    const available = stock ? Number(stock.quantity)-Number(stock.reserved) : 0
+                    if (available < item.quantity) throw new Error(`Stock disponible insuficiente para el producto ${item.product_id} en la ubicación ${item.branch_id}. Disponible: ${available}`)
+                }
+
+                const totals = new Map()
+                for (const item of sortedItems) totals.set(Number(item.product_id),(totals.get(Number(item.product_id))||0)+Number(item.quantity))
+                for (const [productId,quantity] of [...totals.entries()].sort((a,b)=>a[0]-b[0])) {
+                    await connection.query('INSERT INTO order_items (order_id,product_id,quantity) VALUES (?,?,?)',[result.insertId,productId,quantity])
+                }
+                for (const item of sortedItems) {
+                    await connection.query("INSERT INTO stock_reservations (product_id,branch_id,order_id,quantity,status) VALUES (?,?,?,?,'active')",[item.product_id,item.branch_id,result.insertId,item.quantity])
+                }
+                return { id: result.insertId, created: true, status: 'reserved', movement_id: null }
+            })
+        } catch (error) {
+            if (error?.code === 'ER_DUP_ENTRY' && data.idempotency_key) {
+                const existing = await this.findByRequestKey(data.idempotency_key)
+                if (existing) return { ...existing, created: false }
             }
-            const orderNumber = `PED-${Date.now().toString(36).toUpperCase()}`
-            const [result] = await connection.query(`INSERT INTO orders (order_number,channel,customer_reference,branch_id,notes,created_by) VALUES (?,?,?,?,?,UUID_TO_BIN(?))`,
-                [orderNumber,data.channel,data.customer_reference.trim(),data.items[0].branch_id,data.notes||null,userId])
-            const totals = new Map()
-            for (const item of data.items) totals.set(Number(item.product_id),(totals.get(Number(item.product_id))||0)+Number(item.quantity))
-            for (const [productId,quantity] of totals) await connection.query('INSERT INTO order_items (order_id,product_id,quantity) VALUES (?,?,?)',[result.insertId,productId,quantity])
-            for (const item of data.items) await connection.query("INSERT INTO stock_reservations (product_id,branch_id,order_id,quantity,status) VALUES (?,?,?,?,'active')",[item.product_id,item.branch_id,result.insertId,item.quantity])
-            await connection.commit()
-            return result.insertId
-        } catch (error) { await connection.rollback(); throw error } finally { connection.release() }
+            throw error
+        }
     }
 
     async complete(id, userId) {
-        const connection = await this.#db.getConnection()
-        try {
-            await connection.beginTransaction()
-            const [[order]] = await connection.query("SELECT * FROM orders WHERE id=? AND status='reserved' FOR UPDATE",[id])
-            if (!order) throw new Error('El pedido no existe o ya fue cerrado')
-            const [allocations] = await connection.query("SELECT product_id,branch_id,quantity FROM stock_reservations WHERE order_id=? AND status='active' FOR UPDATE",[id])
+        return runTransactionWithRetry(this.#db, async connection => {
+            const [[order]] = await connection.query('SELECT * FROM orders WHERE id=? FOR UPDATE',[id])
+            if (!order) throw new Error('El pedido no existe')
+            if (order.status === 'completed') return order.movement_id
+            if (order.status !== 'reserved') throw new Error('El pedido ya fue cancelado')
+
+            const [allocationRows] = await connection.query("SELECT product_id,branch_id,quantity FROM stock_reservations WHERE order_id=? AND status='active' ORDER BY branch_id,product_id FOR UPDATE",[id])
+            const allocations = sortStockItems(allocationRows)
+            if (!allocations.length) throw new Error('El pedido no tiene reservas activas')
+
             for (const item of allocations) {
                 const [updated] = await connection.query('UPDATE product_branch_stock SET quantity=quantity-? WHERE branch_id=? AND product_id=? AND quantity>=?',[item.quantity,item.branch_id,item.product_id,item.quantity])
                 if (!updated.affectedRows) throw new Error(`El stock físico ya no alcanza para el producto ${item.product_id}`)
@@ -90,7 +112,7 @@ export class OrderModel {
             for (const item of allocations) { if (!byBranch.has(item.branch_id)) byBranch.set(item.branch_id,[]); byBranch.get(item.branch_id).push(item) }
             let firstMovementId = null
             const purpose = order.channel==='mayorista' ? 'wholesale_order' : 'standard'
-            for (const [branchId,items] of byBranch) {
+            for (const [branchId,items] of [...byBranch.entries()].sort((a,b)=>Number(a[0])-Number(b[0]))) {
                 const [movement] = await connection.query(`INSERT INTO movements
                     (receipt_number,type,egress_reason,order_id,movement_purpose,requested_by,confirmed_by,date,user_id,origin_branch_id,destination_branch_id,status)
                     VALUES (?,'egreso','sale',?,?,?,UUID_TO_BIN(?),NOW(),UUID_TO_BIN(?),?,NULL,'entregado')`,
@@ -100,19 +122,19 @@ export class OrderModel {
             }
             await connection.query("UPDATE stock_reservations SET status='fulfilled' WHERE order_id=? AND status='active'",[id])
             await connection.query("UPDATE orders SET status='completed',movement_id=? WHERE id=?",[firstMovementId,id])
-            await connection.commit()
             return firstMovementId
-        } catch (error) { await connection.rollback(); throw error } finally { connection.release() }
+        })
     }
 
     async cancel(id) {
-        const connection = await this.#db.getConnection()
-        try {
-            await connection.beginTransaction()
-            const [updated] = await connection.query("UPDATE orders SET status='cancelled' WHERE id=? AND status='reserved'",[id])
-            if (!updated.affectedRows) throw new Error('El pedido no existe o ya fue cerrado')
+        return runTransactionWithRetry(this.#db, async connection => {
+            const [[order]] = await connection.query('SELECT status FROM orders WHERE id=? FOR UPDATE',[id])
+            if (!order) throw new Error('El pedido no existe')
+            if (order.status === 'cancelled') return false
+            if (order.status !== 'reserved') throw new Error('Un pedido completado no se puede cancelar')
+            await connection.query("UPDATE orders SET status='cancelled' WHERE id=?",[id])
             await connection.query("UPDATE stock_reservations SET status='released' WHERE order_id=? AND status='active'",[id])
-            await connection.commit()
-        } catch (error) { await connection.rollback(); throw error } finally { connection.release() }
+            return true
+        })
     }
 }

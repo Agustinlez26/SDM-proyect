@@ -13,6 +13,7 @@ const movementDetailSchema = z.object({
 })
 
 export const movementSchema = z.object({
+    idempotency_key: z.string().uuid('La identificación de la operación no es válida'),
     type: z.enum(MOVEMENT_TYPES),
     origin_branch_id: z.coerce.number().int().positive().optional().nullable(),
     destination_branch_id: z.coerce.number().int().positive().optional().nullable(),
@@ -44,6 +45,10 @@ export const movementSchema = z.object({
     }
     if ((data.type === 'envio' || (data.type === 'egreso' && ['return', 'exchange'].includes(data.egress_reason))) && !data.explanation?.trim()) {
         ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'La explicación de la operación es obligatoria', path: ['explanation'] })
+    }
+    const productIds = data.details.map(detail => detail.product_id)
+    if (new Set(productIds).size !== productIds.length) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Un producto no puede repetirse dentro del mismo movimiento', path: ['details'] })
     }
 });
 

@@ -99,6 +99,9 @@ export class MovementService {
     async create(data, details) {
         if (!details || details.length === 0) throw new ValidationError('Sin productos')
 
+        const existingMovementId = await this.movementModel.findIdByRequestKey(data.request_key)
+        if (existingMovementId) return { id: existingMovementId, message: 'Movimiento ya procesado' }
+
         let stockAction = null
         let targetBranchForStock = null
 

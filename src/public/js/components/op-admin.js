@@ -2,6 +2,7 @@ let currentOperationType = null;
 let searchTimeout = null;
 let selectedProductsForOp = [];
 let adminBranches = [];
+let pendingOperationRequestKey = null;
 
 function renderAdminDestinations(originId = null) {
     const select = document.getElementById('op-dest');
@@ -73,6 +74,7 @@ async function fetchAdminBranches() {
 function closeAndCleanOperationModal() {
     document.getElementById('modal-operation').classList.remove('active');
     selectedProductsForOp = [];
+    pendingOperationRequestKey = null;
     document.getElementById('op-search-prod').value = '';
     const destSelect = document.getElementById('op-dest');
     if (destSelect) destSelect.value = '';
@@ -113,6 +115,7 @@ window.openOperationModal = function (type, reason = 'return') {
 
     currentOperationType = type;
     selectedProductsForOp = [];
+    pendingOperationRequestKey = null;
 
     const modalOp = document.getElementById('modal-operation');
     const titleOp = document.getElementById('modal-op-title');
@@ -300,6 +303,7 @@ document.getElementById('btn-confirm-op').addEventListener('click', async () => 
     if (selectedProductsForOp.length === 0) return alert('Agrega productos.');
     let dbType = currentOperationType === 'in' ? 'ingreso' : (currentOperationType === 'transfer' ? 'envio' : 'egreso');
     const payload = {
+        idempotency_key: pendingOperationRequestKey ||= crypto.randomUUID(),
         type: dbType,
         details: selectedProductsForOp.map(p => {
             const detailObj = { product_id: p.id, quantity: p.quantity };

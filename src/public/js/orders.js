@@ -1,5 +1,6 @@
 let state = { orders: [], branches: [], catalogs: {}, appRole: 'seller', area: 'retail', channel: window.ORDER_CHANNEL }
 let items = []
+let pendingOrderRequestKey = null
 const $ = id => document.getElementById(id)
 const esc = value => String(value ?? '').replace(/[&<>'"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[c]))
 const channelLabel = value => ({ mercado_libre:'Mercado Libre', tienda_nube:'Tienda Nube', mayorista:'Mayorista', merchandising:'Merchandising', showroom:'Showroom' }[value] || value)
@@ -20,6 +21,7 @@ const selectedBranch = () => state.branches.find(branch => Number(branch.id) ===
 const selectedFulfillmentMode = () => document.querySelector('input[name="fulfillment_mode"]:checked')?.value || 'reserve'
 
 const openOrderModal = () => {
+    pendingOrderRequestKey = null
     $('order-modal').classList.add('active')
     $('order-modal').setAttribute('aria-hidden', 'false')
     document.body.classList.add('order-modal-open')
@@ -39,6 +41,7 @@ const resetOrderForm = () => {
     if (state.branches.length) $('order-branch').value = state.branches[0].id
     renderProductOptions()
     updateSubmitLabel()
+    pendingOrderRequestKey = null
 }
 
 const updateSubmitLabel = () => {
@@ -141,7 +144,8 @@ $('order-form').addEventListener('submit', async event => {
         submitButton.disabled = true
         submitButton.textContent = 'Guardando...'
         const fulfillmentMode = selectedFulfillmentMode()
-        await request('/api/orders', { method:'POST', body:JSON.stringify({ channel:state.channel, fulfillment_mode:fulfillmentMode, customer_reference:$('order-reference').value, notes:$('order-notes').value, items }) })
+        pendingOrderRequestKey ||= crypto.randomUUID()
+        await request('/api/orders', { method:'POST', body:JSON.stringify({ idempotency_key:pendingOrderRequestKey, channel:state.channel, fulfillment_mode:fulfillmentMode, customer_reference:$('order-reference').value, notes:$('order-notes').value, items }) })
         resetOrderForm()
         closeOrderModal()
         notify(fulfillmentMode === 'immediate' ? 'Venta registrada y stock descontado' : 'Pedido creado y stock reservado')

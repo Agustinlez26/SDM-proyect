@@ -1,5 +1,6 @@
 const channels = new Set(['mercado_libre','tienda_nube','mayorista','merchandising','showroom'])
 const positiveInt = value => Number.isInteger(Number(value)) && Number(value)>0
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const fail = (res,error,status=400) => res.status(status).json({status:'error',message:error.message||'Pedido inválido'})
 
 export class OrderController {
@@ -42,6 +43,7 @@ export class OrderController {
         try {
             const data={...req.body}
             const context=await this.#context(req,data.channel)
+            if(!uuidPattern.test(data.idempotency_key||'')) throw new Error('La identificación de la operación no es válida')
             const fulfillmentMode=data.fulfillment_mode||'reserve'
             if(!['reserve','immediate'].includes(fulfillmentMode)) throw new Error('Tipo de operación inválido')
             if(fulfillmentMode==='immediate'&&data.channel!=='showroom') throw new Error('La venta inmediata solo está disponible en Ventas Showroom')
@@ -52,20 +54,23 @@ export class OrderController {
             if(data.channel!=='mayorista'&&data.items.some(item=>Number(item.branch_id)!==Number(req.user.branch_id))&&!context.globalAccess) throw new Error('Las ventas del punto solo pueden usar stock de la ubicación asignada')
             const keys=data.items.map(item=>`${item.product_id}:${item.branch_id}`)
             if(new Set(keys).size!==keys.length) throw new Error('No se puede repetir el mismo producto y ubicación')
-            const id=await this.model.create(data,req.user.id)
-            let movementId=null
+            const creation=await this.model.create(data,req.user.id)
+            const id=creation.id
+            let movementId=creation.movement_id||null
+            let responseStatus=creation.status
             if(fulfillmentMode==='immediate') {
                 try {
                     movementId=await this.model.complete(id,req.user.id)
                 } catch(error) {
-                    await this.model.cancel(id).catch(()=>{})
+                    if(creation.created) await this.model.cancel(id).catch(()=>{})
                     throw error
                 }
+                responseStatus='completed'
                 req.app.get('io').emit('new_movement')
             } else {
                 req.app.get('io').emit('movements_updated')
             }
-            res.status(201).json({status:'success',data:{id,movementId,status:fulfillmentMode==='immediate'?'completed':'reserved'}})
+            res.status(creation.created?201:200).json({status:'success',data:{id,movementId,status:responseStatus,idempotent:!creation.created}})
         } catch(error){ fail(res,error) }
     }
 
