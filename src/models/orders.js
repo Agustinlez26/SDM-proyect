@@ -13,7 +13,7 @@ export class OrderModel {
     }
 
     async orderInfo(id) {
-        const [[row]] = await this.#db.query('SELECT id,channel,BIN_TO_UUID(created_by) created_by,branch_id,status,movement_id,request_key FROM orders WHERE id=?', [id])
+        const [[row]] = await this.#db.query('SELECT id,channel,BIN_TO_UUID(created_by) created_by,branch_id,status,movement_id,request_key,delivery_type,shipping_method,shipping_method_detail FROM orders WHERE id=?', [id])
         return row
     }
 
@@ -35,7 +35,7 @@ export class OrderModel {
             params.push(...allowedBranchIds)
         }
         const [orders] = await this.#db.query(`
-            SELECT o.id,o.order_number,o.channel,o.customer_reference,o.status,o.notes,o.branch_id,
+            SELECT o.id,o.order_number,o.channel,o.customer_reference,o.delivery_type,o.shipping_method,o.shipping_method_detail,o.status,o.notes,o.branch_id,
                 BIN_TO_UUID(o.created_by) created_by,
                 b.name branch_name,o.created_at,
                 COUNT(*) item_count
@@ -92,8 +92,8 @@ export class OrderModel {
         try {
             return await runTransactionWithRetry(this.#db, async connection => {
                 const orderNumber = `PED-${Date.now().toString(36).toUpperCase()}`
-                const [result] = await connection.query(`INSERT INTO orders (order_number,request_key,channel,customer_reference,branch_id,notes,created_by) VALUES (?,?,?,?,?,?,UUID_TO_BIN(?))`,
-                    [orderNumber,data.idempotency_key,data.channel,data.customer_reference.trim(),sortedItems[0].branch_id,data.notes||null,userId])
+                const [result] = await connection.query(`INSERT INTO orders (order_number,request_key,channel,customer_reference,delivery_type,shipping_method,shipping_method_detail,branch_id,notes,created_by) VALUES (?,?,?,?,?,?,?,?,?,UUID_TO_BIN(?))`,
+                    [orderNumber,data.idempotency_key,data.channel,data.customer_reference.trim(),data.delivery_type,data.shipping_method,data.shipping_method_detail,sortedItems[0].branch_id,data.notes||null,userId])
 
                 for (const item of sortedItems) {
                     const [[stock]] = await connection.query(`SELECT s.quantity,
@@ -131,7 +131,7 @@ export class OrderModel {
             if (order.status === 'completed' && !isAdmin) throw new Error('Solo el administrador puede corregir un pedido confirmado')
 
             const [oldItems] = await connection.query('SELECT product_id,branch_id,quantity,status FROM stock_reservations WHERE order_id=? ORDER BY branch_id,product_id FOR UPDATE', [id])
-            const beforeData = { customer_reference:order.customer_reference,notes:order.notes,status:order.status,items:oldItems.map(({product_id,branch_id,quantity})=>({product_id,branch_id,quantity})) }
+            const beforeData = { customer_reference:order.customer_reference,delivery_type:order.delivery_type,shipping_method:order.shipping_method,shipping_method_detail:order.shipping_method_detail,notes:order.notes,status:order.status,items:oldItems.map(({product_id,branch_id,quantity})=>({product_id,branch_id,quantity})) }
             const itemKey = item => `${Number(item.branch_id)}:${Number(item.product_id)}`
             const oldMap = new Map(oldItems.map(item => [itemKey(item), Number(item.quantity)]))
             const newMap = new Map(newItems.map(item => [itemKey(item), Number(item.quantity)]))
@@ -188,9 +188,9 @@ export class OrderModel {
             const totals=new Map()
             for(const item of newItems) totals.set(Number(item.product_id),(totals.get(Number(item.product_id))||0)+Number(item.quantity))
             for(const [productId,quantity] of totals) await connection.query('INSERT INTO order_items (order_id,product_id,quantity) VALUES (?,?,?)',[id,productId,quantity])
-            await connection.query('UPDATE orders SET customer_reference=?,notes=?,branch_id=? WHERE id=?',[data.customer_reference.trim(),data.notes||null,newItems[0].branch_id,id])
+            await connection.query('UPDATE orders SET customer_reference=?,delivery_type=?,shipping_method=?,shipping_method_detail=?,notes=?,branch_id=? WHERE id=?',[data.customer_reference.trim(),data.delivery_type,data.shipping_method,data.shipping_method_detail,data.notes||null,newItems[0].branch_id,id])
 
-            const afterData={customer_reference:data.customer_reference.trim(),notes:data.notes||null,status:order.status,items:newItems.map(({product_id,branch_id,quantity})=>({product_id,branch_id,quantity}))}
+            const afterData={customer_reference:data.customer_reference.trim(),delivery_type:data.delivery_type,shipping_method:data.shipping_method,shipping_method_detail:data.shipping_method_detail,notes:data.notes||null,status:order.status,items:newItems.map(({product_id,branch_id,quantity})=>({product_id,branch_id,quantity}))}
             await connection.query('INSERT INTO order_audit_logs (order_id,changed_by,action,reason,before_data,after_data) VALUES (?,UUID_TO_BIN(?),?,?,?,?)', [id,actorId,order.status==='completed'?'admin_correction':'reservation_edit',data.reason||'Actualización de pedido reservado',JSON.stringify(beforeData),JSON.stringify(afterData)])
             return { status:order.status }
         })

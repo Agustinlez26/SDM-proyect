@@ -54,6 +54,12 @@ describe('OrderController update permissions', () => {
         reason: 'Corrección documentada',
         items: [{ product_id: 4, branch_id: 1, quantity: 2 }]
     }
+    const normalizedBody = {
+        ...validBody,
+        delivery_type: 'pickup',
+        shipping_method: null,
+        shipping_method_detail: null
+    }
     const app = { get: jest.fn(() => ({ emit: jest.fn() })) }
 
     test('allows the creator to edit a reserved order', async () => {
@@ -65,7 +71,7 @@ describe('OrderController update permissions', () => {
         const controller = new OrderController({ orderModel: model })
         const response = responseMock()
         await controller.update({ params:{id:'7'},body:validBody,user:{id:'user-1',app_role:'seller',area:'wholesale',branch_id:1},app },response)
-        expect(model.update).toHaveBeenCalledWith(7,validBody,'user-1',false)
+        expect(model.update).toHaveBeenCalledWith(7,normalizedBody,'user-1',false)
         expect(response.json).toHaveBeenCalledWith({status:'success',data:{status:'reserved'}})
     })
 
@@ -91,7 +97,43 @@ describe('OrderController update permissions', () => {
         const controller = new OrderController({ orderModel: model })
         const response = responseMock()
         await controller.update({params:{id:'7'},body:validBody,user:{id:'admin',is_admin:true,app_role:'admin',area:'general',branch_id:1},app},response)
-        expect(model.update).toHaveBeenCalledWith(7,validBody,'admin',true)
+        expect(model.update).toHaveBeenCalledWith(7,normalizedBody,'admin',true)
         expect(response.json).toHaveBeenCalledWith({status:'success',data:{status:'completed'}})
+    })
+})
+
+describe('OrderController delivery data', () => {
+    const app = { get: jest.fn(() => ({ emit: jest.fn() })) }
+    const user = { id:'seller-1', app_role:'seller', area:'retail', branch_id:1 }
+    const baseBody = {
+        idempotency_key:'11111111-1111-4111-8111-111111111111',
+        channel:'tienda_nube',
+        fulfillment_mode:'reserve',
+        customer_reference:'María Pérez',
+        items:[{product_id:4,branch_id:1,quantity:1}]
+    }
+
+    test('keeps the selected shipping method on order creation', async () => {
+        const model = {
+            allowedBranches:jest.fn(async()=>[{id:1,name:'Taller'}]),
+            create:jest.fn(async()=>({id:9,created:true,status:'reserved'}))
+        }
+        const response=responseMock()
+        const controller=new OrderController({orderModel:model})
+        await controller.create({body:{...baseBody,delivery_type:'shipping',shipping_method:'via_cargo'},user,app},response)
+        expect(model.create).toHaveBeenCalledWith(expect.objectContaining({delivery_type:'shipping',shipping_method:'via_cargo',shipping_method_detail:null}),'seller-1')
+        expect(response.status).toHaveBeenCalledWith(201)
+    })
+
+    test('rejects an unspecified custom shipping method', async () => {
+        const model = {
+            allowedBranches:jest.fn(async()=>[{id:1,name:'Taller'}]),
+            create:jest.fn()
+        }
+        const response=responseMock()
+        const controller=new OrderController({orderModel:model})
+        await controller.create({body:{...baseBody,delivery_type:'shipping',shipping_method:'other',shipping_method_detail:''},user,app},response)
+        expect(response.status).toHaveBeenCalledWith(400)
+        expect(model.create).not.toHaveBeenCalled()
     })
 })

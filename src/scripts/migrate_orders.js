@@ -1,12 +1,16 @@
 import mysql from 'mysql2/promise'
 import 'dotenv/config'
 
+const migrationPassword = process.env.DB_MIGRATION_PASSWORD === '__EMPTY__'
+    ? ''
+    : (process.env.DB_MIGRATION_PASSWORD ?? process.env.DB_PASSWORD)
+
 const db = await mysql.createConnection({
     host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_NO_PASSWORD === '1' ? undefined : process.env.DB_PASSWORD,
+    user: process.env.DB_MIGRATION_USER ?? process.env.DB_USER,
+    password: migrationPassword,
     database: process.env.DB_NAME,
-    port: Number(process.env.DB_PORT)
+    port: Number(process.env.DB_PORT || 3306)
 })
 
 const columnExists = async (table, column) => {
@@ -71,6 +75,9 @@ try {
     if (!await columnExists('movements', 'request_key')) await db.query('ALTER TABLE movements ADD COLUMN request_key VARCHAR(64) NULL AFTER receipt_number')
     if (!await indexExists('movements', 'uq_movements_request_key')) await db.query('ALTER TABLE movements ADD UNIQUE INDEX uq_movements_request_key (request_key)')
     if (!await columnExists('orders', 'request_key')) await db.query('ALTER TABLE orders ADD COLUMN request_key VARCHAR(64) NULL AFTER order_number')
+    if (!await columnExists('orders', 'delivery_type')) await db.query("ALTER TABLE orders ADD COLUMN delivery_type ENUM('pickup','shipping') NOT NULL DEFAULT 'pickup' AFTER customer_reference")
+    if (!await columnExists('orders', 'shipping_method')) await db.query("ALTER TABLE orders ADD COLUMN shipping_method ENUM('via_cargo','uber','correo_argentino','other') NULL AFTER delivery_type")
+    if (!await columnExists('orders', 'shipping_method_detail')) await db.query('ALTER TABLE orders ADD COLUMN shipping_method_detail VARCHAR(120) NULL AFTER shipping_method')
     if (!await indexExists('orders', 'uq_orders_request_key')) await db.query('ALTER TABLE orders ADD UNIQUE INDEX uq_orders_request_key (request_key)')
     if (!await indexExists('stock_reservations', 'idx_reservations_stock_lookup')) await db.query('ALTER TABLE stock_reservations ADD INDEX idx_reservations_stock_lookup (branch_id, product_id, status)')
     if (!await columnExists('movements', 'sale_channel')) await db.query("ALTER TABLE movements ADD COLUMN sale_channel ENUM('mercado_libre','tienda_nube','mayorista','merchandising','showroom') NULL AFTER egress_reason")

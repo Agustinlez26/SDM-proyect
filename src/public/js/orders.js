@@ -9,6 +9,10 @@ const $ = id => document.getElementById(id)
 const esc = value => String(value ?? '').replace(/[&<>'"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[c]))
 const channelLabel = value => ({ mercado_libre:'Mercado Libre', tienda_nube:'Tienda Nube', mayorista:'Mayorista', merchandising:'Merchandising', showroom:'Showroom' }[value] || value)
 const statusLabel = value => ({ reserved:'Reservado', completed:'Completado', cancelled:'Cancelado' }[value] || value)
+const shippingMethodLabel = value => ({ via_cargo:'Vía Cargo', uber:'Uber', correo_argentino:'Correo Argentino', other:'Otro medio' }[value] || value)
+const deliveryLabel = order => order.delivery_type === 'shipping'
+    ? `Envío · ${order.shipping_method === 'other' ? (order.shipping_method_detail || 'Otro medio') : shippingMethodLabel(order.shipping_method)}`
+    : 'Retiro'
 const request = async (url, options = {}) => {
     const response = await fetch(url, { headers: { 'Content-Type':'application/json' }, ...options })
     const body = await response.json().catch(() => ({}))
@@ -23,6 +27,16 @@ const notify = (message, error = false) => {
 const selectedBranchId = () => Number($('order-branch').value)
 const selectedBranch = () => state.branches.find(branch => Number(branch.id) === selectedBranchId())
 const selectedFulfillmentMode = () => document.querySelector('input[name="fulfillment_mode"]:checked')?.value || 'reserve'
+const selectedDeliveryType = () => document.querySelector('input[name="delivery_type"]:checked')?.value || 'pickup'
+
+const syncDeliveryFields = () => {
+    const shipping = selectedDeliveryType() === 'shipping'
+    $('order-shipping-fields').hidden = !shipping
+    $('order-shipping-method').required = shipping
+    const other = shipping && $('order-shipping-method').value === 'other'
+    $('order-shipping-detail-group').hidden = !other
+    $('order-shipping-detail').required = other
+}
 
 const openOrderModal = () => {
     editingOrder = null
@@ -84,6 +98,11 @@ const startOrderEdit = () => {
     $('order-form').reset()
     $('order-reference').value=detailOrder.customer_reference||''
     $('order-notes').value=detailOrder.notes||''
+    const deliveryInput=document.querySelector(`input[name="delivery_type"][value="${detailOrder.delivery_type||'pickup'}"]`)
+    if(deliveryInput) deliveryInput.checked=true
+    $('order-shipping-method').value=detailOrder.shipping_method||''
+    $('order-shipping-detail').value=detailOrder.shipping_method_detail||''
+    syncDeliveryFields()
     $('order-modal-title').textContent=detailOrder.status==='completed'?'Corregir pedido confirmado':'Modificar pedido reservado'
     $('order-edit-reason-group').hidden=detailOrder.status!=='completed'
     $('order-edit-reason').required=detailOrder.status==='completed'
@@ -105,6 +124,7 @@ const resetOrderForm = () => {
     if (state.branches.length) $('order-branch').value = state.branches[0].id
     renderProductOptions()
     updateSubmitLabel()
+    syncDeliveryFields()
     pendingOrderRequestKey = null
 }
 
@@ -171,7 +191,7 @@ const render = () => {
         ['Canal', channelLabel(state.channel)]
     ].map(([label, value]) => `<article><strong>${esc(value)}</strong><span>${label}</span></article>`).join('')
     const canConfirm = state.channel !== 'mayorista' || ['admin', 'stock_manager'].includes(state.appRole)
-    $('orders-list').innerHTML = state.orders.map(o => `<tr><td><strong>${esc(o.order_number)}</strong></td><td>${esc(channelLabel(o.channel))}</td><td>${esc(o.customer_reference)}</td><td>${esc(o.branch_name)}</td><td><button class="order-details-button" data-details="${o.id}" type="button" title="Ver productos del pedido"><span class="material-symbols-outlined">visibility</span> Ver${Number(o.item_count) ? ` (${o.item_count})` : ''}</button></td><td><span class="order-status ${o.status}">${esc(statusLabel(o.status))}</span></td><td>${o.status === 'reserved' ? `${canConfirm ? `<button data-complete="${o.id}">Confirmar</button>` : ''}<button class="danger" data-cancel="${o.id}">Cancelar</button>` : ''}</td></tr>`).join('') || '<tr><td colspan="7">Todavía no hay pedidos en este canal.</td></tr>'
+    $('orders-list').innerHTML = state.orders.map(o => `<tr><td><strong>${esc(o.order_number)}</strong></td><td>${esc(channelLabel(o.channel))}</td><td>${esc(o.customer_reference)}<small>${esc(deliveryLabel(o))}</small></td><td>${esc(o.branch_name)}</td><td><button class="order-details-button" data-details="${o.id}" type="button" title="Ver productos del pedido"><span class="material-symbols-outlined">visibility</span> Ver${Number(o.item_count) ? ` (${o.item_count})` : ''}</button></td><td><span class="order-status ${o.status}">${esc(statusLabel(o.status))}</span></td><td>${o.status === 'reserved' ? `${canConfirm ? `<button data-complete="${o.id}">Confirmar</button>` : ''}<button class="danger" data-cancel="${o.id}">Cancelar</button>` : ''}</td></tr>`).join('') || '<tr><td colspan="7">Todavía no hay pedidos en este canal.</td></tr>'
     $('order-branch').innerHTML = state.branches.map((branch, index) => `<option value="${branch.id}" ${index === 0 ? 'selected' : ''}>${esc(branch.name)}</option>`).join('')
     $('order-branch-group').hidden = state.branches.length === 1
 }
@@ -206,6 +226,8 @@ $('order-product-search').addEventListener('keydown', event => {
 })
 $('order-search-product').addEventListener('click', renderProductOptions)
 document.querySelectorAll('input[name="fulfillment_mode"]').forEach(input => input.addEventListener('change', updateSubmitLabel))
+document.querySelectorAll('input[name="delivery_type"]').forEach(input => input.addEventListener('change', syncDeliveryFields))
+$('order-shipping-method').addEventListener('change', syncDeliveryFields)
 
 document.addEventListener('keydown', event => {
     const target = event.target
@@ -242,13 +264,18 @@ $('order-form').addEventListener('submit', async event => {
         submitButton.disabled = true
         submitButton.textContent = 'Guardando...'
         const fulfillmentMode = selectedFulfillmentMode()
+        const delivery = {
+            delivery_type:selectedDeliveryType(),
+            shipping_method:selectedDeliveryType()==='shipping' ? $('order-shipping-method').value : null,
+            shipping_method_detail:selectedDeliveryType()==='shipping' ? $('order-shipping-detail').value : null
+        }
         if(items.some(item=>!Number.isInteger(Number(item.quantity))||Number(item.quantity)<1)) throw new Error('Todas las cantidades deben ser válidas')
         const wasEditing=Boolean(editingOrder)
         if(editingOrder) {
-            await request(`/api/orders/${editingOrder.id}`, {method:'PATCH',body:JSON.stringify({customer_reference:$('order-reference').value,notes:$('order-notes').value,reason:$('order-edit-reason').value,items})})
+            await request(`/api/orders/${editingOrder.id}`, {method:'PATCH',body:JSON.stringify({customer_reference:$('order-reference').value,...delivery,notes:$('order-notes').value,reason:$('order-edit-reason').value,items})})
         } else {
             pendingOrderRequestKey ||= crypto.randomUUID()
-            await request('/api/orders', { method:'POST', body:JSON.stringify({ idempotency_key:pendingOrderRequestKey, channel:state.channel, fulfillment_mode:fulfillmentMode, customer_reference:$('order-reference').value, notes:$('order-notes').value, items }) })
+            await request('/api/orders', { method:'POST', body:JSON.stringify({ idempotency_key:pendingOrderRequestKey, channel:state.channel, fulfillment_mode:fulfillmentMode, customer_reference:$('order-reference').value, ...delivery, notes:$('order-notes').value, items }) })
         }
         resetOrderForm()
         closeOrderModal()
@@ -273,7 +300,7 @@ $('orders-list').addEventListener('click', async event => {
         if (event.target.dataset.complete) {
             if (!confirm('Se descontará el stock físico de cada ubicación y quedará registrada la confirmación. ¿Continuar?')) return
             await request(`/api/orders/${event.target.dataset.complete}/complete`, { method:'POST' })
-            notify('Retiro confirmado y movimientos registrados')
+            notify('Venta confirmada y movimientos registrados')
         }
         if (event.target.dataset.cancel) {
             if (!confirm('¿Cancelar el pedido y liberar sus reservas?')) return
@@ -288,4 +315,5 @@ $('orders-list').addEventListener('click', async event => {
 
 renderItems()
 updateSubmitLabel()
+syncDeliveryFields()
 load()

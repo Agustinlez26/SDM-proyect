@@ -44,6 +44,10 @@ export class MovementModel {
                 m.sale_channel,
                 m.explanation,
                 m.movement_purpose,
+                sale_order.customer_reference,
+                sale_order.delivery_type,
+                sale_order.shipping_method,
+                sale_order.shipping_method_detail,
                 requester.full_name AS requested_by_name,
                 confirmer.full_name AS confirmed_by_name,
                 m.date,
@@ -61,6 +65,7 @@ export class MovementModel {
                 CASE 
                     WHEN m.type = 'ENVIO' THEN bd.name
                     WHEN m.type = 'INGRESO' THEN bd.name -- En Ingresos, el destino somos nosotros
+                    WHEN m.type = 'EGRESO' AND m.egress_reason = 'sale' THEN COALESCE(sale_order.customer_reference, 'Cliente')
                     WHEN m.type = 'EGRESO' THEN 'Cliente / Consumo'
                 END as destination_branch
 
@@ -70,14 +75,15 @@ export class MovementModel {
             LEFT JOIN users confirmer ON confirmer.id=m.confirmed_by
             LEFT JOIN branches bo ON m.origin_branch_id = bo.id
             LEFT JOIN branches bd ON m.destination_branch_id = bd.id
+            LEFT JOIN orders sale_order ON sale_order.id=m.order_id
             WHERE 1=1
         `
 
         const params = []
 
         if (search) {
-            sql += ' AND m.receipt_number LIKE ?'
-            params.push(`%${search}%`)
+            sql += ' AND (m.receipt_number LIKE ? OR sale_order.customer_reference LIKE ?)'
+            params.push(`%${search}%`, `%${search}%`)
         }
 
         if (filters.type) {
@@ -141,6 +147,10 @@ export class MovementModel {
                 m.sale_channel,
                 m.explanation,
                 m.movement_purpose,
+                sale_order.customer_reference,
+                sale_order.delivery_type,
+                sale_order.shipping_method,
+                sale_order.shipping_method_detail,
                 requester.full_name AS requested_by_name,
                 confirmer.full_name AS confirmed_by_name,
                 m.date,
@@ -159,6 +169,7 @@ export class MovementModel {
                 CASE 
                     WHEN m.type = 'ENVIO' THEN bd.name
                     WHEN m.type = 'INGRESO' THEN bd.name
+                    WHEN m.type = 'EGRESO' AND m.egress_reason = 'sale' THEN COALESCE(sale_order.customer_reference, 'Cliente')
                     WHEN m.type = 'EGRESO' THEN 'Cliente / Consumo'
                 END as destination_branch
 
@@ -168,6 +179,7 @@ export class MovementModel {
             LEFT JOIN users confirmer ON confirmer.id=m.confirmed_by
             LEFT JOIN branches bo ON m.origin_branch_id = bo.id
             LEFT JOIN branches bd ON m.destination_branch_id = bd.id
+            LEFT JOIN orders sale_order ON sale_order.id=m.order_id
             WHERE m.id = ? LIMIT 1
         `
 

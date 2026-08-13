@@ -2,6 +2,20 @@ const channels = new Set(['mercado_libre','tienda_nube','mayorista','merchandisi
 const positiveInt = value => Number.isInteger(Number(value)) && Number(value)>0
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const fail = (res,error,status=400) => res.status(status).json({status:'error',message:error.message||'Pedido inválido'})
+const deliveryTypes = new Set(['pickup','shipping'])
+const shippingMethods = new Set(['via_cargo','uber','correo_argentino','other'])
+
+const normalizeDelivery = (data, current = {}) => {
+    const deliveryType = data.delivery_type || current.delivery_type || 'pickup'
+    if (!deliveryTypes.has(deliveryType)) throw new Error('La modalidad de entrega no es válida')
+    if (deliveryType === 'pickup') return { delivery_type:'pickup', shipping_method:null, shipping_method_detail:null }
+
+    const shippingMethod = data.shipping_method || current.shipping_method
+    if (!shippingMethods.has(shippingMethod)) throw new Error('Seleccioná el medio de envío')
+    const detail = String(data.shipping_method_detail ?? current.shipping_method_detail ?? '').trim()
+    if (shippingMethod === 'other' && detail.length < 2) throw new Error('Especificá el otro medio de envío')
+    return { delivery_type:'shipping', shipping_method:shippingMethod, shipping_method_detail:shippingMethod === 'other' ? detail : null }
+}
 
 export class OrderController {
     constructor({ orderModel }) { this.model=orderModel }
@@ -56,7 +70,7 @@ export class OrderController {
             const order=await this.model.orderInfo(Number(req.params.id))
             if(!order||!this.#canUseChannel(req.user,order.channel)) throw new Error('Pedido inexistente o sin acceso')
             const context=await this.#context(req,order.channel)
-            const data={...req.body}
+            const data={...req.body,...normalizeDelivery(req.body,order)}
             if(!data.customer_reference?.trim()) throw new Error('La referencia del pedido es obligatoria')
             if(!Array.isArray(data.items)||!data.items.length||data.items.some(item=>!positiveInt(item.product_id)||!positiveInt(item.quantity)||!positiveInt(item.branch_id))) throw new Error('El pedido necesita productos, ubicaciones y cantidades válidas')
             if(data.items.some(item=>!context.branchIds.includes(Number(item.branch_id)))) throw new Error('Una de las ubicaciones no está habilitada para tu usuario')
@@ -79,6 +93,7 @@ export class OrderController {
         try {
             const data={...req.body}
             const context=await this.#context(req,data.channel)
+            Object.assign(data,normalizeDelivery(data))
             if(!uuidPattern.test(data.idempotency_key||'')) throw new Error('La identificación de la operación no es válida')
             const fulfillmentMode=data.fulfillment_mode||'reserve'
             if(!['reserve','immediate'].includes(fulfillmentMode)) throw new Error('Tipo de operación inválido')

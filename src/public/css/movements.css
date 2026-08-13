@@ -365,6 +365,16 @@ body:not([data-role="admin"]) .movements-table tbody tr {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.col-branch small,
+.col-type small {
+  display: block;
+  margin-top: .2rem;
+  color: var(--text-muted);
+  font-size: .68rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 .col-user {
   display: flex;

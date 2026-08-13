@@ -7,6 +7,10 @@ export class MovementDTO {
         this.sale_channel = data.sale_channel
         this.explanation = data.explanation
         this.movement_purpose = data.movement_purpose
+        this.customer = data.customer_reference
+        this.delivery_type = data.delivery_type
+        this.shipping_method = data.shipping_method
+        this.shipping_method_detail = data.shipping_method_detail
         this.requested_by = data.requested_by_name
         this.confirmed_by = data.confirmed_by_name
         this.status = data.status

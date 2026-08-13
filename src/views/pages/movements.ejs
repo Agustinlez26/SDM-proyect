@@ -8,7 +8,7 @@
 
                 <main class="layout__content">
                     <%- include('../partials/navbar', { title: 'Movimientos' }) %>
-                        <script src="/js/movements.js" defer></script>
+                        <script src="/js/movements.js?v=2.3" defer></script>
                         <script nonce="<%= cspNonce %>">
                             window.USER_ROLE = '<%= user ? user.role : "" %>';
                         </script>
@@ -105,7 +105,7 @@
                                                 <th class="col-status">Estado</th>
                                                 <th class="col-date">Fecha</th>
                                                 <th class="col-branch">Origen</th>
-                                                <th class="col-branch">Destino</th>
+                                                <th class="col-branch">Destino / cliente</th>
                                                 <% if (user && user.role === 'admin') { %>
                                                 <th class="col-user">Usuario</th>
                                                 <% } %>
@@ -170,6 +170,10 @@
                                             <label>Canal de venta</label>
                                             <span id="detail-channel">-</span>
                                         </div>
+                                        <div class="detail-item" id="detail-delivery-container" style="display: none;">
+                                            <label>Entrega</label>
+                                            <span id="detail-delivery">-</span>
+                                        </div>
                                         <div class="detail-item">
                                             <label>Fecha Creación</label>
                                             <span id="detail-created">YYYY-MM-DD HH:mm</span>
@@ -193,7 +197,7 @@
                                         <div class="route-box">
                                             <span class="material-symbols-outlined icon-route">store</span>
                                             <div>
-                                                <label>Destino</label>
+                                                <label id="detail-dest-label">Destino</label>
                                                 <p id="detail-dest">Destino...</p>
                                             </div>
                                         </div>

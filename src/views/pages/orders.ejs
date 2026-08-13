@@ -76,6 +76,23 @@
                             </fieldset>
                         <% } %>
                         <label>Cliente / referencia del pedido<input id="order-reference" required placeholder="Nombre, número de venta o referencia"></label>
+                        <fieldset class="sale-mode delivery-mode">
+                            <legend>Entrega al cliente</legend>
+                            <label><input type="radio" name="delivery_type" value="pickup" <%= !['mercado_libre','tienda_nube'].includes(orderChannel) ? 'checked' : '' %>><span><strong>Retiro</strong><small>El cliente retira el pedido.</small></span></label>
+                            <label><input type="radio" name="delivery_type" value="shipping" <%= ['mercado_libre','tienda_nube'].includes(orderChannel) ? 'checked' : '' %>><span><strong>Envío</strong><small>Se despacha por un medio de transporte.</small></span></label>
+                        </fieldset>
+                        <div class="order-shipping-fields" id="order-shipping-fields" hidden>
+                            <label>Medio de envío
+                                <select id="order-shipping-method">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="via_cargo">Vía Cargo</option>
+                                    <option value="uber">Uber</option>
+                                    <option value="correo_argentino">Correo Argentino</option>
+                                    <option value="other">Otro medio</option>
+                                </select>
+                            </label>
+                            <label id="order-shipping-detail-group" hidden>Especificar otro medio<input id="order-shipping-detail" maxlength="120" placeholder="Ej: camioneta de la empresa"></label>
+                        </div>
                         <label id="order-branch-group">Reservar desde<select id="order-branch" required></select></label>
                         <label class="order-product-search">Buscar producto
                             <div class="search-bar">
@@ -103,7 +120,7 @@
             </div>
 
             <script nonce="<%= cspNonce %>">window.ORDER_CHANNEL='<%= orderChannel %>'; window.ORDER_TITLE='<%= orderTitle %>';</script>
-            <script src="/js/orders.js"></script>
+            <script src="/js/orders.js?v=2.3"></script>
         </main>
     </div>
 </body>

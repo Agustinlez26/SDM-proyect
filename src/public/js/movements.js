@@ -158,14 +158,14 @@ function escapeHTML(str) {
     return str.toString().replace(/[&<>"']/g, function (m) { return map[m]; });
 }
 
-function generateTypeBadge(type) {
+function generateTypeBadge(type, egressReason = null) {
     const t = type.toLowerCase();
     let icon = 'sync_alt', label = 'TRANSFERENCIA', cssClass = 'type-transfer';
 
     if (t === 'ingreso') {
         icon = 'download'; label = 'INGRESO'; cssClass = 'type-in';
     } else if (t === 'egreso') {
-        icon = 'upload'; label = 'EGRESO'; cssClass = 'type-out';
+        icon = 'upload'; label = ({ sale:'VENTA', return:'DEVOLUCIÓN', exchange:'CAMBIO' }[egressReason] || 'EGRESO'); cssClass = 'type-out';
     } else if (t === 'envio') {
         icon = 'local_shipping'; label = 'ENVÍO'; cssClass = 'type-transfer';
     }
@@ -177,6 +177,16 @@ function generateTypeBadge(type) {
         </span>
     `;
 }
+
+const movementChannelLabel = value => ({mercado_libre:'Mercado Libre',tienda_nube:'Tienda Nube',mayorista:'Mayorista',merchandising:'Merchandising',showroom:'Minorista / Showroom'}[value] || value);
+const movementDeliveryLabel = mov => {
+    if (!mov.delivery_type) return '';
+    if (mov.delivery_type === 'pickup') return 'Retiro';
+    const method = mov.shipping_method === 'other'
+        ? (mov.shipping_method_detail || 'Otro medio')
+        : ({via_cargo:'Vía Cargo',uber:'Uber',correo_argentino:'Correo Argentino'}[mov.shipping_method] || 'Envío');
+    return `Envío · ${method}`;
+};
 
 function generateStatusBadge(status) {
     const s = status.toLowerCase();
@@ -226,11 +236,11 @@ function renderMovementsTable(movements) {
         tr.innerHTML = `
             <td class="col-id">#${mov.id}</td>
             <td class="col-receipt font-mono">${escapeHTML(mov.receipt_number || 'S/N')}</td>
-            <td class="col-type">${generateTypeBadge(mov.type)}${mov.movement_purpose === 'wholesale_order' ? '<small>Pedido mayorista</small>' : mov.type === 'egreso' ? `<small>${escapeHTML(({sale:'Venta',return:'Devolución',exchange:'Cambio'}[mov.egress_reason] || ''))}</small>` : ''}</td>
+            <td class="col-type">${generateTypeBadge(mov.type, mov.egress_reason)}${mov.egress_reason === 'sale' && mov.sale_channel ? `<small>${escapeHTML(movementChannelLabel(mov.sale_channel))}</small>` : mov.movement_purpose === 'wholesale_order' ? '<small>Pedido mayorista</small>' : ''}</td>
             <td class="col-status">${generateStatusBadge(mov.status)}</td>
             <td class="col-date">${frontendDate}</td>
             <td class="col-branch" title="${escapeHTML(mov.origin || 'Externo')}">${escapeHTML(mov.origin || '-')}</td>
-            <td class="col-branch" title="${escapeHTML(mov.destination || 'Externo')}">${escapeHTML(mov.destination || '-')}</td>
+            <td class="col-branch" title="${escapeHTML(mov.destination || 'Externo')}">${escapeHTML(mov.destination || '-')}${mov.egress_reason === 'sale' && movementDeliveryLabel(mov) ? `<small>${escapeHTML(movementDeliveryLabel(mov))}</small>` : ''}</td>
             ${userHtml}
             <td class="col-info">
                 <button class="btn-icon-info" onclick="loadMovementDetails(${mov.id})" title="Ver Detalles">
@@ -334,9 +344,7 @@ async function loadMovementDetails(id) {
 function openDetailModal(mov, details) {
     document.getElementById('detail-id').textContent = '#' + mov.id;
     document.getElementById('detail-receipt').textContent = mov.receipt_number || '-';
-    document.getElementById('detail-type').innerHTML = generateTypeBadge(mov.type);
-    if (mov.type === 'egreso' && mov.egress_reason) document.getElementById('detail-type').innerHTML += ` <small>${escapeHTML(({sale:'Venta',return:'Devolución',exchange:'Cambio de producto'}[mov.egress_reason] || mov.egress_reason))}</small>`;
-    if (mov.type === 'egreso' && mov.egress_reason === 'exchange' && mov.sale_channel) document.getElementById('detail-type').innerHTML += ` <small>${escapeHTML(({mercado_libre:'Mercado Libre',tienda_nube:'Tienda Nube',mayorista:'Mayorista',merchandising:'Merchandising',showroom:'Showroom'}[mov.sale_channel] || mov.sale_channel))}</small>`;
+    document.getElementById('detail-type').innerHTML = generateTypeBadge(mov.type, mov.egress_reason);
     if (mov.movement_purpose === 'wholesale_order') document.getElementById('detail-type').innerHTML += ` <small>Solicitado por ${escapeHTML(mov.requested_by || '-')} · confirmado por ${escapeHTML(mov.confirmed_by || '-')}</small>`;
     document.getElementById('detail-status').innerHTML = generateStatusBadge(mov.status);
     document.getElementById('detail-date').textContent = mov.date ? new Date(mov.date).toLocaleDateString('es-AR') : '-';
@@ -346,12 +354,20 @@ function openDetailModal(mov, details) {
     if (userContainer) userContainer.style.display = 'flex';
 
     const channelContainer = document.getElementById('detail-channel-container');
-    const channelLabels = {mercado_libre:'Mercado Libre',tienda_nube:'Tienda Nube',mayorista:'Mayorista',merchandising:'Merchandising',showroom:'Showroom'};
     if (mov.sale_channel) {
-        document.getElementById('detail-channel').textContent = channelLabels[mov.sale_channel] || mov.sale_channel;
+        document.getElementById('detail-channel').textContent = movementChannelLabel(mov.sale_channel);
         channelContainer.style.display = 'flex';
     } else {
         channelContainer.style.display = 'none';
+    }
+
+    const deliveryContainer = document.getElementById('detail-delivery-container');
+    const delivery = movementDeliveryLabel(mov);
+    if (delivery) {
+        document.getElementById('detail-delivery').textContent = delivery;
+        deliveryContainer.style.display = 'flex';
+    } else {
+        deliveryContainer.style.display = 'none';
     }
 
     const explanationContainer = document.getElementById('detail-explanation-container');
@@ -367,6 +383,7 @@ function openDetailModal(mov, details) {
     // CORRECCIÓN DE RUTAS DE CABECERA
     document.getElementById('detail-origin').textContent = mov.origin || 'Externo / N/A';
     document.getElementById('detail-dest').textContent = mov.destination || 'Externo / N/A';
+    document.getElementById('detail-dest-label').textContent = mov.egress_reason === 'sale' ? 'Cliente' : 'Destino';
 
     const prodList = document.getElementById('detail-products-list');
     prodList.innerHTML = '';
