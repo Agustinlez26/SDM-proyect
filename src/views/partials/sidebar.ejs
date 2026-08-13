@@ -45,7 +45,7 @@
                 </a>
             </li>
 
-            <% if (user && (['admin','stock_manager'].includes(user.app_role) || ['wholesale','retail'].includes(user.area))) { %>
+            <% if (user && (['admin','stock_manager'].includes(user.app_role) || ['wholesale','retail','merchandising'].includes(user.area))) { %>
             <li class="nav-section-title" aria-hidden="true"><span>Ventas y pedidos</span></li>
             <% } %>
 
@@ -56,6 +56,9 @@
             <li class="nav-item <%= activePage === 'mercado-libre' ? 'active' : '' %>"><a href="/mercado-libre" class="nav-link"><span class="material-symbols-outlined">shopping_cart</span><span>Mercado Libre</span></a></li>
             <li class="nav-item <%= activePage === 'tienda-nube' ? 'active' : '' %>"><a href="/tienda-nube" class="nav-link"><span class="material-symbols-outlined">cloud</span><span>Tienda Nube</span></a></li>
             <li class="nav-item <%= activePage === 'showroom-sales' ? 'active' : '' %>"><a href="/ventas-showroom" class="nav-link"><span class="material-symbols-outlined">point_of_sale</span><span>Ventas Showroom</span></a></li>
+            <% } %>
+            <% if (user && (['admin','stock_manager'].includes(user.app_role) || user.area === 'merchandising')) { %>
+            <li class="nav-item <%= activePage === 'merchandising' ? 'active' : '' %>"><a href="/merchandising" class="nav-link"><span class="material-symbols-outlined">campaign</span><span>Merchandising</span></a></li>
             <% } %>
 
             <li class="nav-section-title" aria-hidden="true"><span>Gestión</span></li>

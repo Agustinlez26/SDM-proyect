@@ -601,6 +601,46 @@ body.order-modal-open {
   }
 }
 
+/* Estado y acciones conservan su forma aun en tablas compactas. */
+.orders-table-card .order-status-cell {
+  text-align: center;
+  overflow-wrap: normal;
+}
+
+.order-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.orders-table-card .order-actions-cell {
+  text-align: center;
+}
+
+@media (max-width: 700px) {
+  .orders-table-card th:nth-child(5) { width: 11%; }
+  .orders-table-card th:nth-child(6) { width: 15%; }
+  .orders-table-card th:nth-child(7) { width: 15%; }
+
+  .order-status {
+    padding: .28rem .42rem;
+    font-size: .64rem;
+  }
+
+  .order-details-card {
+    height: calc(100dvh - .75rem) !important;
+    max-height: calc(100dvh - .75rem) !important;
+  }
+
+  .order-details-card > .orders-table-wrap {
+    min-height: 0;
+    flex: 1 1 auto;
+  }
+}
+
 @media (max-width: 340px) {
   .orders-summary {
     grid-template-columns: minmax(0, 1fr);
@@ -841,5 +881,38 @@ body.order-modal-open {
 
   .modal-order-card .detail-products-table th {
     font-size: .61rem;
+  }
+}
+
+/* Final phone override: three readable columns, without horizontal clipping. */
+@media (max-width: 480px) {
+  .modal-card.order-details-card {
+    height: min(78dvh, 620px) !important;
+    max-height: calc(100dvh - .75rem) !important;
+  }
+
+  .order-details-card > .orders-table-wrap {
+    min-height: 0;
+    overflow-x: hidden;
+  }
+
+  .order-details-table .order-detail-sku {
+    display: none;
+  }
+
+  .order-details-table th.order-detail-product { width: 44%; }
+  .order-details-table th.order-detail-branch { width: 37%; }
+  .order-details-table th.order-detail-quantity { width: 19%; }
+
+  .order-details-table th,
+  .order-details-table td {
+    padding: .5rem .3rem;
+    font-size: .67rem;
+    line-height: 1.2;
+    overflow-wrap: break-word;
+  }
+
+  .order-details-table .order-detail-quantity {
+    white-space: nowrap;
   }
 }

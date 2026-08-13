@@ -26,6 +26,7 @@ const indexExists = async (table, index) => {
 try {
     if (!await columnExists('users', 'app_role')) await db.query("ALTER TABLE users ADD COLUMN app_role ENUM('admin','stock_manager','seller') NOT NULL DEFAULT 'seller' AFTER is_admin")
     if (!await columnExists('users', 'area')) await db.query("ALTER TABLE users ADD COLUMN area ENUM('general','wholesale','retail') NOT NULL DEFAULT 'retail' AFTER app_role")
+    await db.query("ALTER TABLE users MODIFY COLUMN area ENUM('general','wholesale','retail','merchandising') NOT NULL DEFAULT 'retail'")
     await db.query(`CREATE TABLE IF NOT EXISTS user_branch_access (
         user_id BINARY(16) NOT NULL, branch_id INT UNSIGNED NOT NULL,
         is_enabled BOOLEAN NOT NULL DEFAULT TRUE,

@@ -87,6 +87,20 @@ export class OrderModel {
         return rows
     }
 
+    async productsBelongToChannel(items, channel) {
+        const productIds = [...new Set(items.map(item => Number(item.product_id)))]
+        if (!productIds.length) return false
+        const [rows] = await this.#db.query(`
+            SELECT DISTINCT p.id
+            FROM products p
+            JOIN product_sales_channels psc ON psc.product_id=p.id AND psc.is_enabled=TRUE
+            JOIN sales_channels sc ON sc.id=psc.channel_id AND sc.is_active=TRUE
+            WHERE p.is_active=TRUE AND p.is_sellable=TRUE AND sc.code=?
+              AND p.id IN (${productIds.map(() => '?').join(',')})
+        `, [channel, ...productIds])
+        return rows.length === productIds.length
+    }
+
     async create(data, userId) {
         const sortedItems = sortStockItems(data.items)
         try {

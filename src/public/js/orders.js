@@ -74,7 +74,7 @@ const openOrderDetails = async order => {
         const details = detailData.items
         detailOrder = {...order,details}
         list.innerHTML = details.length
-            ? details.map(item => `<tr><td><span class="order-sku">${esc(item.sku || 'S/C')}</span></td><td><strong>${esc(item.name)}</strong></td><td>${esc(item.branch_name)}</td><td class="text-right"><span class="order-quantity-badge">${esc(item.quantity)}</span></td></tr>`).join('')
+            ? details.map(item => `<tr><td class="order-detail-sku"><span class="order-sku">${esc(item.sku || 'S/C')}</span></td><td class="order-detail-product"><strong>${esc(item.name)}</strong></td><td class="order-detail-branch">${esc(item.branch_name)}</td><td class="order-detail-quantity text-right"><span class="order-quantity-badge">${esc(item.quantity)}</span></td></tr>`).join('')
             : '<tr><td colspan="4" class="order-details-loading">El pedido no tiene productos.</td></tr>'
         const canEditReserved=order.status==='reserved'&&(order.created_by===state.userId||['admin','stock_manager'].includes(state.appRole))
         const canCorrectCompleted=order.status==='completed'&&state.isAdmin
@@ -191,7 +191,7 @@ const render = () => {
         ['Canal', channelLabel(state.channel)]
     ].map(([label, value]) => `<article><strong>${esc(value)}</strong><span>${label}</span></article>`).join('')
     const canConfirm = state.channel !== 'mayorista' || ['admin', 'stock_manager'].includes(state.appRole)
-    $('orders-list').innerHTML = state.orders.map(o => `<tr><td><strong>${esc(o.order_number)}</strong></td><td>${esc(channelLabel(o.channel))}</td><td>${esc(o.customer_reference)}<small>${esc(deliveryLabel(o))}</small></td><td>${esc(o.branch_name)}</td><td><button class="order-details-button" data-details="${o.id}" type="button" title="Ver productos del pedido"><span class="material-symbols-outlined">visibility</span> Ver${Number(o.item_count) ? ` (${o.item_count})` : ''}</button></td><td><span class="order-status ${o.status}">${esc(statusLabel(o.status))}</span></td><td>${o.status === 'reserved' ? `${canConfirm ? `<button data-complete="${o.id}">Confirmar</button>` : ''}<button class="danger" data-cancel="${o.id}">Cancelar</button>` : ''}</td></tr>`).join('') || '<tr><td colspan="7">Todavía no hay pedidos en este canal.</td></tr>'
+    $('orders-list').innerHTML = state.orders.map(o => `<tr><td><strong>${esc(o.order_number)}</strong></td><td>${esc(channelLabel(o.channel))}</td><td>${esc(o.customer_reference)}<small>${esc(deliveryLabel(o))}</small></td><td>${esc(o.branch_name)}</td><td><button class="order-details-button" data-details="${o.id}" type="button" title="Ver productos del pedido"><span class="material-symbols-outlined">visibility</span> Ver${Number(o.item_count) ? ` (${o.item_count})` : ''}</button></td><td class="order-status-cell"><span class="order-status ${o.status}">${esc(statusLabel(o.status))}</span></td><td class="order-actions-cell">${o.status === 'reserved' ? `${canConfirm ? `<button data-complete="${o.id}">Confirmar</button>` : ''}<button class="danger" data-cancel="${o.id}">Cancelar</button>` : ''}</td></tr>`).join('') || '<tr><td colspan="7">Todavía no hay pedidos en este canal.</td></tr>'
     $('order-branch').innerHTML = state.branches.map((branch, index) => `<option value="${branch.id}" ${index === 0 ? 'selected' : ''}>${esc(branch.name)}</option>`).join('')
     $('order-branch-group').hidden = state.branches.length === 1
 }

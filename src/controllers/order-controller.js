@@ -23,7 +23,9 @@ export class OrderController {
     #canUseChannel(user,channel) {
         if (['admin','stock_manager'].includes(user.app_role)) return true
         if (user.app_role!=='seller') return false
-        return user.area==='wholesale' ? channel==='mayorista' : ['mercado_libre','tienda_nube','showroom'].includes(channel)
+        if (user.area==='wholesale') return channel==='mayorista'
+        if (user.area==='merchandising') return channel==='merchandising'
+        return ['mercado_libre','tienda_nube','showroom'].includes(channel)
     }
 
     async #context(req,channel) {
@@ -73,6 +75,7 @@ export class OrderController {
             const data={...req.body,...normalizeDelivery(req.body,order)}
             if(!data.customer_reference?.trim()) throw new Error('La referencia del pedido es obligatoria')
             if(!Array.isArray(data.items)||!data.items.length||data.items.some(item=>!positiveInt(item.product_id)||!positiveInt(item.quantity)||!positiveInt(item.branch_id))) throw new Error('El pedido necesita productos, ubicaciones y cantidades válidas')
+            if(!await this.model.productsBelongToChannel(data.items,order.channel)) throw new Error('Uno de los productos no está habilitado para este canal de venta')
             if(data.items.some(item=>!context.branchIds.includes(Number(item.branch_id)))) throw new Error('Una de las ubicaciones no está habilitada para tu usuario')
             if(order.channel!=='mayorista'&&new Set(data.items.map(item=>Number(item.branch_id))).size>1) throw new Error('Un pedido del punto de venta debe pertenecer a una sola ubicación')
             const keys=data.items.map(item=>`${item.product_id}:${item.branch_id}`)
@@ -100,6 +103,7 @@ export class OrderController {
             if(fulfillmentMode==='immediate'&&data.channel!=='showroom') throw new Error('La venta inmediata solo está disponible en Ventas Showroom')
             if(!data.customer_reference?.trim()) throw new Error('La referencia del pedido es obligatoria')
             if(!Array.isArray(data.items)||!data.items.length||data.items.some(item=>!positiveInt(item.product_id)||!positiveInt(item.quantity)||!positiveInt(item.branch_id))) throw new Error('El pedido necesita productos, ubicaciones y cantidades válidas')
+            if(!await this.model.productsBelongToChannel(data.items,data.channel)) throw new Error('Uno de los productos no está habilitado para este canal de venta')
             if(data.items.some(item=>!context.branchIds.includes(Number(item.branch_id)))) throw new Error('Una de las ubicaciones no está habilitada para tu usuario')
             if(data.channel!=='mayorista'&&new Set(data.items.map(item=>Number(item.branch_id))).size>1) throw new Error('Un pedido del punto de venta debe pertenecer a una sola ubicación')
             if(data.channel!=='mayorista'&&data.items.some(item=>Number(item.branch_id)!==Number(req.user.branch_id))&&!context.globalAccess) throw new Error('Las ventas del punto solo pueden usar stock de la ubicación asignada')

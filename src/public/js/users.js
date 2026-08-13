@@ -125,7 +125,7 @@ function renderUsers(users) {
                     <span class="material-symbols-outlined icon-info">store</span>
                     <p>${user.allowed_branches || user.branch}</p>
                 </div>
-                <div class="info-row"><span class="material-symbols-outlined icon-info">badge</span><p>${({general:'General',wholesale:'Mayorista',retail:'Minorista'}[user.area] || user.area)}</p></div>
+                <div class="info-row"><span class="material-symbols-outlined icon-info">badge</span><p>${({general:'General',wholesale:'Mayorista',retail:'Minorista',merchandising:'Merchandising'}[user.area] || user.area)}</p></div>
             </div>
             <div class="card-footer">
                 <button class="btn-action btn-key" title="Resetear Contraseña" onclick="abrirModalPassword('${user.id}', '${user.full_name}')">

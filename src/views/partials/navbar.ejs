@@ -68,7 +68,8 @@
                         <%= user ? user.name : 'Nombre Apellido' %>
                     </p>
                     <p class="user-role">
-                        <%= user ? user.role.toUpperCase() : 'ROL' %>
+                        <% const positionLabel = !user ? 'ROL' : user.app_role === 'admin' ? 'Administrador' : user.app_role === 'stock_manager' ? 'Control de stock' : user.area === 'wholesale' ? 'Vendedor mayorista' : user.area === 'merchandising' ? 'Ventas merchandising' : 'Vendedor de punto de venta'; %>
+                        <%= positionLabel %>
                     </p>
                 </div>
 

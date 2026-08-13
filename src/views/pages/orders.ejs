@@ -41,7 +41,7 @@
                     </header>
                     <div class="orders-table-wrap">
                         <table class="order-details-table">
-                            <thead><tr><th>SKU</th><th>Producto</th><th>Sucursal</th><th class="text-right">Cantidad</th></tr></thead>
+                            <thead><tr><th class="order-detail-sku">SKU</th><th class="order-detail-product">Producto</th><th class="order-detail-branch">Sucursal</th><th class="order-detail-quantity text-right">Cantidad</th></tr></thead>
                             <tbody id="order-details-list"></tbody>
                         </table>
                     </div>
@@ -120,7 +120,7 @@
             </div>
 
             <script nonce="<%= cspNonce %>">window.ORDER_CHANNEL='<%= orderChannel %>'; window.ORDER_TITLE='<%= orderTitle %>';</script>
-            <script src="/js/orders.js?v=2.3"></script>
+            <script src="/js/orders.js?v=2.7"></script>
         </main>
     </div>
 </body>

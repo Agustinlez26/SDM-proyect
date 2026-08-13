@@ -66,6 +66,7 @@ describe('OrderController update permissions', () => {
         const model = {
             orderInfo: jest.fn(async () => ({ id: 7, channel: 'mayorista', status: 'reserved', created_by: 'user-1' })),
             allowedBranches: jest.fn(async () => [{ id: 1, name: 'Taller' }]),
+            productsBelongToChannel: jest.fn(async () => true),
             update: jest.fn(async () => ({ status: 'reserved' }))
         }
         const controller = new OrderController({ orderModel: model })
@@ -79,6 +80,7 @@ describe('OrderController update permissions', () => {
         const model = {
             orderInfo: jest.fn(async () => ({ id: 7, channel: 'mayorista', status: 'completed', created_by: 'user-1' })),
             allowedBranches: jest.fn(async () => [{ id: 1, name: 'Taller' }]),
+            productsBelongToChannel: jest.fn(async () => true),
             update: jest.fn()
         }
         const controller = new OrderController({ orderModel: model })
@@ -92,6 +94,7 @@ describe('OrderController update permissions', () => {
         const model = {
             orderInfo: jest.fn(async () => ({ id: 7, channel: 'mayorista', status: 'completed', created_by: 'user-1' })),
             allowedBranches: jest.fn(async () => [{ id: 1, name: 'Taller' }]),
+            productsBelongToChannel: jest.fn(async () => true),
             update: jest.fn(async () => ({ status: 'completed' }))
         }
         const controller = new OrderController({ orderModel: model })
@@ -116,6 +119,7 @@ describe('OrderController delivery data', () => {
     test('keeps the selected shipping method on order creation', async () => {
         const model = {
             allowedBranches:jest.fn(async()=>[{id:1,name:'Taller'}]),
+            productsBelongToChannel:jest.fn(async()=>true),
             create:jest.fn(async()=>({id:9,created:true,status:'reserved'}))
         }
         const response=responseMock()
@@ -133,6 +137,42 @@ describe('OrderController delivery data', () => {
         const response=responseMock()
         const controller=new OrderController({orderModel:model})
         await controller.create({body:{...baseBody,delivery_type:'shipping',shipping_method:'other',shipping_method_detail:''},user,app},response)
+        expect(response.status).toHaveBeenCalledWith(400)
+        expect(model.create).not.toHaveBeenCalled()
+    })
+})
+
+describe('OrderController merchandising access', () => {
+    const app = { get: jest.fn(() => ({ emit: jest.fn() })) }
+
+    test('allows a merchandising seller to use only that channel', async () => {
+        const model = {
+            allowedBranches: jest.fn(async () => [{ id:1, name:'Taller' }]),
+            overview: jest.fn(async () => ({ orders:[] }))
+        }
+        const controller = new OrderController({ orderModel:model })
+        const allowedResponse = responseMock()
+        await controller.overview({query:{channel:'merchandising'},user:{id:'merch-1',app_role:'seller',area:'merchandising',branch_id:1}},allowedResponse)
+        expect(allowedResponse.json).toHaveBeenCalled()
+
+        const deniedResponse = responseMock()
+        await controller.overview({query:{channel:'mayorista'},user:{id:'merch-1',app_role:'seller',area:'merchandising',branch_id:1}},deniedResponse)
+        expect(deniedResponse.status).toHaveBeenCalledWith(403)
+    })
+
+    test('rejects a product that is not enabled for the requested channel', async () => {
+        const model = {
+            allowedBranches:jest.fn(async()=>[{id:1,name:'Taller'}]),
+            productsBelongToChannel:jest.fn(async()=>false),
+            create:jest.fn()
+        }
+        const controller = new OrderController({ orderModel:model })
+        const response = responseMock()
+        await controller.create({body:{
+            idempotency_key:'11111111-1111-4111-8111-111111111111',
+            channel:'merchandising',customer_reference:'Cliente',
+            items:[{product_id:4,branch_id:1,quantity:1}]
+        },user:{id:'merch-1',app_role:'seller',area:'merchandising',branch_id:1},app},response)
         expect(response.status).toHaveBeenCalledWith(400)
         expect(model.create).not.toHaveBeenCalled()
     })

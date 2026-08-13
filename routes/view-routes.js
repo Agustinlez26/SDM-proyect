@@ -18,6 +18,7 @@ router.get('/mayorista', checkAuth, requirePasswordChange, viewsController.rende
 router.get('/mercado-libre', checkAuth, requirePasswordChange, viewsController.renderMercadoLibre)
 router.get('/tienda-nube', checkAuth, requirePasswordChange, viewsController.renderTiendaNube)
 router.get('/ventas-showroom', checkAuth, requirePasswordChange, viewsController.renderShowroomSales)
+router.get('/merchandising', checkAuth, requirePasswordChange, viewsController.renderMerchandisingSales)
 router.get('/operations', checkAuth, requirePasswordChange, viewsController.renderOperations)
 router.get('/stats', checkAuth, requirePasswordChange, viewsController.renderStats)
 router.get('/branches', checkAuth, requirePasswordChange, viewsController.renderBranches)

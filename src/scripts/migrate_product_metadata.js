@@ -95,6 +95,18 @@ try {
 
     await connection.query(`INSERT IGNORE INTO product_sales_channels(product_id,channel_id,is_enabled)
         SELECT p.id,c.id,TRUE FROM products p CROSS JOIN sales_channels c WHERE c.is_active=TRUE`)
+    await connection.query(`UPDATE product_sales_channels psc
+        JOIN products p ON p.id=psc.product_id
+        JOIN product_categories pc ON pc.id=p.category_id
+        JOIN sales_channels sc ON sc.id=psc.channel_id
+        SET psc.is_enabled=FALSE
+        WHERE LOWER(pc.name)='indumentaria' AND sc.code='mayorista'`)
+    await connection.query(`UPDATE product_sales_channels psc
+        JOIN products p ON p.id=psc.product_id
+        JOIN product_categories pc ON pc.id=p.category_id
+        JOIN sales_channels sc ON sc.id=psc.channel_id
+        SET psc.is_enabled=TRUE
+        WHERE LOWER(pc.name)='indumentaria' AND sc.code IN ('merchandising','tienda_nube','mercado_libre','showroom')`)
     console.log('Metadatos de productos y canales actualizados correctamente.')
 } finally {
     await connection.end()

@@ -137,6 +137,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 1px solid var(--border-color);
+}
+
+html.dark-theme .user-avatar {
+  background-color: #2b2b2b;
+  color: var(--text-primary);
+  border-color: #525252;
+}
+
+html.dark-theme .user-avatar svg {
+  fill: currentColor;
 }
 
 .user-name {

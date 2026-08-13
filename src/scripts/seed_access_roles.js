@@ -3,7 +3,10 @@ import bcrypt from 'bcryptjs'
 import { randomUUID } from 'node:crypto'
 import 'dotenv/config'
 
-const db = await mysql.createConnection({ host:process.env.DB_HOST, user:process.env.DB_USER, password:process.env.DB_NO_PASSWORD==='1'?undefined:process.env.DB_PASSWORD, database:process.env.DB_NAME, port:Number(process.env.DB_PORT) })
+const seedPassword = process.env.DB_MIGRATION_PASSWORD === '__EMPTY__'
+    ? ''
+    : (process.env.DB_MIGRATION_PASSWORD ?? (process.env.DB_NO_PASSWORD==='1' ? undefined : process.env.DB_PASSWORD))
+const db = await mysql.createConnection({ host:process.env.DB_HOST, user:process.env.DB_MIGRATION_USER ?? process.env.DB_USER, password:seedPassword, database:process.env.DB_NAME, port:Number(process.env.DB_PORT) })
 const temporaryPassword = 'SolDeMayo2026!'
 const passwordHash = await bcrypt.hash(temporaryPassword, 10)
 
@@ -11,6 +14,7 @@ const profiles = [
     { name:'Segundo', email:'segundo@soldemayo.com', role:'admin', area:'general', branch:1, all:true },
     { name:'Agustin Lezcano', email:'admin@soldemayo.com', role:'stock_manager', area:'general', branch:1, all:true },
     { name:'Lucas', email:'lucas@soldemayo.com', role:'seller', area:'wholesale', branch:1, all:true },
+    { name:'Luciana', email:'luciana@soldemayo.com', role:'seller', area:'merchandising', branch:1, all:true },
     { name:'Tomi', email:'tomi@soldemayo.com', role:'seller', area:'retail', branch:2, all:false },
     { name:'Isabela', email:'isa@soldemayo.com', role:'seller', area:'retail', branch:2, all:false }
 ]
