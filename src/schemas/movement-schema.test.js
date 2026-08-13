@@ -33,4 +33,35 @@ describe('movement idempotency validation', () => {
 
         expect(result.success).toBe(false)
     })
+
+    test('rejects product exchanges through Mercado Libre', () => {
+        const result = validateMovement({
+            idempotency_key: validKey,
+            type: 'egreso',
+            egress_reason: 'exchange',
+            sale_channel: 'mercado_libre',
+            explanation: 'El cliente solicita cambiar el producto',
+            origin_branch_id: 1,
+            details: [{ product_id: 8, quantity: 1 }]
+        })
+
+        expect(result.success).toBe(false)
+        expect(result.error.issues).toEqual(expect.arrayContaining([
+            expect.objectContaining({ path: ['sale_channel'], message: 'Mercado Libre no admite cambios de producto' })
+        ]))
+    })
+
+    test('allows a product exchange through another sales channel', () => {
+        const result = validateMovement({
+            idempotency_key: validKey,
+            type: 'egreso',
+            egress_reason: 'exchange',
+            sale_channel: 'tienda_nube',
+            explanation: 'El cliente solicita cambiar el producto',
+            origin_branch_id: 1,
+            details: [{ product_id: 8, quantity: 1 }]
+        })
+
+        expect(result.success).toBe(true)
+    })
 })

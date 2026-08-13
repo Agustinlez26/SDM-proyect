@@ -43,6 +43,9 @@ export const movementSchema = z.object({
     if (data.type === 'egreso' && data.egress_reason === 'exchange' && !data.sale_channel) {
         ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'El cambio requiere indicar el canal de venta', path: ['sale_channel'] })
     }
+    if (data.type === 'egreso' && data.egress_reason === 'exchange' && data.sale_channel === 'mercado_libre') {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Mercado Libre no admite cambios de producto', path: ['sale_channel'] })
+    }
     if ((data.type === 'envio' || (data.type === 'egreso' && ['return', 'exchange'].includes(data.egress_reason))) && !data.explanation?.trim()) {
         ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'La explicación de la operación es obligatoria', path: ['explanation'] })
     }
