@@ -8,6 +8,9 @@ export class ShipmentsDTO {
         this.origin_branch_name = data.origin_branch_name
         this.destination_branch_name = data.destination_branch_name
         this.branch = data.destination_branch_name
+        this.product_count = Number(data.product_count || 0)
+        this.total_units = Number(data.total_units || 0)
+        this.product_summary = data.product_summary || ''
         this.date = data.date
     }
 }

@@ -81,7 +81,7 @@ async function loadPendingShipments() {
                 const canReceive = (statusNormal === 'en_proceso' || statusNormal === 'en proceso') && isDestination;
 
                 if (canDispatch) {
-                    actionButton = `<button class="btn-primary shipment-action" data-shipment-action="dispatch" data-shipment-id="${shipment.id}" data-shipment-receipt="${receipt}">Verificar y despachar</button>`;
+                    actionButton = `<button class="btn-primary shipment-action" data-shipment-action="dispatch" data-shipment-id="${shipment.id}" data-shipment-receipt="${receipt}"><span class="material-symbols-outlined">fact_check</span> Ver productos y despachar</button>`;
                 } else if (canReceive) {
                     actionButton = `<button class="btn-success shipment-action" data-shipment-action="receive" data-shipment-id="${shipment.id}" data-shipment-receipt="${receipt}"><span class="material-symbols-outlined">inventory_2</span> Confirmar llegada</button>`;
                 } else if (statusNormal === 'pendiente') {
@@ -97,6 +97,10 @@ async function loadPendingShipments() {
                         <span class="badge ${statusNormal}">${(shipment.status || 'Pendiente').replace('_', ' ')}</span>
                         <h3>Envío ${receipt}</h3>
                         <p><strong>${escapeShipmentText(shipment.origin_branch_name || 'Origen desconocido')}</strong> → <strong>${escapeShipmentText(shipment.destination_branch_name || 'Destino desconocido')}</strong></p>
+                        <div class="shipment-product-summary">
+                            <span>${escapeShipmentText(shipment.product_summary || 'Sin productos informados')}</span>
+                            <small>${Number(shipment.product_count || 0)} productos · ${Number(shipment.total_units || 0)} unidades</small>
+                        </div>
                         <p class="alert-date">Fecha: ${dateStr}</p>
                     </div>
                     ${actionButton}

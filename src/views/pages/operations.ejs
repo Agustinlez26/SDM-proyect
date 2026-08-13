@@ -13,7 +13,7 @@
                 window.USER_BRANCH_ID = <%- user && user.branch_id ? Number(user.branch_id) : 'null' %>;
                 window.CAN_MANAGE_ALL_SHIPMENTS = <%= Boolean(user && (user.is_admin || user.app_role === 'admin' || user.app_role === 'stock_manager')) %>;
             </script>
-            <script src="/js/operations.js?v=2.5" defer></script>
+            <script src="/js/operations.js?v=2.6" defer></script>
 
             <div class="main-container">
                 <section class="alerts-section" id="alerts-section">

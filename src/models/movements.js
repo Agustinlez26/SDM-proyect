@@ -226,6 +226,12 @@ export class MovementModel {
                 m.destination_branch_id,
                 bo.name AS origin_branch_name,
                 bd.name AS destination_branch_name,
+                (SELECT COUNT(*) FROM movement_details summary_md WHERE summary_md.movement_id=m.id) AS product_count,
+                (SELECT COALESCE(SUM(summary_md.quantity),0) FROM movement_details summary_md WHERE summary_md.movement_id=m.id) AS total_units,
+                (SELECT GROUP_CONCAT(CONCAT(summary_p.name, ' ×', summary_md.quantity) ORDER BY summary_p.name SEPARATOR ' · ')
+                    FROM movement_details summary_md
+                    JOIN products summary_p ON summary_p.id=summary_md.product_id
+                    WHERE summary_md.movement_id=m.id) AS product_summary,
                 m.date
             FROM ${this.#table} m
             JOIN ${this.#tableBranches} bo ON m.origin_branch_id = bo.id

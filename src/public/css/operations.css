@@ -131,6 +131,28 @@ html.dark-theme .alert-card .btn-secondary.waiting-dispatch {
   justify-content: center;
 }
 
+.shipment-product-summary {
+  display: grid;
+  gap: .3rem;
+  margin-top: .8rem;
+  padding: .7rem .8rem;
+  border-radius: 8px;
+  background: var(--bg-body);
+  border: 1px solid var(--border-color);
+}
+
+.shipment-product-summary span {
+  color: var(--text-primary);
+  font-size: .82rem;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+.shipment-product-summary small {
+  color: var(--text-muted);
+  font-size: .72rem;
+}
+
 html.dark-theme .alert-card .badge.en_proceso {
   background: rgba(255, 255, 255, .1);
   color: #e5e5e5;
