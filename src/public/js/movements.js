@@ -204,7 +204,7 @@ function renderMovementsTable(movements) {
     if (movements.length === 0) {
         tbody.innerHTML = `
             <tr class="empty-state-row">
-                <td colspan="9">
+                <td colspan="10">
                     <span class="material-symbols-outlined icon-empty">inbox</span>
                     <h3 style="color: var(--text-secondary); margin-bottom: 0.5rem;">No se encontraron movimientos</h3>
                     <p style="font-size: 0.9rem;">Prueba ajustando los filtros de búsqueda.</p>
@@ -236,7 +236,8 @@ function renderMovementsTable(movements) {
         tr.innerHTML = `
             <td class="col-id">#${mov.id}</td>
             <td class="col-receipt font-mono">${escapeHTML(mov.receipt_number || 'S/N')}</td>
-            <td class="col-type">${generateTypeBadge(mov.type, mov.egress_reason)}${mov.egress_reason === 'sale' && mov.sale_channel ? `<small>${escapeHTML(movementChannelLabel(mov.sale_channel))}</small>` : mov.movement_purpose === 'wholesale_order' ? '<small>Pedido mayorista</small>' : ''}</td>
+            <td class="col-type">${generateTypeBadge(mov.type, mov.egress_reason)}${mov.movement_purpose === 'wholesale_order' ? '<small>Pedido mayorista</small>' : ''}</td>
+            <td class="col-channel">${mov.sale_channel ? `<span>${escapeHTML(movementChannelLabel(mov.sale_channel))}</span>` : '<span class="channel-empty">—</span>'}</td>
             <td class="col-status">${generateStatusBadge(mov.status)}</td>
             <td class="col-date">${frontendDate}</td>
             <td class="col-branch" title="${escapeHTML(mov.origin || 'Externo')}">${escapeHTML(mov.origin || '-')}</td>

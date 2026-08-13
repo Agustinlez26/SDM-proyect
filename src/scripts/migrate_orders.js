@@ -91,6 +91,10 @@ try {
     if (!await columnExists('movements', 'movement_purpose')) await db.query("ALTER TABLE movements ADD COLUMN movement_purpose ENUM('standard','wholesale_order') NOT NULL DEFAULT 'standard' AFTER order_id")
     if (!await columnExists('movements', 'requested_by')) await db.query('ALTER TABLE movements ADD COLUMN requested_by BINARY(16) NULL AFTER movement_purpose')
     if (!await columnExists('movements', 'confirmed_by')) await db.query('ALTER TABLE movements ADD COLUMN confirmed_by BINARY(16) NULL AFTER requested_by')
+    await db.query(`UPDATE movements m
+        JOIN orders o ON o.id=m.order_id
+        SET m.sale_channel=o.channel
+        WHERE m.egress_reason='sale' AND m.sale_channel IS NULL`)
     await db.query(`CREATE TABLE IF NOT EXISTS order_audit_logs (
         id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         order_id INT UNSIGNED NOT NULL,
