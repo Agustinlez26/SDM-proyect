@@ -7,7 +7,30 @@
         <main class="layout__content">
             <%- include('../partials/navbar', { title: 'Operaciones' }) %>
 
+            <script nonce="<%= cspNonce %>">
+                window.USER_ROLE = '<%= user && (user.is_admin || user.app_role === "admin") ? "admin" : "employee" %>';
+                window.USER_APP_ROLE = '<%= user ? user.app_role : "" %>';
+                window.USER_BRANCH_ID = <%- user && user.branch_id ? Number(user.branch_id) : 'null' %>;
+                window.CAN_MANAGE_ALL_SHIPMENTS = <%= Boolean(user && (user.is_admin || user.app_role === 'admin' || user.app_role === 'stock_manager')) %>;
+            </script>
+            <script src="/js/operations.js?v=2.5" defer></script>
+
             <div class="main-container">
+                <section class="alerts-section" id="alerts-section">
+                    <div class="section-header">
+                        <span class="material-symbols-outlined icon-alert" id="alert-icon">notifications_active</span>
+                        <div>
+                            <h2 id="alert-title">Envíos pendientes</h2>
+                            <p class="text-muted">Despachá los envíos de tu sucursal o confirmá los que llegaron a destino.</p>
+                        </div>
+                    </div>
+                    <div class="alerts-grid" id="alerts-grid-container">
+                        <div class="shipment-loading">Buscando envíos...</div>
+                    </div>
+                </section>
+
+                <hr class="divider">
+
                 <section class="actions-section">
                     <div class="section-header">
                         <div>
@@ -48,6 +71,37 @@
                 <%- include('../partials/modals/modal-op-employee') %>
                 <script src="/js/components/op-employee.js" defer></script>
             <% } %>
+
+            <div class="modal-overlay" id="modal-shipment">
+                <div class="modal-card modal-large modal-shipment-card">
+                    <header class="modal-header modal-shipment-header" id="modal-shipment-header">
+                        <div id="modal-shipment-icon" class="material-symbols-outlined modal-shipment-icon">local_shipping</div>
+                        <div class="modal-shipment-title-container">
+                            <h3 id="modal-shipment-title">Detalle del envío</h3>
+                            <p id="modal-shipment-subtitle">Verificá los productos antes de confirmar.</p>
+                        </div>
+                        <button class="btn-close-modal" type="button" data-close-shipment aria-label="Cerrar">
+                            <span class="material-symbols-outlined">close</span>
+                        </button>
+                    </header>
+                    <div class="modal-body modal-shipment-body">
+                        <h4>Productos del envío</h4>
+                        <div class="detail-products-container">
+                            <table class="detail-products-table">
+                                <thead><tr><th>SKU</th><th>Producto</th><th class="text-center">Cantidad</th></tr></thead>
+                                <tbody id="shipment-products-list"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal-actions modal-shipment-actions">
+                        <button class="btn-cancel" type="button" data-close-shipment>Volver</button>
+                        <button class="btn-primary" id="btn-confirm-shipment" type="button">
+                            <span class="material-symbols-outlined" id="btn-confirm-shipment-icon">check_circle</span>
+                            <span id="btn-confirm-shipment-text">Confirmar</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 </body>

@@ -5,6 +5,9 @@
 
 let currentShipmentType = null;
 let currentShipmentId = null;
+const escapeShipmentText = value => String(value ?? '').replace(/[&<>"']/g, char => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+})[char]);
 
 document.addEventListener('DOMContentLoaded', () => {
     initOperationsSocket()
@@ -71,42 +74,20 @@ async function loadPendingShipments() {
 
                 let actionButton = '';
 
-                // LÓGICA DE ADMIN
-                if (window.USER_ROLE === 'admin') {
-                    if (statusNormal === 'pendiente') {
-                        actionButton = `
-                            <button class="btn-primary" onclick="openShipmentModal('dispatch', ${shipment.id}, '${shipment.receipt_number || shipment.id}')">
-                                Verificar y Despachar
-                            </button>
-                        `;
-                    } else {
-                        actionButton = `
-                            <button class="btn-secondary" disabled>
-                                <span class="material-symbols-outlined" style="font-size: 18px;">local_shipping</span>
-                                Envío en Camino
-                            </button>
-                        `;
-                    }
-                }
-                // LÓGICA DE EMPLEADO
-                else {
-                    if (statusNormal === 'pendiente') {
-                        // El empleado ve que se está preparando, pero no puede clickear
-                        actionButton = `
-                            <button class="btn-secondary waiting-dispatch" disabled>
-                                <span class="material-symbols-outlined" style="font-size: 18px;">hourglass_empty</span>
-                                Esperando despacho...
-                            </button>
-                        `;
-                    } else if (statusNormal === 'en_proceso' || statusNormal === 'en proceso') {
-                        // El envío ya fue despachado, el empleado puede confirmar la llegada
-                        actionButton = `
-                            <button class="btn-success" style="width: 100%; justify-content: center;" onclick="openShipmentModal('receive', ${shipment.id}, '${shipment.receipt_number || shipment.id}')">
-                                <span class="material-symbols-outlined" style="font-size: 18px;">inventory_2</span>
-                                Confirmar Llegada
-                            </button>
-                        `;
-                    }
+                const receipt = escapeShipmentText(shipment.receipt_number || shipment.id);
+                const isOrigin = Number(window.USER_BRANCH_ID) === Number(shipment.origin_branch_id);
+                const isDestination = Number(window.USER_BRANCH_ID) === Number(shipment.destination_branch_id);
+                const canDispatch = statusNormal === 'pendiente' && (Boolean(window.CAN_MANAGE_ALL_SHIPMENTS) || isOrigin);
+                const canReceive = (statusNormal === 'en_proceso' || statusNormal === 'en proceso') && isDestination;
+
+                if (canDispatch) {
+                    actionButton = `<button class="btn-primary shipment-action" data-shipment-action="dispatch" data-shipment-id="${shipment.id}" data-shipment-receipt="${receipt}">Verificar y despachar</button>`;
+                } else if (canReceive) {
+                    actionButton = `<button class="btn-success shipment-action" data-shipment-action="receive" data-shipment-id="${shipment.id}" data-shipment-receipt="${receipt}"><span class="material-symbols-outlined">inventory_2</span> Confirmar llegada</button>`;
+                } else if (statusNormal === 'pendiente') {
+                    actionButton = `<button class="btn-secondary waiting-dispatch" disabled><span class="material-symbols-outlined">hourglass_empty</span> Esperando despacho</button>`;
+                } else {
+                    actionButton = `<button class="btn-secondary" disabled><span class="material-symbols-outlined">local_shipping</span> Esperando confirmación en destino</button>`;
                 }
 
                 const card = document.createElement('div');
@@ -114,14 +95,18 @@ async function loadPendingShipments() {
                 card.innerHTML = `
                     <div class="alert-info">
                         <span class="badge ${statusNormal}">${(shipment.status || 'Pendiente').replace('_', ' ')}</span>
-                        <h3>Envío ${shipment.receipt_number || '#' + shipment.id}</h3>
-                        <p>Desde/Hacia: <strong>${shipment.branch || shipment.origin_branch_name || 'Desconocido'}</strong></p>
+                        <h3>Envío ${receipt}</h3>
+                        <p><strong>${escapeShipmentText(shipment.origin_branch_name || 'Origen desconocido')}</strong> → <strong>${escapeShipmentText(shipment.destination_branch_name || 'Destino desconocido')}</strong></p>
                         <p class="alert-date">Fecha: ${dateStr}</p>
                     </div>
                     ${actionButton}
                 `;
                 container.appendChild(card);
             });
+
+            container.querySelectorAll('[data-shipment-action]').forEach(button => button.addEventListener('click', () => {
+                openShipmentModal(button.dataset.shipmentAction, Number(button.dataset.shipmentId), button.dataset.shipmentReceipt);
+            }));
         }
     } catch (error) {
         console.error("Error cargando alertas:", error);
@@ -251,3 +236,7 @@ document.getElementById('btn-confirm-shipment').addEventListener('click', async 
 document.getElementById('modal-shipment').addEventListener('click', (e) => {
     if (e.target.id === 'modal-shipment') e.target.classList.remove('active');
 });
+
+document.querySelectorAll('[data-close-shipment]').forEach(button => button.addEventListener('click', () => {
+    document.getElementById('modal-shipment').classList.remove('active');
+}));

@@ -222,10 +222,14 @@ export class MovementModel {
                 m.id,
                 m.status,
                 m.receipt_number,
-                b.name as branch,
+                m.origin_branch_id,
+                m.destination_branch_id,
+                bo.name AS origin_branch_name,
+                bd.name AS destination_branch_name,
                 m.date
             FROM ${this.#table} m
-            JOIN ${this.#tableBranches} b ON m.destination_branch_id = b.id
+            JOIN ${this.#tableBranches} bo ON m.origin_branch_id = bo.id
+            JOIN ${this.#tableBranches} bd ON m.destination_branch_id = bd.id
             WHERE m.type = 'envio' AND m.status != 'entregado'
         `
 

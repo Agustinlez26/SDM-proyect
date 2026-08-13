@@ -168,13 +168,13 @@ export class MovementService {
         if (movement.status === 'entregado') throw new ValidationError('Este envío ya está concluido')
 
         if (!actor?.is_admin && actor?.app_role !== 'stock_manager') {
-            if (movement.status === 'pendiente' && actor?.branch_id !== movement.origin_branch_id) {
+            if (movement.status === 'pendiente' && Number(actor?.branch_id) !== Number(movement.origin_branch_id)) {
                 throw new ValidationError('No tienes permiso para despachar este envio')
             }
+        }
 
-            if (movement.status === 'en_proceso' && actor?.branch_id !== movement.destination_branch_id) {
-                throw new ValidationError('No tienes permiso para recibir este envio')
-            }
+        if (movement.status === 'en_proceso' && Number(actor?.branch_id) !== Number(movement.destination_branch_id)) {
+            throw new ValidationError('La llegada debe confirmarla un usuario de la sucursal destino')
         }
 
         const details = await this.movementModel.findDetails(movementId)
