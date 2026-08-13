@@ -153,6 +153,11 @@ html.dark-theme .alert-card .btn-secondary.waiting-dispatch {
   font-size: .72rem;
 }
 
+.shipment-orders-panel{margin-top:1rem;padding:1rem;border:1px solid var(--border-color);border-radius:12px;background:var(--bg-body)}
+.shipment-orders-heading{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:.75rem}.shipment-orders-heading div{display:grid;gap:.2rem}.shipment-orders-heading small,.shipment-orders-help,.shipment-order-option small{color:var(--text-muted);font-size:.74rem}.shipment-orders-list{display:grid;gap:.55rem;max-height:245px;overflow:auto}.shipment-order-option{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:.75rem;padding:.7rem;border:1px solid var(--border-color);border-radius:9px;background:var(--bg-card)}.shipment-order-option.selected{border-color:#a68d20;box-shadow:0 0 0 2px rgba(166,141,32,.12)}.shipment-order-option>label:first-child{display:flex;align-items:flex-start;gap:.65rem;min-width:0;cursor:pointer}.shipment-order-option>label:first-child span{display:grid;gap:.16rem;min-width:0}.shipment-order-option strong,.shipment-order-option small{overflow-wrap:anywhere}.shipment-package-count{display:grid;gap:.2rem;font-size:.68rem;color:var(--text-muted);text-align:center}.shipment-package-count input{width:64px;padding:.4rem;border:1px solid var(--border-color);border-radius:6px;background:var(--bg-input);color:var(--text-primary);text-align:center}.shipment-orders-help{margin-top:.65rem}.shipment-orders-empty{padding:.8rem;color:var(--text-muted);text-align:center}.shipment-orders-empty.error{color:#dc2626}
+.shipment-order-summary{display:grid;gap:.15rem;margin-top:.55rem;padding:.55rem .7rem;border-left:3px solid #a68d20;background:rgba(166,141,32,.08);border-radius:5px}.shipment-order-summary strong{font-size:.78rem}.shipment-order-summary small{color:var(--text-muted);font-size:.7rem;overflow-wrap:anywhere}
+@media(max-width:600px){.shipment-order-option{grid-template-columns:minmax(0,1fr)}.shipment-package-count{display:flex;align-items:center;justify-content:flex-end;gap:.5rem}.shipment-orders-panel{padding:.75rem}}
+
 html.dark-theme .alert-card .badge.en_proceso {
   background: rgba(255, 255, 255, .1);
   color: #e5e5e5;

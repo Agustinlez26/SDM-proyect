@@ -101,6 +101,7 @@ async function loadPendingShipments() {
                             <span>${escapeShipmentText(shipment.product_summary || 'Sin productos informados')}</span>
                             <small>${Number(shipment.product_count || 0)} productos · ${Number(shipment.total_units || 0)} unidades</small>
                         </div>
+                        ${Number(shipment.order_count || 0) ? `<div class="shipment-order-summary"><strong>${Number(shipment.order_count)} pedidos · ${Number(shipment.package_count)} bultos</strong><small>${escapeShipmentText(shipment.order_summary)}</small></div>` : ''}
                         <p class="alert-date">Fecha: ${dateStr}</p>
                     </div>
                     ${actionButton}

@@ -13,7 +13,7 @@
                 window.USER_BRANCH_ID = <%- user && user.branch_id ? Number(user.branch_id) : 'null' %>;
                 window.CAN_MANAGE_ALL_SHIPMENTS = <%= Boolean(user && (user.is_admin || user.app_role === 'admin' || user.app_role === 'stock_manager')) %>;
             </script>
-            <script src="/js/operations.js?v=2.6" defer></script>
+            <script src="/js/operations.js?v=2.8" defer></script>
 
             <div class="main-container">
                 <section class="alerts-section" id="alerts-section">
@@ -66,10 +66,12 @@
 
             <% if (user && (user.role === 'admin' || user.app_role === 'stock_manager')) { %>
                 <%- include('../partials/modals/modal-op-admin') %>
-                <script src="/js/components/op-admin.js" defer></script>
+                <script src="/js/components/shipment-orders.js?v=2.8" defer></script>
+                <script src="/js/components/op-admin.js?v=2.8" defer></script>
             <% } else { %>
                 <%- include('../partials/modals/modal-op-employee') %>
-                <script src="/js/components/op-employee.js" defer></script>
+                <script src="/js/components/shipment-orders.js?v=2.8" defer></script>
+                <script src="/js/components/op-employee.js?v=2.8" defer></script>
             <% } %>
 
             <div class="modal-overlay" id="modal-shipment">

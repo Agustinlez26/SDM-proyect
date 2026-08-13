@@ -59,6 +59,7 @@ function closeAndCleanOperationModal() {
     document.getElementById('op-search-prod').value = '';
     document.getElementById('op-sale-channel').value = '';
     document.getElementById('op-explanation').value = '';
+    window.resetShipmentOrderPackages?.();
 
     const grid = document.getElementById('catalog-grid');
     if (grid) grid.innerHTML = '';
@@ -94,6 +95,7 @@ window.openOperationModal = function (type, reason = 'return') {
     if (!['out', 'transfer'].includes(type)) return;
     if (type === 'out' && !['return', 'exchange'].includes(reason)) return;
     currentOperationType = type;
+    document.getElementById('modal-operation').dataset.operationType = type;
     pendingOperationRequestKey = null;
 
     selectedProductsForOp = [];
@@ -116,6 +118,7 @@ window.openOperationModal = function (type, reason = 'return') {
     searchProductsForOperation(''); // Cargamos todo el stock de entrada
 
     document.getElementById('modal-operation').classList.add('active');
+    window.refreshShipmentOrderPackages?.();
     setTimeout(() => document.getElementById('op-search-prod').focus(), 100);
 }
 
@@ -236,7 +239,8 @@ window.removeProductFromOp = function (index) {
 const btnConfirmOp = document.getElementById('btn-confirm-op');
 if (btnConfirmOp) {
     btnConfirmOp.addEventListener('click', async () => {
-        if (selectedProductsForOp.length === 0) return alert('Debes agregar al menos un producto a la operación.');
+        const shipmentOrders = window.getShipmentOrderPackages?.() || [];
+        if (selectedProductsForOp.length === 0 && shipmentOrders.length === 0) return alert('Debes agregar productos o seleccionar al menos un pedido.');
 
         const payload = {
             idempotency_key: pendingOperationRequestKey ||= crypto.randomUUID(),
@@ -244,7 +248,8 @@ if (btnConfirmOp) {
             details: selectedProductsForOp.map(p => ({
                 product_id: p.id,
                 quantity: p.quantity
-            }))
+            })),
+            shipment_orders: shipmentOrders
         };
 
         if (payload.type === 'envio') {

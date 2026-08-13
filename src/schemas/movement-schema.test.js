@@ -64,4 +64,34 @@ describe('movement idempotency validation', () => {
 
         expect(result.success).toBe(true)
     })
+
+    test('allows a Taller to Juncal shipment composed only of reserved orders', () => {
+        const result = validateMovement({
+            idempotency_key: validKey,
+            type: 'envio',
+            explanation: 'Pedidos preparados para llevar a Juncal',
+            origin_branch_id: 1,
+            destination_branch_id: 2,
+            details: [],
+            shipment_orders: [{ order_id: 15, package_count: 2 }]
+        })
+
+        expect(result.success).toBe(true)
+    })
+
+    test('rejects a duplicated order inside one shipment', () => {
+        const result = validateMovement({
+            idempotency_key: validKey,
+            type: 'envio',
+            explanation: 'Pedidos preparados para llevar a Juncal',
+            origin_branch_id: 1,
+            destination_branch_id: 2,
+            shipment_orders: [
+                { order_id: 15, package_count: 1 },
+                { order_id: 15, package_count: 2 }
+            ]
+        })
+
+        expect(result.success).toBe(false)
+    })
 })

@@ -86,6 +86,11 @@ export class MovementService {
         return await this.movementModel.findShipmentsInProcess()
     }
 
+    async findShippableOrders(originBranchId, destinationBranchId) {
+        if (Number(originBranchId) !== 1 || Number(destinationBranchId) !== 2) return []
+        return this.movementModel.findShippableOrders(originBranchId)
+    }
+
     /**
      * Lógica central de creación de movimientos.
      * Prepara los datos según el tipo (INGRESO, EGRESO, ENVIO) y valida stock antes de llamar al modelo.
@@ -96,8 +101,8 @@ export class MovementService {
      * @param {Array} details - Array de productos.
      * @returns {Promise<Object>} { id, message }
      */
-    async create(data, details) {
-        if (!details || details.length === 0) throw new ValidationError('Sin productos')
+    async create(data, details, shipmentOrders = []) {
+        if ((!details || details.length === 0) && !shipmentOrders.length) throw new ValidationError('Sin productos ni pedidos')
 
         const existingMovementId = await this.movementModel.findIdByRequestKey(data.request_key)
         if (existingMovementId) return { id: existingMovementId, message: 'Movimiento ya procesado' }
@@ -134,7 +139,7 @@ export class MovementService {
             if (!originExists) throw new NotFoundError('Sucursal origen no existe')
             if (!destExists) throw new NotFoundError('Sucursal destino no existe')
 
-            await this.#validateStockAvailability(data.origin_branch_id, details)
+            if (!shipmentOrders.length) await this.#validateStockAvailability(data.origin_branch_id, details)
 
             data.status = 'pendiente'
 
@@ -146,7 +151,8 @@ export class MovementService {
             data,
             details,
             stockAction,
-            targetBranchForStock
+            targetBranchForStock,
+            shipmentOrders
         );
 
         return { id, message: 'Movimiento procesado' }

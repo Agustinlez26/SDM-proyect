@@ -232,6 +232,9 @@ export class MovementModel {
                     FROM movement_details summary_md
                     JOIN products summary_p ON summary_p.id=summary_md.product_id
                     WHERE summary_md.movement_id=m.id) AS product_summary,
+                (SELECT COUNT(*) FROM shipment_order_packages sop WHERE sop.movement_id=m.id) AS order_count,
+                (SELECT COALESCE(SUM(sop.package_count),0) FROM shipment_order_packages sop WHERE sop.movement_id=m.id) AS package_count,
+                (SELECT GROUP_CONCAT(o.order_number ORDER BY o.id SEPARATOR ' · ') FROM shipment_order_packages sop JOIN orders o ON o.id=sop.order_id WHERE sop.movement_id=m.id) AS order_summary,
                 m.date
             FROM ${this.#table} m
             JOIN ${this.#tableBranches} bo ON m.origin_branch_id = bo.id
@@ -247,6 +250,21 @@ export class MovementModel {
         }
         const [rows] = await this.#db.query(sql, params)
         return rows.map(row => new ShipmentsDTO(row))
+    }
+
+    async findShippableOrders(originBranchId) {
+        const [rows] = await this.#db.query(`
+            SELECT o.id,o.order_number,o.channel,o.customer_reference,o.created_at,
+                COUNT(DISTINCT sr.product_id) product_count,SUM(sr.quantity) total_units,
+                GROUP_CONCAT(DISTINCT CONCAT(p.name,' ×',sr.quantity) ORDER BY p.name SEPARATOR ' · ') product_summary
+            FROM orders o
+            JOIN stock_reservations sr ON sr.order_id=o.id AND sr.status='active'
+            JOIN products p ON p.id=sr.product_id
+            WHERE o.status='reserved' AND o.channel IN ('mayorista','merchandising') AND sr.branch_id=?
+              AND NOT EXISTS (SELECT 1 FROM shipment_order_packages sop WHERE sop.order_id=o.id)
+            GROUP BY o.id ORDER BY o.created_at,o.id
+        `, [originBranchId])
+        return rows
     }
 
     /**
@@ -286,10 +304,29 @@ export class MovementModel {
      * @param {number} targetBranchId - Sucursal donde impactar el stock (si action != NONE).
      * @returns {Promise<number>} ID del nuevo movimiento.
      */
-    async createTransaction(data, details, stockAction, targetBranchId) {
-        const sortedDetails = sortStockItems(details)
+    async createTransaction(data, details, stockAction, targetBranchId, shipmentOrders = []) {
+        const sortedDetails = sortStockItems(details || [])
         try {
             return await runTransactionWithRetry(this.#db, async connection => {
+                const packagedOrderIds = shipmentOrders.map(item => Number(item.order_id))
+                const packageTotals = new Map()
+                if (packagedOrderIds.length) {
+                    if (data.type !== 'envio' || Number(data.origin_branch_id) !== 1 || Number(data.destination_branch_id) !== 2) throw new Error('Los pedidos solo pueden incluirse en envíos del Taller a Juncal')
+                    for (const packageInfo of shipmentOrders) {
+                        const orderId = Number(packageInfo.order_id)
+                        const [[order]] = await connection.query('SELECT id,status,channel FROM orders WHERE id=? FOR UPDATE', [orderId])
+                        if (!order || order.status !== 'reserved' || !['mayorista','merchandising'].includes(order.channel)) throw new Error(`El pedido ${orderId} no está disponible para enviar`)
+                        const [[alreadyPacked]] = await connection.query('SELECT movement_id FROM shipment_order_packages WHERE order_id=? LIMIT 1', [orderId])
+                        if (alreadyPacked) throw new Error(`El pedido ${orderId} ya pertenece a otro envío`)
+                        const [reservations] = await connection.query("SELECT product_id,branch_id,quantity FROM stock_reservations WHERE order_id=? AND branch_id=? AND status='active' FOR UPDATE", [orderId,data.origin_branch_id])
+                        if (!reservations.length) throw new Error(`El pedido ${orderId} no tiene productos reservados en el Taller`)
+                        for (const row of reservations) packageTotals.set(Number(row.product_id),(packageTotals.get(Number(row.product_id))||0)+Number(row.quantity))
+                    }
+                }
+
+                const combinedTotals = new Map(packageTotals)
+                for (const item of sortedDetails) combinedTotals.set(Number(item.product_id),(combinedTotals.get(Number(item.product_id))||0)+Number(item.quantity))
+                const combinedDetails = [...combinedTotals.entries()].map(([product_id,quantity]) => ({product_id,quantity}))
                 const sqlHeader = `
                     INSERT INTO ${this.#table}
                     (receipt_number, request_key, type, egress_reason, sale_channel, explanation, date, user_id, origin_branch_id, destination_branch_id, status)
@@ -302,10 +339,10 @@ export class MovementModel {
                 ])
                 const movementId = resultHeader.insertId
 
-                const values = sortedDetails.map(d => [movementId, d.product_id, d.quantity])
+                const values = combinedDetails.map(d => [movementId, d.product_id, d.quantity])
                 await connection.query(`INSERT INTO ${this.#tableDetails} (movement_id, product_id, quantity) VALUES ?`, [values])
 
-                for (const item of sortedDetails) {
+                for (const item of combinedDetails) {
                     if (stockAction === 'ADD') {
                         const minQty = item.min_quantity || 0
                         await connection.query(`
@@ -314,16 +351,23 @@ export class MovementModel {
                             ON DUPLICATE KEY UPDATE quantity = quantity + ?
                         `, [targetBranchId, item.product_id, item.quantity, minQty, item.quantity])
                     } else if (stockAction === 'SUBTRACT') {
+                        const exclusion = packagedOrderIds.length ? ` AND (r.order_id IS NULL OR r.order_id NOT IN (${packagedOrderIds.map(() => '?').join(',')}))` : ''
                         const [res] = await connection.query(`
                             UPDATE ${this.#tableStock}
                             SET quantity = quantity - ?
                             WHERE branch_id = ? AND product_id = ?
                               AND quantity - COALESCE((SELECT SUM(r.quantity) FROM stock_reservations r
-                                  WHERE r.branch_id = ? AND r.product_id = ? AND r.status = 'active'), 0) >= ?
-                        `, [item.quantity, targetBranchId, item.product_id, targetBranchId, item.product_id, item.quantity])
+                                  WHERE r.branch_id = ? AND r.product_id = ? AND r.status = 'active'${exclusion}), 0) >= ?
+                        `, [item.quantity, targetBranchId, item.product_id, targetBranchId, item.product_id, ...packagedOrderIds, item.quantity])
 
                         if (res.affectedRows === 0) throw new Error(`Stock insuficiente para el producto ID: ${item.product_id}`)
                     }
+                }
+
+                for (const packageInfo of shipmentOrders) {
+                    await connection.query('INSERT INTO shipment_order_packages (movement_id,order_id,package_count) VALUES (?,?,?)', [movementId,packageInfo.order_id,packageInfo.package_count])
+                    await connection.query("UPDATE stock_reservations SET branch_id=? WHERE order_id=? AND branch_id=? AND status='active'", [data.destination_branch_id,packageInfo.order_id,data.origin_branch_id])
+                    await connection.query('UPDATE orders SET branch_id=? WHERE id=?', [data.destination_branch_id,packageInfo.order_id])
                 }
 
                 return movementId

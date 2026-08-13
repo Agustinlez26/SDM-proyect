@@ -195,6 +195,17 @@ export class MovementController {
         }
     }
 
+    getShippableOrders = async (req, res) => {
+        const origin = Number(req.query.origin_branch_id)
+        const destination = Number(req.query.destination_branch_id)
+        if (!Number.isInteger(origin) || !Number.isInteger(destination)) return res.status(400).json({ status:'error', message:'Origen y destino inválidos' })
+        if (!hasGlobalStockAccess(req.user) && Number(req.user.branch_id) !== origin) return res.status(403).json({ status:'error', message:'No tenés acceso al stock de ese origen' })
+        try {
+            const orders = await this.movementService.findShippableOrders(origin, destination)
+            res.json({ status:'success', data:orders })
+        } catch (error) { handleError(res,error) }
+    }
+
     /**
      * Crea un nuevo movimiento (Ingreso, Egreso o Envío).
      * * * Validaciones:
@@ -218,7 +229,7 @@ export class MovementController {
             });
         }
 
-        const { idempotency_key, type, origin_branch_id, destination_branch_id, egress_reason, sale_channel, explanation, details } = result.data;
+        const { idempotency_key, type, origin_branch_id, destination_branch_id, egress_reason, sale_channel, explanation, details, shipment_orders } = result.data;
 
         const userId = req.user.id;
         const userBranchId = req.user.branch_id;
@@ -270,7 +281,7 @@ export class MovementController {
         };
 
         try {
-            await this.movementService.create(dbPayload, details);
+            await this.movementService.create(dbPayload, details, shipment_orders);
 
             const io = req.app.get('io')
             io.emit('new_movement')

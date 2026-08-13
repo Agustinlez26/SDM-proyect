@@ -11,6 +11,9 @@ export class ShipmentsDTO {
         this.product_count = Number(data.product_count || 0)
         this.total_units = Number(data.total_units || 0)
         this.product_summary = data.product_summary || ''
+        this.order_count = Number(data.order_count || 0)
+        this.package_count = Number(data.package_count || 0)
+        this.order_summary = data.order_summary || ''
         this.date = data.date
     }
 }

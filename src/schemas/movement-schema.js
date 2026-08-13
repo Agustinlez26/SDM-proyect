@@ -12,6 +12,11 @@ const movementDetailSchema = z.object({
     min_quantity: z.coerce.number().int().nonnegative().optional()
 })
 
+const shipmentOrderSchema = z.object({
+    order_id: z.coerce.number().int().positive(),
+    package_count: z.coerce.number().int().min(1).max(99)
+})
+
 export const movementSchema = z.object({
     idempotency_key: z.string().uuid('La identificación de la operación no es válida'),
     type: z.enum(MOVEMENT_TYPES),
@@ -20,9 +25,13 @@ export const movementSchema = z.object({
     egress_reason: z.enum(EGRESS_REASONS).optional().nullable(),
     sale_channel: z.enum(SALE_CHANNELS).optional().nullable(),
     explanation: z.string().trim().max(1000, 'La explicación no puede superar los 1000 caracteres').optional().nullable(),
-    details: z.array(movementDetailSchema).min(1, "Debe incluir al menos un producto")
+    details: z.array(movementDetailSchema).default([]),
+    shipment_orders: z.array(shipmentOrderSchema).max(100).default([])
 
 }).superRefine((data, ctx) => {
+    if (!data.details.length && !(data.type === 'envio' && data.shipment_orders.length)) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Debe incluir al menos un producto o pedido', path: ['details'] })
+    }
     if (data.type === 'envio' && !data.destination_branch_id) {
         ctx.addIssue({
             code: z.ZodIssueCode.custom,
@@ -52,6 +61,10 @@ export const movementSchema = z.object({
     const productIds = data.details.map(detail => detail.product_id)
     if (new Set(productIds).size !== productIds.length) {
         ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Un producto no puede repetirse dentro del mismo movimiento', path: ['details'] })
+    }
+    const orderIds = data.shipment_orders.map(item => item.order_id)
+    if (new Set(orderIds).size !== orderIds.length) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Un pedido no puede repetirse dentro del envío', path: ['shipment_orders'] })
     }
 });
 

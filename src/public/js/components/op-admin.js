@@ -84,6 +84,7 @@ function closeAndCleanOperationModal() {
     if (saleChannel) saleChannel.value = '';
     const explanation = document.getElementById('op-explanation');
     if (explanation) explanation.value = '';
+    window.resetShipmentOrderPackages?.();
     renderAdminDestinations();
 
     document.getElementById('catalog-grid').innerHTML = ''; // Limpiamos grilla
@@ -118,6 +119,7 @@ window.openOperationModal = function (type, reason = 'return') {
     pendingOperationRequestKey = null;
 
     const modalOp = document.getElementById('modal-operation');
+    modalOp.dataset.operationType = type;
     const titleOp = document.getElementById('modal-op-title');
     const subtitleOp = document.getElementById('modal-op-subtitle');
     const controlsDiv = document.getElementById('op-controls');
@@ -178,6 +180,7 @@ window.openOperationModal = function (type, reason = 'return') {
     renderEmptyEditableRow();
     searchProductsForOperation(''); // Cargamos todo de entrada
     modalOp.classList.add('active');
+    window.refreshShipmentOrderPackages?.();
     setTimeout(() => document.getElementById('op-search-prod').focus(), 100);
 }
 
@@ -300,7 +303,8 @@ window.removeProductFromOp = function (index) {
 }
 
 document.getElementById('btn-confirm-op').addEventListener('click', async () => {
-    if (selectedProductsForOp.length === 0) return alert('Agrega productos.');
+    const shipmentOrders = window.getShipmentOrderPackages?.() || [];
+    if (selectedProductsForOp.length === 0 && shipmentOrders.length === 0) return alert('Agrega productos o seleccioná al menos un pedido.');
     let dbType = currentOperationType === 'in' ? 'ingreso' : (currentOperationType === 'transfer' ? 'envio' : 'egreso');
     const payload = {
         idempotency_key: pendingOperationRequestKey ||= crypto.randomUUID(),
@@ -309,7 +313,8 @@ document.getElementById('btn-confirm-op').addEventListener('click', async () => 
             const detailObj = { product_id: p.id, quantity: p.quantity };
             if (p.min_quantity > 0) detailObj.min_quantity = p.min_quantity;
             return detailObj;
-        })
+        }),
+        shipment_orders: shipmentOrders
     };
 
     if (dbType === 'envio') {

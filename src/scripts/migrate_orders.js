@@ -109,5 +109,16 @@ try {
         CONSTRAINT fk_order_audit_order FOREIGN KEY (order_id) REFERENCES orders(id),
         CONSTRAINT fk_order_audit_user FOREIGN KEY (changed_by) REFERENCES users(id)
     )`)
+    await db.query(`CREATE TABLE IF NOT EXISTS shipment_order_packages (
+        id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        movement_id INT UNSIGNED NOT NULL,
+        order_id INT UNSIGNED NOT NULL,
+        package_count INT UNSIGNED NOT NULL DEFAULT 1,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY uq_shipment_package_order (order_id),
+        INDEX idx_shipment_package_movement (movement_id),
+        CONSTRAINT fk_shipment_package_movement FOREIGN KEY (movement_id) REFERENCES movements(id),
+        CONSTRAINT fk_shipment_package_order FOREIGN KEY (order_id) REFERENCES orders(id)
+    )`)
     console.log('Migracion de pedidos, reservas y motivos de egreso completada.')
 } finally { await db.end() }
