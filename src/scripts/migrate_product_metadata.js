@@ -87,7 +87,7 @@ try {
     await addColumnIfMissing('product_recipes','is_active','BOOLEAN NOT NULL DEFAULT TRUE')
     await addColumnIfMissing('product_personalization_methods','is_enabled','BOOLEAN NOT NULL DEFAULT TRUE')
 
-    await normalizeChannel('retail','showroom','Showroom')
+    await normalizeChannel('retail','showroom','Minorista / Showroom')
     await normalizeChannel('wholesale','mayorista','Mayorista')
     await normalizeChannel('mercadolibre','mercado_libre','Mercado Libre')
     await normalizeChannel('tiendanube','tienda_nube','Tienda Nube')

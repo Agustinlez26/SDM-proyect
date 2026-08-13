@@ -265,6 +265,17 @@ export class ProductModel {
         }
     }
 
+    async findActiveSalesChannelIds(channelIds) {
+        const uniqueIds = [...new Set((channelIds || []).map(Number).filter(Number.isInteger))]
+        if (uniqueIds.length === 0) return []
+        const placeholders = uniqueIds.map(() => '?').join(',')
+        const [rows] = await this.#db.query(
+            `SELECT id FROM sales_channels WHERE is_active = TRUE AND id IN (${placeholders})`,
+            uniqueIds
+        )
+        return rows.map(row => Number(row.id))
+    }
+
     /**
      * Actualiza el estado de activo/inactivo de un producto.
      * Se utiliza para el borrado lógico (Soft Delete) o reactivación.

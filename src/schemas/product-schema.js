@@ -19,7 +19,7 @@ const optionalBranch = z.preprocess(
     z.coerce.number().int().positive().nullable()
 )
 
-const channelsSchema = z.preprocess(parseJson, z.array(z.coerce.number().int().positive()))
+const channelsSchema = z.preprocess(parseJson, z.array(z.coerce.number().int().positive()).max(20))
 const personalizationSchema = z.preprocess(
     parseJson,
     z.array(z.enum(['laser_internal', 'artisan_metalwork']))
@@ -63,6 +63,14 @@ const productSchema = z.object({
     channels: operationalFields.channels.default([]),
     personalization_methods: operationalFields.personalization_methods.default([]),
     recipe: operationalFields.recipe.default([])
+}).superRefine((data, ctx) => {
+    if (data.is_sellable && data.channels.length === 0) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'Un producto vendible debe tener al menos un canal de venta',
+            path: ['channels']
+        })
+    }
 })
 const partialProductSchema = z.object({
     ...productFields,

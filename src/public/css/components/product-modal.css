@@ -273,6 +273,11 @@
 #modal-add-product .operational-checks input { width: auto; }
 #modal-add-product .operational-fieldset { border: 1px solid var(--border-color); border-radius: 9px; padding: 1rem; }
 #modal-add-product .operational-fieldset legend { padding: 0 .4rem; font-weight: 700; }
+#modal-add-product .operational-fieldset.is-disabled { opacity: .62; }
+#modal-add-product .channel-selection-actions { display: flex; gap: .55rem; margin-top: .85rem; }
+#modal-add-product .channel-selection-actions button { border: 1px solid var(--border-color); border-radius: 7px; background: transparent; color: var(--text-primary); padding: .4rem .65rem; font-size: .76rem; font-weight: 650; cursor: pointer; }
+#modal-add-product .channel-selection-actions button:hover:not(:disabled) { background: var(--primary-light); }
+#modal-add-product .channel-selection-actions button:disabled { cursor: not-allowed; opacity: .55; }
 #modal-add-product .recipe-lines { display: flex; flex-direction: column; gap: .55rem; margin: .75rem 0; }
 #modal-add-product .recipe-line { display: grid; grid-template-columns: minmax(180px, 1fr) 110px 38px; gap: .5rem; }
 #modal-add-product .recipe-remove { border: 1px solid #fecaca; background: #fff1f2; color: #be123c; border-radius: 7px; cursor: pointer; }

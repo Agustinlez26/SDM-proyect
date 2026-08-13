@@ -102,10 +102,14 @@
                     </select>
                 </div>
 
-                <fieldset class="operational-fieldset">
-                    <legend>Canales habilitados</legend>
+                <fieldset class="operational-fieldset" id="prod-channel-section">
+                    <legend>Canales de venta habilitados</legend>
                     <div id="prod-channel-options" class="operational-checks"></div>
-                    <small>Una materia prima también puede venderse, pero solo aparecerá en los canales marcados.</small>
+                    <div class="channel-selection-actions">
+                        <button type="button" id="btn-select-all-channels">Seleccionar todos</button>
+                        <button type="button" id="btn-clear-channels">Limpiar</button>
+                    </div>
+                    <small id="prod-channel-help">Elegí solamente los sectores donde se ofrece. Por ejemplo, Indumentaria puede habilitarse en Merchandising, Tienda Nube, Mercado Libre y Minorista.</small>
                 </fieldset>
 
                 <fieldset class="operational-fieldset" id="prod-personalization-section" hidden>

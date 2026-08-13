@@ -61,6 +61,14 @@ const escapeProductText = value => String(value ?? '').replace(/[&<>"']/g, char 
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
 })[char]);
 
+const productChannelName = channel => ({
+    showroom: 'Minorista / Showroom',
+    mercado_libre: 'Mercado Libre',
+    tienda_nube: 'Tienda Nube',
+    mayorista: 'Mayorista',
+    merchandising: 'Merchandising'
+})[channel.code] || channel.name;
+
 async function fetchOperationalCatalogs() {
     try {
         const response = await fetch('/api/products/operational-catalogs');
@@ -73,7 +81,8 @@ async function fetchOperationalCatalogs() {
             .map(branch => `<option value="${branch.id}">${escapeProductText(branch.name)}</option>`).join('');
 
         document.getElementById('prod-channel-options').innerHTML = operationalCatalogs.channels
-            .map(channel => `<label><input type="checkbox" name="prod-channel" value="${channel.id}" checked> ${escapeProductText(channel.name)}</label>`).join('');
+            .map(channel => `<label><input type="checkbox" name="prod-channel" value="${channel.id}" data-channel-code="${escapeProductText(channel.code)}"> ${escapeProductText(productChannelName(channel))}</label>`).join('');
+        syncSalesChannelState();
         renderRecipeLines();
     } catch (error) {
         console.error(error);
@@ -124,11 +133,12 @@ window.openProductModal = function () {
     document.getElementById('prod-is-customizable').checked = false;
     document.getElementById('prod-production-method').value = 'purchased';
     document.getElementById('prod-production-branch').value = '';
-    document.querySelectorAll('[name="prod-channel"]').forEach(box => { box.checked = true; });
+    document.querySelectorAll('[name="prod-channel"]').forEach(box => { box.checked = false; });
     document.querySelectorAll('[name="prod-personalization-method"]').forEach(box => { box.checked = false; });
     recipeDraft = [];
     renderRecipeLines();
     syncOperationalVisibility();
+    syncSalesChannelState();
     resetProductImageSelection();
     document.getElementById('prod-img-label').textContent = 'Imagen del producto';
     document.getElementById('modal-add-product').classList.add('active');
@@ -303,6 +313,14 @@ if (formProduct) {
             return;
         }
 
+        const isSellable = document.getElementById('prod-is-sellable').checked;
+        const selectedChannels = [...document.querySelectorAll('[name="prod-channel"]:checked')];
+        if (isSellable && selectedChannels.length === 0) {
+            alert('Seleccioná al menos un canal de venta para el producto.');
+            document.getElementById('prod-channel-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+
         const formData = new FormData();
         const productName = document.getElementById('prod-name').value;
         formData.append('name', productName);
@@ -323,7 +341,7 @@ if (formProduct) {
         formData.append('is_customizable', document.getElementById('prod-is-customizable').checked ? '1' : '0');
         formData.append('production_method', document.getElementById('prod-production-method').value);
         formData.append('production_branch_id', document.getElementById('prod-production-branch').value);
-        formData.append('channels', JSON.stringify([...document.querySelectorAll('[name="prod-channel"]:checked')].map(box => Number(box.value))));
+        formData.append('channels', JSON.stringify(isSellable ? selectedChannels.map(box => Number(box.value)) : []));
         formData.append('personalization_methods', JSON.stringify([...document.querySelectorAll('[name="prod-personalization-method"]:checked')].map(box => box.value)));
         formData.append('recipe', JSON.stringify(recipeDraft.filter(item => item.product_id && item.quantity > 0)));
 
@@ -364,12 +382,32 @@ if (formProduct) {
 }
 
 function setupOperationalProductListeners() {
+    document.getElementById('prod-is-sellable')?.addEventListener('change', syncSalesChannelState);
     document.getElementById('prod-is-manufacturable')?.addEventListener('change', syncOperationalVisibility);
     document.getElementById('prod-is-customizable')?.addEventListener('change', syncOperationalVisibility);
+    document.getElementById('btn-select-all-channels')?.addEventListener('click', () => {
+        document.querySelectorAll('[name="prod-channel"]:not(:disabled)').forEach(box => { box.checked = true; });
+    });
+    document.getElementById('btn-clear-channels')?.addEventListener('click', () => {
+        document.querySelectorAll('[name="prod-channel"]:not(:disabled)').forEach(box => { box.checked = false; });
+    });
     document.getElementById('btn-add-recipe-line')?.addEventListener('click', () => {
         recipeDraft.push({ product_id: '', quantity: 1 });
         renderRecipeLines();
     });
+}
+
+function syncSalesChannelState() {
+    const sellable = Boolean(document.getElementById('prod-is-sellable')?.checked);
+    const section = document.getElementById('prod-channel-section');
+    section?.classList.toggle('is-disabled', !sellable);
+    document.querySelectorAll('[name="prod-channel"]').forEach(box => { box.disabled = !sellable; });
+    document.getElementById('btn-select-all-channels')?.toggleAttribute('disabled', !sellable);
+    document.getElementById('btn-clear-channels')?.toggleAttribute('disabled', !sellable);
+    const help = document.getElementById('prod-channel-help');
+    if (help) help.textContent = sellable
+        ? 'Elegí solamente los sectores donde se ofrece. Por ejemplo, Indumentaria puede habilitarse en Merchandising, Tienda Nube, Mercado Libre y Minorista.'
+        : 'Este producto no se vende, por eso no utiliza canales de venta.';
 }
 
 function syncOperationalVisibility() {

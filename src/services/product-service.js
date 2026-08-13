@@ -28,17 +28,19 @@ export class ProductService {
             throw new ValidationError(error.message)
         }
 
+        const channels = await this.#validateSalesChannels(data.is_sellable, data.channels)
         let imagesPaths = await processProductImage(file.buffer, data.name)
 
         const producToSave = {
             ...data,
+            channels,
             cod_bar: sku,
             ...imagesPaths,
             is_active: true
         }
 
         const productId = await this.productModel.create(producToSave)
-        await this.productModel.saveOperationalConfig(productId, data)
+        await this.productModel.saveOperationalConfig(productId, producToSave)
         return productId
     }
 
@@ -72,6 +74,12 @@ export class ProductService {
             }
         }
 
+        const isSellable = data.is_sellable ?? currentProduct.is_sellable
+        const channels = await this.#validateSalesChannels(
+            isSellable,
+            data.channels ?? currentProduct.channels
+        )
+
         let imgPaths = {
             url_img_original: currentProduct.url_img_original,
             url_img_small: currentProduct.url_img_small
@@ -85,6 +93,7 @@ export class ProductService {
 
         const productToUpdate = {
             ...data,
+            is_sellable: isSellable,
             ...imgPaths
         }
 
@@ -100,12 +109,27 @@ export class ProductService {
         const operationalData = {
             is_manufacturable: data.is_manufacturable ?? currentProduct.is_manufacturable,
             is_customizable: data.is_customizable ?? currentProduct.is_customizable,
-            channels: data.channels ?? currentProduct.channels,
+            channels,
             personalization_methods: data.personalization_methods ?? currentProduct.personalization_methods,
             recipe: data.recipe ?? currentProduct.recipe
         }
         await this.productModel.saveOperationalConfig(id, operationalData)
         return updated || true
+    }
+
+    async #validateSalesChannels(isSellable, channelIds) {
+        if (!isSellable) return []
+
+        const selectedIds = [...new Set((channelIds || []).map(Number))]
+        if (selectedIds.length === 0) {
+            throw new ValidationError('Un producto vendible debe tener al menos un canal de venta')
+        }
+
+        const activeIds = await this.productModel.findActiveSalesChannelIds(selectedIds)
+        if (activeIds.length !== selectedIds.length) {
+            throw new ValidationError('Uno o más canales de venta no existen o están deshabilitados')
+        }
+        return selectedIds
     }
 
     async #generateUniqueSku(productName) {
