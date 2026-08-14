@@ -110,7 +110,22 @@ El backend de Sol de Mayo incluye las siguientes medidas de seguridad y rendimie
    - Configurar credenciales DB (`DB_HOST`, `DB_USER`, `DB_PASS`, `DB_NAME`).
    - Configurar `JWT_SECRET` (Mínimo recomendado: hash de 64 caracteres).
 
-4. **Desplegar Servidor:**
+4. **Crear la estructura de la base de datos:**
+   - Crear una base vacía con el mismo nombre configurado en `DB_NAME`.
+   - Importar `database/sol_de_mayo_schema.sql`. El archivo contiene solamente la
+     estructura (tablas, relaciones, índices y restricciones), sin datos de prueba.
+
+   ```bash
+   mysql -u root -p nombre_base < database/sol_de_mayo_schema.sql
+   ```
+
+   Si se necesitan también los usuarios de prueba y sus permisos, ejecutar luego:
+
+   ```bash
+   npm run seed:access-roles
+   ```
+
+5. **Desplegar Servidor:**
    ```bash
    # Entorno de Desarrollo
    npm run dev
@@ -119,5 +134,5 @@ El backend de Sol de Mayo incluye las siguientes medidas de seguridad y rendimie
    npm start
    ```
 
-5. **Apertura:**
+6. **Apertura:**
    Visitar http://localhost:1234 en el navegador para acceder a la interfaz del sistema.
